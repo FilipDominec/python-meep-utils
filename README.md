@@ -16,7 +16,6 @@ Filip Dominec, filip.dominec@gmail.com,
 February 2015
 
 
-
 ## File overview
  * `meep_utils.py`       - the main module with routines useful for python-meep simulations
  * `meep_materials.py`   - module containing definition of materials used. The material definition in 
@@ -24,22 +23,22 @@ February 2015
  * `README.txt`		     - this file
 
 
-== Related resources ==
-*Official website of MEEP: http://ab-initio.mit.edu/wiki/index.php/Meep
+## Related resources
+ * Official website of MEEP: http://ab-initio.mit.edu/wiki/index.php/Meep
 Information on the FDTD algorithm and simulations in general, documentation of the MEEP functions. Examples 
 are mostly in Scheme. 
-Since 2014, the MEEP source code is hosted at Github: https://github.com/stevengj/meep
+   * Since 2014, the MEEP source code is hosted at Github: https://github.com/stevengj/meep
 Your questions may (or may not) be answered at the mailing list: meep-discuss@ab-initio.mit.edu,
 http://www.mail-archive.com/meep-discuss@ab-initio.mit.edu/
 
-*Website of the python-meep interface: https://launchpad.net/python-meep
+ * Website of the python-meep interface: https://launchpad.net/python-meep
 Provides examples of how the python-meep functions can be used in scripts.
 
-*I also write own website on simulations: http://f.dominec.eu/meep/index.html
+ * I also write own website on simulations: http://f.dominec.eu/meep/index.html
 My experience with installation requirements and procedure, simulation performance, realistic definition of 
 materials, data postprocessing etc. is elaborated there.
 
-*License: GPLv2, http://www.gnu.org/licenses/gpl-2.0.html
+ * License: GPLv2, http://www.gnu.org/licenses/gpl-2.0.html
 
 
 == TODOs ==
