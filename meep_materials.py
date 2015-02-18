@@ -231,7 +231,7 @@ class material_TiO2_THz():#{{{  ## for THz application only
 
     """
     def __init__(self, where=None):
-        self.eps = 22.
+        self.eps = 12.
         self.pol = [
                 #{'omega':5.67e12, 'gamma':1.05e12, 'sigma':70.},            ## strongest optical phonon resonance in THz range
                 {'omega':5.67e12, 'gamma':1.05e12, 'sigma':50+30.},            ## strongest optical phonon resonance in THz range

@@ -431,7 +431,7 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
     plt.figure(figsize=(7,3))
     colors = ['#000000', '#004400', '#003366', '#000088', '#440077', 
               '#661100', '#AA8800', '#00AA00', '#0099DD', '#2200FF', 
-              '#000000', '#000000']
+              '#000000', '#008844']
 
     subplotnumber = 2 if plot_conductivity else 1
 
@@ -443,8 +443,8 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
         #print material
         eps = np.conj(analytic_eps(material, frequency))
         #R = abs((1-eps**.5)/(1+eps**.5))**2     ## Intensity reflectivity
-        plt.plot(frequency, np.real(eps), color="#008844", label="$\\varepsilon_r'$" , ls='-') #  
-        plt.plot(frequency, np.imag(eps), color="#88aa00", label="$\\varepsilon_r''$", ls='--') # 
+        plt.plot(frequency, np.real(eps), color=color, label="$\\varepsilon_r'$" , ls='-') #  
+        plt.plot(frequency, np.imag(eps), color=color, label="$\\varepsilon_r''$", ls='--') # 
         plt.ylabel(u"relative permittivity")
         #plt.ylabel(u"Intensity reflectivity")
 
@@ -452,7 +452,7 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
         ylim = (-420, 280); plt.ylim(ylim); plt.yscale('linear')
 
         plt.xscale('log')
-        plt.legend(prop={'size':10}, loc='upper right')
+        #plt.legend(prop={'size':10}, loc='upper right')
         #plt.ylim(ymin=1e-2); 
         plt.grid(True)
 
@@ -522,7 +522,7 @@ def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y
         while (mfreqtxt[0:1]==' ' and mfreqtxt[-2:-1]==' '): 
             label_y2 = label_y2*2 if log_y else label_y2+1
             mfreqtxt=mfreqtxt[1:-1]; 
-        bboxprops   = dict(boxstyle='round, pad=.15', fc='white', alpha=.6, lw=0)
+        bboxprops   = dict(boxstyle='round, pad=.15', fc='white', alpha=1, lw=0)
         arrowprops  = dict(arrowstyle=('->', '-|>', 'simple', 'fancy')[0], connectionstyle = 'arc3,rad=0', lw=1, ec='k', fc='w')
         plt.annotate(mfreqtxt,                    
                 xy      = (mfreq, label_y2),    xycoords  ='data',
