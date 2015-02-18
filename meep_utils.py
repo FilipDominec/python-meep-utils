@@ -446,7 +446,7 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
         #plt.ylabel(u"Intensity reflectivity")
 
         plt.yscale('symlog')
-        plt.ylim((-1e4, 1e4))
+        plt.ylim((-1e5, 1e9))
         plt.xscale('log')
         plt.legend(loc='lower left', prop={'size':7}); 
         #plt.ylim(ymin=1e-2); 
@@ -733,7 +733,7 @@ class Slice(): #{{{
         outputvtk: real part of each component in separate VTK file (for mayavi2/paraview)
 
     -- Usage --
-    One has to provide the model object, which provides: size_x, size_y, size_z, model.simtime, model.simulation_name
+    One has to provide the model object with these attributes: size_x, size_y, size_z, simtime, simulation_name
     The components parameter may be one or more meep components, such as meep.Ex, meep.Ey or meep.Dielectric
     Also the fields object is compulsory.
 
