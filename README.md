@@ -1,7 +1,7 @@
 ## Introduction
-MEEP is an implementation of the FDTD algorithm, widely used to compute the propagation of electromagnetic
+MEEP is an implementation of the FDTD algorithm, which simulates the propagation of electromagnetic
 waves. During my PhD studies, I used it intensively for simulations of metamaterials, photonic crystals and
-many other studies.
+many other problems.
 
 Unlike many commercial packages, the simulation has to be *programmed*; MEEP is a library accessible from C/C++, 
 Scheme or Python. I chose to write my simulations using Python, as it has powerful modules and is widely used 
