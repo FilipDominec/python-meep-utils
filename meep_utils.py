@@ -409,7 +409,7 @@ class MyConductivity(meep.Callback):#{{{            %% TODO rename to Conductivi
                 return permittivity2conductivity(analytic_eps(material, self.frequency), self.frequency)
         else: return 0
 #}}}
-def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range=(1e9, 1e17), mark_freq=[]):#{{{
+def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range=(1e10, 1e16), mark_freq=[], draw_instability_block=None):#{{{
     """ Plots complex permittivity of the materials to a PNG file
 
     Accepts list of materials
@@ -419,16 +419,19 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
     matplotlib.use('Agg') ## Enable plotting even in the GNU screen session
     import matplotlib.pyplot as plt
 
+    matplotlib.rc('text', usetex=True)
+    matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}') # \usepackage{lmodern}, 
+
     #for material in list(to_plot): ## autoscale x axis?
         #for pol in material.pol:
             #if freq_range[1] < pol['omega']: freq_range[1] = pol['omega']*2
 
     frequency = 10**np.arange(np.log10(freq_range[0]), np.log10(freq_range[1]), .01)
 
-    plt.figure(figsize=(10,10))
-    colors = ['#554400', '#004400', '#003366', '#000088', '#440077', 
+    plt.figure(figsize=(7,3))
+    colors = ['#000000', '#004400', '#003366', '#000088', '#440077', 
               '#661100', '#AA8800', '#00AA00', '#0099DD', '#2200FF', 
-              '#8800DD', '#BB3300']
+              '#000000', '#000000']
 
     subplotnumber = 2 if plot_conductivity else 1
 
@@ -438,17 +441,18 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
         else: color = 'black'
         label = getattr(material, 'shortname', material.name)
         #print material
-        eps = analytic_eps(material, frequency)
+        eps = np.conj(analytic_eps(material, frequency))
         #R = abs((1-eps**.5)/(1+eps**.5))**2     ## Intensity reflectivity
-        plt.plot(frequency, np.real(eps), color=color, label=label, ls='-')
-        plt.plot(frequency, np.imag(eps), color=color, label="", ls='--')
-        plt.ylabel(u"solid: Re($\\varepsilon_r$), dashed: Im($\\varepsilon_r$) ")
+        plt.plot(frequency, np.real(eps), color="#008844", label="$\\varepsilon_r'$" , ls='-') #  
+        plt.plot(frequency, np.imag(eps), color="#88aa00", label="$\\varepsilon_r''$", ls='--') # 
+        plt.ylabel(u"relative permittivity")
         #plt.ylabel(u"Intensity reflectivity")
 
-        plt.yscale('symlog')
-        plt.ylim((-1e5, 1e9))
+        #ylim = (-1e3, 1e3); plt.ylim(ylim); plt.yscale('symlog')
+        ylim = (-420, 280); plt.ylim(ylim); plt.yscale('linear')
+
         plt.xscale('log')
-        plt.legend(loc='lower left', prop={'size':7}); 
+        plt.legend(prop={'size':10}, loc='upper right')
         #plt.ylim(ymin=1e-2); 
         plt.grid(True)
 
@@ -481,7 +485,8 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
                                                     #^??????^/(2*np.pi)
             plt.ylabel(u"solid: Re($\\sigma$), dashed: Im($\\sigma$) ")
             plt.yscale('symlog'); 
-            plt.xscale('log'); plt.legend(); plt.grid(True)
+            plt.xscale('log'); plt.grid(True)
+            plt.legend(prop={'size':10}, loc='upper right')
 
             ## TODO check this and perhaps remove:
             #plt.subplot(subplotnumber,1,3)
@@ -496,10 +501,14 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
 
     ## Annotate frequencies and finish the graph 
     plt.subplot(subplotnumber,1,1)
-    annotate_frequency_axis(mark_freq, log_y=True) # TODO , print_freq=True
+    annotate_frequency_axis(mark_freq, log_y=True, arrow_length=50) # TODO , print_freq=True
+    if draw_instability_block:
+        plt.gca().add_patch(plt.Rectangle((draw_instability_block[0], draw_instability_block[1]-ylim[1]), 1e20, ylim[1], color='#ffddaa'))
 
-    plt.xlabel(u"Frequency [Hz]") 
+
+    plt.xlabel(u"frequency $f$ [Hz]") 
     plt.savefig(filename, bbox_inches='tight')
+    plt.savefig(filename+".pdf", bbox_inches='tight')
 #}}}
 
 def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y=False):#{{{

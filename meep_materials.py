@@ -234,7 +234,7 @@ class material_TiO2_THz():#{{{  ## for THz application only
         self.eps = 22.
         self.pol = [
                 #{'omega':5.67e12, 'gamma':1.05e12, 'sigma':70.},            ## strongest optical phonon resonance in THz range
-                {'omega':5.67e12, 'gamma':.5e12, 'sigma':70.},            ## strongest optical phonon resonance in THz range
+                {'omega':5.67e12, 'gamma':1.05e12, 'sigma':50+30.},            ## strongest optical phonon resonance in THz range
                 ]
         self.name = "polycrystalline TiO2 (rutile)"
         self.where = where
