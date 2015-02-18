@@ -3,9 +3,8 @@ MEEP is an implementation of the FDTD algorithm, which simulates the propagation
 waves. During my PhD studies, I used it intensively for simulations of metamaterials, photonic crystals and
 many other problems.
 
-Unlike many commercial packages, the simulation has to be *programmed*; MEEP is a library accessible from C/C++, 
-Scheme or Python. I chose to write my simulations using Python, as it has powerful modules and is widely used 
-for scientific computing. Starting with MEEP was not easy, though, due to lack of resources online. Over few 
+Unlike many commercial packages, the simulation has to be *programmed*; MEEP is only a library accessible from C/C++, Scheme or Python. I chose to write my simulations using Python, as it has powerful modules  
+for scientific computing. Starting with MEEP was not easy, though, mostly due to lack of resources online. Over few 
 years I wrote multiple utility functions that in my opinion greatly facilitate the simulations, and I publish 
 them under open license, with the hope they might be useful to the scientific community.
 
@@ -51,4 +50,19 @@ materials, data postprocessing etc. is elaborated there.
  * resonant modes extraction via HarmInv, done in a branched file 
  * optimize the structure using D.E (http://inspyred.github.com) or CMA-ES
  * mode separation on the user-defined ports
-
+ * add examples (tests / case study?):
+   * waveguide-splitter
+   * metamaterial parameters of dielectric rods (CASE STUDY)
+   * metamaterial parameters of dielectric sphere in wire mesh (CASE STUDY)
+   * a split-ring resonator and current-driven homogenisation
+   * surface-plasmons
+   * surface-plasmons on thin-metal (CASE STUDY) 
+   * thin-gold-film-transmission
+   * plasmonic resonance in gold nanoparticles
+   * resistive-metal strips
+   * extraordinary transmission
+   * Kerr nonlinearity and self-focusing
+   * scattering SNOM microscope (CASE STUDY)
+   * oblique-wave fabry-pérot resonances, comparison with analytic solution
+   * resonances in cylinder cavity, application of harminv and comparison with analytic
+   * modeling spontaneous parametric down-conversion
