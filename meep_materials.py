@@ -11,16 +11,26 @@ spectrum from microwave to optical range, so the number of Lorentzian oscillator
 would have to be manually reduced to make the simulation run effectively.
 
 About this script:
- * Written in 2012-2013 by Filip Dominec (dominecf at the server of fzu.cz)
+ * Written in 2012-2015 by Filip Dominec (dominecf at the server of fzu.cz)
  * Being distributed under the GPL license, this script is free as speech after five beers. 
  * You are encouraged to use and modify it as you need. Feel free to write me if needed.
  * Hereby I thank to the MEEP/python_meep authors and people of meep mailing list who helped me a lot.
  
 See also:
-    http://fzu.cz/~dominecf/misc/meep/index.html    -- my MEEP page
-    http://fzu.cz/~dominecf/misc/eps/               -- permittivity spectra plot into graphs
+    http://f.dominec.eu/meep/              -- my MEEP page
+    http://f.dominec.eu/eps/               -- permittivity spectra plot into graphs
 
-Last edited: 2013-05-28
+TODO:
+    * implement material self-adjustment for stability 
+       1) wipe out all oscillators above f_c (sum Δε into ε_infty)
+       2) adjust the Drude term to be stable when f_c < omega_p/2π
+       3) re-express all oscillators above FRoI as one oscillator (is it possible? what are the summing rules
+                for lorentzians with different frequency and losses?)
+       4) do something with that Debye term can be unstable
+    * make a manifest of materials and their source files; 
+    * add the plot_eps.py file and its directory into the project??
+
+Last edited: 2015-02-19
 """
 
 import numpy as np
@@ -465,10 +475,6 @@ class material_SiO2():#{{{
         self.where = where
 #}}}
 
-
-
-
-
 class material_SiC():#{{{
     """ Silicon carbide, or SiC
     THz and optical resonances fitted manually to spectra from databases/experiment
@@ -618,53 +624,46 @@ class material_Au():#{{{
         self.eps = 1. 
         omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
         self.pol = [
-
                 {'omega': omega0,	'gamma': 1e6*c*0.042747, 'sigma': 4.0314e+41 * 1e-20**2 * (1e6*c)**2 / omega0**2},
-                #{'omega':1e6*c*0.33472, 'gamma':1e6*c*0.19438, 'sigma':11.363},
-                #{'omega':1e6*c*0.66944, 'gamma':1e6*c*0.27826, 'sigma':1.1836},
-                #{'omega':1e6*c*2.3947 , 'gamma':1e6*c*0.7017 , 'sigma': 0.65677},
-                #{'omega':1e6*c*3.4714 , 'gamma':1e6*c*2.0115 , 'sigma': 2.6455},
-                #{'omega':1e6*c*10.743 , 'gamma':1e6*c*1.7857 , 'sigma': 2.0148},
+                {'omega':1e6*c*0.33472, 'gamma':1e6*c*0.19438, 'sigma':11.363}, ## sum of Lorentzians = 17.86
+                {'omega':1e6*c*0.66944, 'gamma':1e6*c*0.27826, 'sigma':1.1836},
+                {'omega':1e6*c*2.3947 , 'gamma':1e6*c*0.7017 , 'sigma': 0.65677},
+                {'omega':1e6*c*3.4714 , 'gamma':1e6*c*2.0115 , 'sigma': 2.6455},
+                {'omega':1e6*c*10.743 , 'gamma':1e6*c*1.7857 , 'sigma': 2.0148},
                 ]
-        self.name = "Gold"
+        self.name = "Gold (Drude-Lorentz)"
         self.shortname = "Au"
         self.where = where
 #}}}
-class material_Au():#{{{
+class material_Au2():#{{{
     """ Drude-Lorentz model for Gold """
     def __init__(self, where=None, resistivity=0., eps=0.):
         #self.eps = 1. 
-        self.eps = 1.5 
+        self.eps = 18.86 
         omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
         self.pol = [
-
-                {'omega': omega0,	'gamma': 1e6*c*0.042747, 'sigma': 4.0314e+40 * 1e-20**2 * (1e6*c)**2 / omega0**2},
-                #{'omega':1e6*c*0.33472, 'gamma':1e6*c*0.19438, 'sigma':11.363},
-                #{'omega':1e6*c*0.66944, 'gamma':1e6*c*0.27826, 'sigma':1.1836},
-                #{'omega':1e6*c*2.3947 , 'gamma':1e6*c*0.7017 , 'sigma': 0.65677},
-                #{'omega':1e6*c*3.4714 , 'gamma':1e6*c*2.0115 , 'sigma': 2.6455},
-                #{'omega':1e6*c*10.743 , 'gamma':1e6*c*1.7857 , 'sigma': 2.0148},
+                {'omega': omega0,	'gamma': 1e6*c*0.042747, 'sigma': 4.0314e+41 * 1e-20**2 * (1e6*c)**2 / omega0**2},
                 ]
-        self.name = "Gold"
+        self.name = "Gold (Drude-Lorentz)"
         self.shortname = "Au"
         self.where = where
 #}}}
-class material_NbN_03K():#{{{  
-    """
-    Niobium nitride -- low-temperature type-II superconductor (Tk ~ 15 K ?)
-    """
-    def __init__(self, where=None):
-        #self.eps = 100.
-        self.eps = 3.
+class material_Au3():#{{{
+    """ Drude-Lorentz model for Gold """
+    def __init__(self, where=None, resistivity=0., eps=0.):
+        #self.eps = 1. 
+        self.eps = 18.86 
+        omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
         self.pol = [
-                {'omega':2.3e12, 'gamma':.4e12*1.000, 'sigma':5},
+                {'omega': omega0,	'gamma': 0, 'sigma': 4.0314e+41 * 1e-20**2 * (1e6*c)**2 / omega0**2},
                 ]
-        self.name = "Niobium nitride (T = 3 K)"
+        self.name = "Gold (Drude-Lorentz)"
+        self.shortname = "Au"
         self.where = where
 #}}}
 
 
-## -- Obsoleted -- 
+## -- Obsoleted or experimental -- 
 class material_DrudeMetal_old():#{{{
     """ Defines a generic metal with a Drude model
 
@@ -737,6 +736,19 @@ class material_testsnom():#{{{
                 {'omega': 2e13, 'gamma':3e12, 'sigma':42},  
                 ]
         self.name = ""
+        self.where = where
+#}}}
+class material_NbN_03K():#{{{  
+    """
+    Niobium nitride -- low-temperature type-II superconductor (Tk ~ 15 K ?)
+    """
+    def __init__(self, where=None):
+        #self.eps = 100.
+        self.eps = 3.
+        self.pol = [
+                {'omega':2.3e12, 'gamma':.4e12*1.000, 'sigma':5},
+                ]
+        self.name = "Niobium nitride (T = 3 K)"
         self.where = where
 #}}}
 

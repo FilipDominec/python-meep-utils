@@ -30,7 +30,7 @@ import meep_mpi as meep
 #import meep
 
 ## === User interaction and convenience routines ===
-def process_param(args):#{{{                TODO rename this to print_simulation_progress()
+def process_param(args):#{{{                
     """ Parse command-line parameters, and separate them into two groups.
 
     Some of them control the simulation (`sim_param'), but all remaining will be passed to 
@@ -81,7 +81,7 @@ def phys_to_float(s):#{{{
             return s
     except ValueError:
         return s#}}}
-class Timer():#{{{
+class Timer():#{{{ 
     """
     Prints total estimated time of computation, and the simulation progress 
     """
@@ -92,7 +92,7 @@ class Timer():#{{{
         self.reporttimes = [.001, .01, 0.03] + [t/10. for t in range(1,10)] + [2.]
     def get_time(self):
         return time.time()-self.starttime
-    def print_progress(self, now):
+    def print_progress(self, now): 
         if now/self.simtime > self.reporttimes[0]:
             meep.master_printf("Progress %.2f of expected total %d s\n" % \
                     (now / self.simtime, (self.simtime / now * self.get_time())))
@@ -117,7 +117,7 @@ def notify(title, run_time=None):#{{{
     except:
         pass
 #}}}
-def get_simulation_name(argindex=1): #{{{
+def get_simulation_name(argindex=1): #{{{ ## TODO rename
     """Get the name of the last simulation run.
 
     Priority: 1) parameter, 2) last_simulation_name.txt, 3) working directory"""
@@ -274,7 +274,7 @@ class AbstractMeepModel(meep.Callback): #{{{
 
             ## Check the second numerical stability criterion (that MEEP does not) 
             eps_fc      = analytic_eps(self.materials[0], f_c)
-            eps_minimum = meep.use_Courant()**2 * 3 # for three dimensions only
+            eps_minimum = meep.use_Courant()**2 * 3 # for three dimensions (2-D simulations are safer as they multiply by 2 only, but it is ignored here)
             if (eps_fc.real < eps_minimum):
                 meep.master_printf("\n\tWARNING: at the critical frequency %f, real permittivity of %s is below the criterion for stability (%f < %f)\n\n"
                         % (f_c, material.name, eps_fc, eps_minimum))
@@ -428,10 +428,10 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
 
     frequency = 10**np.arange(np.log10(freq_range[0]), np.log10(freq_range[1]), .01)
 
-    plt.figure(figsize=(7,3))
+    plt.figure(figsize=(7,6))
     colors = ['#000000', '#004400', '#003366', '#000088', '#440077', 
-              '#661100', '#AA8800', '#00AA00', '#0099DD', '#2200FF', 
-              '#000000', '#008844']
+              '#661100', '#AA8800', '#00AA00', '#0099DD', '#888888', '#dd2200', 
+              '#0044dd']
 
     subplotnumber = 2 if plot_conductivity else 1
 
@@ -443,15 +443,16 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
         #print material
         eps = np.conj(analytic_eps(material, frequency))
         #R = abs((1-eps**.5)/(1+eps**.5))**2     ## Intensity reflectivity
-        plt.plot(frequency, np.real(eps), color=color, label="$\\varepsilon_r'$" , ls='-') #  
-        plt.plot(frequency, np.imag(eps), color=color, label="$\\varepsilon_r''$", ls='--') # 
-        plt.ylabel(u"relative permittivity")
+        plt.plot(frequency, np.real(eps), color=color, label=material.name, ls='-') #  
+        plt.plot(frequency, np.imag(eps), color=color, label='', ls='--') # 
+        plt.ylabel(u"relative permittivity $\\varepsilon_r$")
         #plt.ylabel(u"Intensity reflectivity")
 
-        #ylim = (-1e3, 1e3); plt.ylim(ylim); plt.yscale('symlog')
-        ylim = (-420, 280); plt.ylim(ylim); plt.yscale('linear')
+        ylim = (-1e7, 1e3); plt.ylim(ylim); plt.yscale('symlog')
+        #ylim = (-420, 280); plt.ylim(ylim); plt.yscale('linear')
 
         plt.xscale('log')
+        plt.legend(prop={'size':11}, loc='upper left')
         #plt.legend(prop={'size':10}, loc='upper right')
         #plt.ylim(ymin=1e-2); 
         plt.grid(True)
@@ -469,24 +470,27 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
             plt.subplot(subplotnumber,1,2)
             label = ""
             omega = 2*np.pi*frequency
-            cond = eps * omega * epsilon_0 / 1j
+            cond = eps * omega * epsilon_0 * 1j ## for positive frequency convention
+            #cond = eps * omega * epsilon_0 / 1j ## for negative frequency convention
 
-            plt.plot(frequency, np.real(cond), color=color, label=label, ls='-')
+            plt.plot(frequency, np.real(cond), color=color, label=material.name, ls='-')
             plt.plot(frequency, np.imag(cond), color=color, label="", ls='--')
 
-            plt.plot(frequency, np.real(1./cond)*1e12, color=color, lw=1.5, label=("$\\rho^{'}\cdot 10^{12}$"), ls=':') ## (real) resistivity
+            #plt.plot(frequency, np.real(1./cond)*1e12, color=color, lw=1.5, label=("$\\rho^{'}\cdot 10^{12}$"), ls=':') ## (real) resistivity
 
             ## Low-frequency limits for pseudo-Drude model
-            plt.plot(frequency, np.ones_like(omega) * omega_p**2 * epsilon_0 / gamma, color='k', label=label, ls='-', lw=.3)
-            plt.plot(frequency, omega * (-epsilon_0 + omega_p**2 * epsilon_0 / gamma**2), color='k', label=label, ls='--', lw=.3)
+            #plt.plot(frequency, np.ones_like(omega) * omega_p**2 * epsilon_0 / gamma, color='k', label=label, ls='-', lw=.3)
+            #plt.plot(frequency, omega * (-epsilon_0 + omega_p**2 * epsilon_0 / gamma**2), color='k', label=label, ls='--', lw=.3)
             ## High-frequency limits for pseudo-Drude model
-            plt.plot(frequency, omega**-2 * (omega_p**2 * epsilon_0 * gamma), color='g', label=label, ls='-', lw=.3)
-            plt.plot(frequency, omega * -epsilon_0            , color='g', label=label, ls='--', lw=.3)
+            #plt.plot(frequency, omega**-2 * (omega_p**2 * epsilon_0 * gamma), color='g', label=label, ls='-', lw=.3)
+            #plt.plot(frequency, omega * -epsilon_0            , color='g', label=label, ls='--', lw=.3)
                                                     #^??????^/(2*np.pi)
-            plt.ylabel(u"solid: Re($\\sigma$), dashed: Im($\\sigma$) ")
+            plt.ylabel(u"conductivity $\\sigma$")
             plt.yscale('symlog'); 
+            plt.ylim((-1e9, 1e12)); 
             plt.xscale('log'); plt.grid(True)
-            plt.legend(prop={'size':10}, loc='upper right')
+
+            plt.xlabel(u"frequency $f$ [Hz]") 
 
             ## TODO check this and perhaps remove:
             #plt.subplot(subplotnumber,1,3)
@@ -503,7 +507,7 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
     plt.subplot(subplotnumber,1,1)
     annotate_frequency_axis(mark_freq, log_y=True, arrow_length=50) # TODO , print_freq=True
     if draw_instability_block:
-        plt.gca().add_patch(plt.Rectangle((draw_instability_block[0], draw_instability_block[1]-ylim[1]), 1e20, ylim[1], color='#ffddaa'))
+        plt.gca().add_patch(plt.Rectangle((draw_instability_block[0], ylim[0]), 1e20, draw_instability_block[1]-ylim[0], color='#ffddaa'))
 
 
     plt.xlabel(u"frequency $f$ [Hz]") 
