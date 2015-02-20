@@ -116,16 +116,16 @@ def notify(title, run_time=None):#{{{
 def last_simulation_name(argindex=1): #{{{ 
     """Get the name of the last simulation run.
 
-    Priority: 1) parameter, 2) last_simulation_name.txt, 3) working directory"""
+    Priority: 1) parameter, 2) last_simulation_name.dat, 3) working directory"""
     cwd = os.getcwd()
     if len(sys.argv)>argindex and sys.argv[argindex] != "-"  and __name__ == "__main__": 
         print "Parameter passed:", sys.argv[argindex]
         last_simulation_name = sys.argv[argindex]
-    elif os.path.exists(os.path.join(cwd, 'last_simulation_name.txt')):
-        print "Loading from", os.path.join(cwd, 'last_simulation_name.txt')
-        last_simulation_name = os.path.join(cwd, open(os.path.join(cwd, 'last_simulation_name.txt'),'r').read().strip())
+    elif os.path.exists(os.path.join(cwd, 'last_simulation_name.dat')):
+        print "Loading from", os.path.join(cwd, 'last_simulation_name.dat')
+        last_simulation_name = os.path.join(cwd, open(os.path.join(cwd, 'last_simulation_name.dat'),'r').read().strip())
     else:
-        print "Error: No input file provided and 'last_simulation_name.txt' not found!"
+        print "Error: No input file provided and 'last_simulation_name.dat' not found!"
         last_simulation_name = cwd
     if (last_simulation_name[-4:] == ".dat"): last_simulation_name = last_simulation_name[:-4] # strip the .dat extension
     return  last_simulation_name

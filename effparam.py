@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-"""#{{{
-Plots reflection and transmission of a metamaterial structure
+""" Plots reflection and transmission of a metamaterial structure
+
 Tries to calculate its effective parameters [Smith2002], avoiding branch jumps
 Enables to save to several types of output (cartesian graphs, polar graphs, nice PDF graphs...)
 Exports the effective parameters to another data file for further processing
@@ -24,9 +24,9 @@ import matplotlib.pyplot as plt
 plt.ioff() ## is this useful?
 from scipy.optimize import fsolve, fmin
 c = 2.99792458e8        # speed of light
+
 ## == User settings for postprocessing and plotting == 
 frequnit, frequnitname = 1e12, "THz"
-#}}}
 
 N_init_branch   =   -1
 N_init_sign     =   1
@@ -58,16 +58,16 @@ np.seterr(all='ignore')      ## do not print warnings for negative-number logari
 def get_simulation_name(argindex=1): #{{{
     """Get the name of the last simulation run.
 
-    Priority: 1) parameter, 2) last_simulation_name.txt, 3) working directory"""
+    Priority: 1) parameter, 2) last_simulation_name.dat, 3) working directory"""
     cwd = os.getcwd()
     if len(sys.argv)>argindex and sys.argv[argindex] != "-"  and __name__ == "__main__": 
         print "Parameter passed:", sys.argv[argindex]
         last_simulation_name = sys.argv[argindex]
-    elif os.path.exists(os.path.join(cwd, 'last_simulation_name.txt')):
-        print "Loading from", os.path.join(cwd, 'last_simulation_name.txt')
-        last_simulation_name = os.path.join(cwd, open(os.path.join(cwd, 'last_simulation_name.txt'),'r').read().strip())
+    elif os.path.exists(os.path.join(cwd, 'last_simulation_name.dat')):
+        print "Loading from", os.path.join(cwd, 'last_simulation_name.dat')
+        last_simulation_name = os.path.join(cwd, open(os.path.join(cwd, 'last_simulation_name.dat'),'r').read().strip())
     else:
-        print "Error: No input file provided and 'last_simulation_name.txt' not found!"
+        print "Error: No input file provided and 'last_simulation_name.dat' not found!"
         last_simulation_name = cwd
     if (last_simulation_name[-4:] == ".dat"): last_simulation_name = last_simulation_name[:-4] # strip the .dat extension
     return  last_simulation_name
@@ -139,7 +139,6 @@ def find_maxima(x, y, minimum_value=.1):#{{{
 def reasonable_ticks(a, density=.6): #{{{
     """ Define the grid and ticks a bit denser than by default """
     decimal=10**np.trunc(np.log10(a/density)); y=a/density/decimal/10
-    print a, decimal, y
     return (decimal, 2*decimal, 5*decimal)[np.int(3*y)]
 #}}}
 
@@ -544,9 +543,9 @@ if len(freq)>2:
         plt.plot(freq[allindices], np.zeros_like(allindices), marker='x', color="k")
 
         ## Scan through all photonic bands/bandgaps, seleting the correct N branch
-        print 'allindices', allindices
+        #print 'allindices', allindices
         #N_init_branch = 0
-        print 'N_init_sign', N_init_sign
+        #print 'N_init_sign', N_init_sign
         #N_init_sign = -1 
         #pN_uo = [0,0,0,0]
         pN_uo = [2*np.pi,2*np.pi,2*np.pi,0]
@@ -580,7 +579,7 @@ if len(freq)>2:
                 pN, pN_uo, pN_debug    = rt2n(pfreq, ps11, ps12, d, init_branch=N_init_branch, init_sign=N_init_sign, uo=pN_uo)
                 #if q!=0: pN_uo = pN_uo_old
 
-                print 'end=', np.array(pN_uo)/np.pi
+                #print 'end=', np.array(pN_uo)/np.pi
                 if i == 0:
                     try:
                         #print len(pN)
