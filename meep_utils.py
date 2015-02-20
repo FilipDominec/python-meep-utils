@@ -5,14 +5,6 @@ Here you can find various functions and classes that facilitate the work with py
 I believe some of these functions ought to be implemented in the meep module.
 Filip Dominec 2012-2015
 
-== Possible errors and clues ==
-    HDF5-DIAG: Error detected in HDF5 (1.8.4-patch1) MPI-process 0:
-      #000: ../../../src/H5F.c line 1514 in H5Fopen(): unable to open file
-    ---> perhaps you defined two slices the same?
-
-
-
-        
        SliceAnalysis(Slices=[], TimeDomainFunction=None, FreqDomainFunction=None, plot_timedomain=True, plot_freqdomain=True)
 TODOs optional:
     * try to make meep use true speed of light 
@@ -22,9 +14,13 @@ TODOs optional:
             4) remove all divisions/multiplications by speed of light (hooray!!)
             5) adjust Courant factor
 """
-import numpy as np
 import os, os.path, sys, subprocess, time
+import numpy as np
 from scipy.constants import c, epsilon_0, mu_0
+
+import matplotlib
+matplotlib.use('Agg') ## Enable plotting even in the GNU screen session
+import matplotlib.pyplot as plt
 
 import meep_mpi as meep
 #import meep
@@ -117,7 +113,7 @@ def notify(title, run_time=None):#{{{
     except:
         pass
 #}}}
-def get_simulation_name(argindex=1): #{{{ ## TODO rename
+def last_simulation_name(argindex=1): #{{{ 
     """Get the name of the last simulation run.
 
     Priority: 1) parameter, 2) last_simulation_name.txt, 3) working directory"""
@@ -148,14 +144,23 @@ def find_maxima(x, y, minimum_value=0):#{{{
 
 ## === Structure definition and setup ===
 ## Define the simulated models as a class (much simpler than handling callbacks manually)
-class AbstractMeepModel(meep.Callback): #{{{
-    def __init__(self):
+class AbstractMeepModel(meep.Callback): 
+    def __init__(self):#{{{
         meep.Callback.__init__(self)
-        meep.master_printf("INITIALIZING MATERIAL\n") 
         self.double_vec = None          # (callback function to be redirected to the desired function)
         self.return_value = True  
-
-    def register_local(self, param, val):
+        #}}}
+    def eps(self, r):#{{{
+        """ Scans through materials and returns the high-frequency part of permittivity for the first in the list. 
+        Be careful when materials overlap - their polarizabilities still sum up, making a nonrealistic result. 
+        """
+        ## TODO #CSGspeedup rewrite to:  sum([mat.eps for mat in self.materials if mat.where(r)]) or 1 
+        ## TODO rewrite the geometric functions to lambdas and test the speed!
+        for mat in self.materials:
+            if mat.where(r): return mat.eps         ## TODO: #realCproject will MEEP use the natural speed of light 3e8 m/s, if this is multiplied by eps0?
+        else: return 1.                             ## TODO: and here too   (... this also needs that similar approach is used to define mu=mu0 everywhere)
+        #}}}
+    def register_local(self, param, val):#{{{
         """ Adds a parameter as an attribute of the model (either number or float). 
         If the parameter value differs its default one, adds it also to the simulation name"""
         setattr(self, param, val)
@@ -174,8 +179,8 @@ class AbstractMeepModel(meep.Callback): #{{{
             if nondefault: self.simulation_name += ("_%s=%s") % (param, val)
             self.parameterstring += "#param %s,%s\n" % (param, val)
             #meep.master_printf("  <str>   %s%s = %s %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
-
-    def register_locals(self, params):
+        #}}}
+    def register_locals(self, params):#{{{
         """ Scans through the parameters and calls register_local() for each """
         import inspect
         a = inspect.getargspec(self.__init__)
@@ -192,15 +197,12 @@ class AbstractMeepModel(meep.Callback): #{{{
         for (param, val) in params.iteritems():
             if param != 'self' and param not in preferred_params:
                 self.register_local(param, val)
-
-    def eps(self, r):
-        """ Scans through materials and returns the high-frequency part of permittivity for the first in the list. 
-        Be careful when materials overlap - their polarizabilities still sum up, making a nonrealistic result. """
-        for mat in self.materials:
-            if mat.where(r): return mat.eps         ## TODO: "realCproject": will MEEP use the natural speed of light 3e8 m/s, if this is multiplied by eps0?
-        else: return 1.                             ## TODO: and here too   (... this also needs that similar approach is used to define mu=mu0 everywhere)
-
-    def build_polarizabilities(self, structure):
+        #}}}
+    def f_c(self):#{{{
+        """ critical_frequency for FDTD stability """
+        return c / np.pi/self.resolution/meep.use_Courant() 
+        #}}}
+    def build_polarizabilities(self, structure):#{{{
         """ 
         This is a helper to define the susceptibilities using the callback.
         It goes through all polarizabilities for all materials. 
@@ -224,14 +226,14 @@ class AbstractMeepModel(meep.Callback): #{{{
                 if "lorentzian_susceptibility" in dir(meep):
                     ## for meep 1.2 or newer
                     structure.add_susceptibility(next_cb, meep.E_stuff, 
-                            meep.lorentzian_susceptibility(polariz['omega']/c, polariz['gamma']/c))     ## todo "realCproject":
+                            meep.lorentzian_susceptibility(polariz['omega']/c, polariz['gamma']/c))     ## todo #realCproject":
                     #else:todo: fix in python-meep
                         #print dir(meep)
                         #structure.add_susceptibility(next_cb, meep.E_stuff, 
                                 #meep.drude_susceptibility(polariz['omega']/c, polariz['gamma']/c)) 
                 else:
                     ## for meep 1.1.1 or older
-                    structure.add_polarizability(next_cb, polariz['omega']/c, polariz['gamma']/c)       ## todo "realCproject":
+                    structure.add_polarizability(next_cb, polariz['omega']/c, polariz['gamma']/c)       ## todo #realCproject":
 
             # TODO  fix crashing 
             #if 'chi2' in dir(material):
@@ -251,32 +253,54 @@ class AbstractMeepModel(meep.Callback): #{{{
             #             #set_chi3(meep::structure *,meep::component,meep::material_function &)
             #             #set_chi3(meep::structure *,meep::material_function &)
             #             #set_chi3(meep::structure *,double (*)(meep::vec const &)) XXX this is perhaps used XXX
+        #}}}
+    def fix_material_stability(self, material, f_c="Auto", verbose="false"):#{{{
+        if f_c == "Auto": f_c = self.f_c()
 
-    def TestMaterials(self, verbose="false"):#{{{
-        print "OBSOLETE TestMaterials"
-        self.prepare_materials(verbose=verbose)
-    #}}}
-    def prepare_materials(self, verbose="false"):
+        ## Check and fix the first stability criterion
+        for osc in material.pol[:]:
+            if osc['omega'] > f_c: 
+                material.eps += osc['sigma']
+                material.pol.remove(osc)
+
+        ## Find possible Drude terms and fix them if they break the 2nd stability criterion
+        for osc in material.pol:
+            if osc['omega'] < 1:      ## detects Drude term, TODO make more general (or even define new parameters for Drude term)
+                ## Retrieve the properties of the Drude term
+                gamma    = osc['gamma'] * 2*np.pi  # angular scattering frequency 
+
+                ## Real part of permittivity is roughly constant under the scattering frequency, `gamma', 
+                ## and grows above it. To push permittivity above zero at f_c, gamma must be lower than f_c. 
+                max_gamma = f_c * 0.5
+                if osc['gamma'] > max_gamma: 
+                    osc['gamma'] = max_gamma
+
+                ## For a typical Drude conductive material, permittivity is so a big negative number at low frequencies,
+                ## so pushing it above 1 at high frequencies does not make any appreciable error.
+                ## To be on the safe side, we ensure eps' > 1 even at f_c*0.5.
+                eps_at_fc = np.real(analytic_eps(material, freq=f_c * 0.5))
+                if eps_at_fc < 1:
+                    material.eps += 1 - eps_at_fc
+        #}}}
+    def test_materials(self, verbose="false"):#{{{
         """ 
         1) Verify the material definition will not introduce instabilities in FDTD
         2) Call the where() function for each material, in order to make sure there are no errors
         (SWIG callback does not report where the error occured, it just crashes) 
         """
-        f_c = c / np.pi/self.resolution/meep.use_Courant() ## critical_frequency
-        for material in self.materials: 
-            ## Check and fix the first stability criterion
-            for n, osc in enumerate(material.pol):
+        f_c = self.f_c()
+        for n, material in enumerate(self.materials): 
+            ## Check the first stability criterion (that MEEP checks, but in a wrong way)
+            for osc in material.pol:
                 if osc['omega'] > f_c: 
-                    meep.master_printf("\n\tWARNING: the oscillator %d in material `%s' defined above the critical frequency (%g) \n\n" % (n, material.name, f_c))
-                    material.eps += osc['sigma']
-                    material.pol.remove(osc)
+                    meep.master_printf("\n\tWARNING: the oscillator %d in material `%s' defined above the critical frequency (%g)." % (n, material.name, f_c))
+                    meep.master_printf("\n\t         It may help to run fix_material_stability for this material, or edit it manually.\n\n")
 
-
-            ## Check the second numerical stability criterion (that MEEP does not) 
+            ## Check the 2nd stability criterion for all remaining oscillators
             eps_fc      = analytic_eps(self.materials[0], f_c)
             eps_minimum = meep.use_Courant()**2 * 3 # for three dimensions (2-D simulations are safer as they multiply by 2 only, but it is ignored here)
             if (eps_fc.real < eps_minimum):
-                meep.master_printf("\n\tWARNING: at the critical frequency %f, real permittivity of %s is below the criterion for stability (%f < %f)\n\n"
+                meep.master_printf("\n\tWARNING: at the critical frequency %f, real permittivity of %s is below the criterion for stability (%f < %f)"
                         % (f_c, material.name, eps_fc, eps_minimum))
 
             ## Test whether the `where()' function 
@@ -288,9 +312,9 @@ class AbstractMeepModel(meep.Callback): #{{{
                         else:               # 2D case
                             material.where(meep.vec(x, y))
             else:       
-                meep.master_printf("\n\tWARNING: `where' parameter not a function, material not used: %s\n\n" % (material.name))
+                meep.master_printf("\n\tWARNING: `where' parameter is not a function, material not used: %s\n\n" % (material.name))
                 self.materials.remove(material)
-#}}}
+        #}}}
 
 ## Geometrical primitives to help defining the geometry
 def in_xslab(r,cx,d):#{{{
@@ -338,12 +362,11 @@ f.add_volume_source(meep.Ex, srctype, srcvolume, meep.AMPL)
 ## BTW could one not use an anonymous object here? How does it cope with this? meep.set_AMPL_Callback(af.__disown__())
 ## o = type('AmplitudeFactor', (meep.Callback,), { "complex_vec": lambda xxx})
 ## ...
-
 """
 #}}}
 
 
-## === Initialization of the simulation ===
+## === Initialization of the materials, structure and whole simulation ===
 def permittivity2conductivity(complex_eps, freq):#{{{
     """
     Enables to use the same dispersive materials for time- and frequency-domain simulation
@@ -409,111 +432,6 @@ class MyConductivity(meep.Callback):#{{{            %% TODO rename to Conductivi
                 return permittivity2conductivity(analytic_eps(material, self.frequency), self.frequency)
         else: return 0
 #}}}
-def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range=(1e10, 1e16), mark_freq=[], draw_instability_block=None):#{{{
-    """ Plots complex permittivity of the materials to a PNG file
-
-    Accepts list of materials
-    """
-    from scipy.constants import epsilon_0
-    import matplotlib
-    matplotlib.use('Agg') ## Enable plotting even in the GNU screen session
-    import matplotlib.pyplot as plt
-
-    matplotlib.rc('text', usetex=True)
-    matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}') # \usepackage{lmodern}, 
-
-    #for material in list(to_plot): ## autoscale x axis?
-        #for pol in material.pol:
-            #if freq_range[1] < pol['omega']: freq_range[1] = pol['omega']*2
-
-    frequency = 10**np.arange(np.log10(freq_range[0]), np.log10(freq_range[1]), .01)
-
-    plt.figure(figsize=(7,6))
-    colors = ['#000000', '#004400', '#003366', '#000088', '#440077', 
-              '#661100', '#AA8800', '#00AA00', '#0099DD', '#888888', '#dd2200', 
-              '#0044dd']
-
-    subplotnumber = 2 if plot_conductivity else 1
-
-    for material in list(to_plot):
-        plt.subplot(subplotnumber,1,1)
-        if colors: color = colors.pop()
-        else: color = 'black'
-        label = getattr(material, 'shortname', material.name)
-        #print material
-        eps = np.conj(analytic_eps(material, frequency))
-        #R = abs((1-eps**.5)/(1+eps**.5))**2     ## Intensity reflectivity
-        plt.plot(frequency, np.real(eps), color=color, label=material.name, ls='-') #  
-        plt.plot(frequency, np.imag(eps), color=color, label='', ls='--') # 
-        plt.ylabel(u"relative permittivity $\\varepsilon_r$")
-        #plt.ylabel(u"Intensity reflectivity")
-
-        ylim = (-1e7, 1e3); plt.ylim(ylim); plt.yscale('symlog')
-        #ylim = (-420, 280); plt.ylim(ylim); plt.yscale('linear')
-
-        plt.xscale('log')
-        plt.legend(prop={'size':11}, loc='upper left')
-        #plt.legend(prop={'size':10}, loc='upper right')
-        #plt.ylim(ymin=1e-2); 
-        plt.grid(True)
-
-
-
-        if plot_conductivity:
-            # XXX temporary
-            gamma = 1.5e+13
-            f_p = 2.07153080589e+14
-            omega_p =  1.3015811923e+15
-            omega_p = 1.3015811923e+15 # / (2*np.pi)**.5
-            # XXX                   #  ^^ ?????????? ^
-
-            plt.subplot(subplotnumber,1,2)
-            label = ""
-            omega = 2*np.pi*frequency
-            cond = eps * omega * epsilon_0 * 1j ## for positive frequency convention
-            #cond = eps * omega * epsilon_0 / 1j ## for negative frequency convention
-
-            plt.plot(frequency, np.real(cond), color=color, label=material.name, ls='-')
-            plt.plot(frequency, np.imag(cond), color=color, label="", ls='--')
-
-            #plt.plot(frequency, np.real(1./cond)*1e12, color=color, lw=1.5, label=("$\\rho^{'}\cdot 10^{12}$"), ls=':') ## (real) resistivity
-
-            ## Low-frequency limits for pseudo-Drude model
-            #plt.plot(frequency, np.ones_like(omega) * omega_p**2 * epsilon_0 / gamma, color='k', label=label, ls='-', lw=.3)
-            #plt.plot(frequency, omega * (-epsilon_0 + omega_p**2 * epsilon_0 / gamma**2), color='k', label=label, ls='--', lw=.3)
-            ## High-frequency limits for pseudo-Drude model
-            #plt.plot(frequency, omega**-2 * (omega_p**2 * epsilon_0 * gamma), color='g', label=label, ls='-', lw=.3)
-            #plt.plot(frequency, omega * -epsilon_0            , color='g', label=label, ls='--', lw=.3)
-                                                    #^??????^/(2*np.pi)
-            plt.ylabel(u"conductivity $\\sigma$")
-            plt.yscale('symlog'); 
-            plt.ylim((-1e9, 1e12)); 
-            plt.xscale('log'); plt.grid(True)
-
-            plt.xlabel(u"frequency $f$ [Hz]") 
-
-            ## TODO check this and perhaps remove:
-            #plt.subplot(subplotnumber,1,3)
-            #plt.plot(frequency, -np.real(cond), color=color, label=label, ls='-')
-            #plt.plot(frequency, -np.imag(cond), color=color, label="", ls='--')
-            #
-            #
-            #plt.ylabel(u"negative valued")
-            #plt.yscale('log'); 
-            #plt.xscale('log'); plt.legend(); plt.grid(True)
-
-
-    ## Annotate frequencies and finish the graph 
-    plt.subplot(subplotnumber,1,1)
-    annotate_frequency_axis(mark_freq, log_y=True, arrow_length=50) # TODO , print_freq=True
-    if draw_instability_block:
-        plt.gca().add_patch(plt.Rectangle((draw_instability_block[0], ylim[0]), 1e20, draw_instability_block[1]-ylim[0], color='#ffddaa'))
-
-
-    plt.xlabel(u"frequency $f$ [Hz]") 
-    plt.savefig(filename, bbox_inches='tight')
-    plt.savefig(filename+".pdf", bbox_inches='tight')
-#}}}
 
 def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y=False):#{{{
     """
@@ -536,6 +454,105 @@ def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y
                 arrowprops  = arrowprops,       # comment out to disable arrow
                 )
 #}}}
+def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range=(1e10, 1e18), mark_freq=[], draw_instability_block=None):#{{{
+    """ Plots complex permittivity of the materials to a PNG file
+
+    Accepts list of materials
+    """
+
+    matplotlib.rc('text', usetex=True)
+    matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}') # \usepackage{lmodern}, 
+
+    #for material in list(to_plot): ## autoscale x axis?
+        #for pol in material.pol:
+            #if freq_range[1] < pol['omega']: freq_range[1] = pol['omega']*2
+
+    frequency = 10**np.arange(np.log10(freq_range[0]), np.log10(freq_range[1]), .01)
+
+    plt.figure(figsize=(7,6))
+    colors = ['#000000', '#004400', '#003366', '#000088', '#440077', 
+              '#661100', '#AA8800', '#00AA00', '#0099DD',  '#dd2200', 
+              '#0044dd','#888888']
+
+    subplotnumber = 2 if plot_conductivity else 1
+
+
+    for material in list(to_plot):
+        if colors: color = colors.pop()
+        else: color = 'black'
+        label = getattr(material, 'shortname', material.name)
+        plt.subplot(subplotnumber,1,1)
+
+        eps = np.conj(analytic_eps(material, frequency)) ## FIXME eps should be computed as conjugated by default
+
+        plt.subplot(subplotnumber,1,1)
+        plt.plot(frequency, np.real(eps), color=color, label=material.name, ls='-') #  
+        plt.plot(frequency, np.imag(eps), color=color, label='', ls='--') # 
+        #R = abs((1-eps**.5)/(1+eps**.5))**2     ## Intensity reflectivity
+
+        if plot_conductivity:
+            plt.subplot(subplotnumber,1,2)
+            label = ""
+            omega = 2*np.pi*frequency
+            cond = eps * omega * epsilon_0 * 1j ## for positive frequency convention
+            #cond = eps * omega * epsilon_0 / 1j ## for negative frequency convention
+
+            plt.plot(frequency, np.real(cond), color=color, label=material.name, ls='-')
+            plt.plot(frequency, np.imag(cond), color=color, label="#", ls='--')
+
+
+            #plt.plot(frequency, np.real(1./cond)*1e12, color=color, lw=1.5, label=("$\\rho^{'}\cdot 10^{12}$"), ls=':') ## (real) resistivity
+
+            # XXX temporary
+            #gamma = 1.5e+13
+            #f_p = 2.07153080589e+14
+            #omega_p =  1.3015811923e+15
+            #omega_p = 1.3015811923e+15 # / (2*np.pi)**.5
+
+            ## Low-frequency limits for pseudo-Drude model
+            #plt.plot(frequency, np.ones_like(omega) * omega_p**2 * epsilon_0 / gamma, color='k', label=label, ls='-', lw=.3)
+            #plt.plot(frequency, omega * (-epsilon_0 + omega_p**2 * epsilon_0 / gamma**2), color='k', label=label, ls='--', lw=.3)
+            ## High-frequency limits for pseudo-Drude model
+            #plt.plot(frequency, omega**-2 * (omega_p**2 * epsilon_0 * gamma), color='g', label=label, ls='-', lw=.3)
+            #plt.plot(frequency, omega * -epsilon_0            , color='g', label=label, ls='--', lw=.3)
+                                                    #^??????^/(2*np.pi)
+            # XXX                   #  ^^ ?????????? ^
+
+            ## TODO check this and perhaps remove:
+            #plt.subplot(subplotnumber,1,3)
+            #plt.plot(frequency, -np.real(cond), color=color, label=label, ls='-')
+            #plt.plot(frequency, -np.imag(cond), color=color, label="", ls='--')
+            #
+            #
+            #plt.ylabel(u"negative valued")
+            #plt.yscale('log'); 
+            #plt.xscale('log'); plt.legend(); plt.grid(True)
+
+
+
+    ## Annotate frequencies and finish the graph 
+    plt.subplot(subplotnumber,1,1)
+    plt.xlabel(u"frequency $f$ [Hz]") 
+    plt.ylabel(u"relative permittivity $\\varepsilon_r$")
+    plt.xscale('log'); plt.grid(True)
+    ylim = (-1e7, 1e6); plt.ylim(ylim); plt.yscale('symlog')
+    #ylim = (-420, 280); plt.ylim(ylim); plt.yscale('linear')
+    annotate_frequency_axis(mark_freq, log_y=True, arrow_length=50) # TODO , print_freq=True
+    if draw_instability_block:
+        plt.gca().add_patch(plt.Rectangle((draw_instability_block[0], ylim[0]), 1e20, draw_instability_block[1]-ylim[0], color='#ffddaa'))
+
+    if plot_conductivity:
+        plt.subplot(subplotnumber,1,2)
+        plt.ylabel(u"conductivity $\\sigma$")
+        plt.xscale('log'); plt.grid(True)
+        plt.yscale('symlog'); plt.ylim((-1e12, 1e12)); 
+        plt.xlabel(u"frequency $f$ [Hz]") 
+
+    plt.xlabel(u"frequency $f$ [Hz]") 
+    plt.savefig(filename, bbox_inches='tight')
+    plt.savefig(filename+".pdf", bbox_inches='tight')
+#}}}
+
 def init_structure(model, volume, sim_param, pml_axes):#{{{
     """
     This routine wraps the usual tasks needed to set up a realistic simulation with meep.
@@ -561,7 +578,6 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
         ## Define the frequency-independent epsilon for all materials (needed here, before defining s, or unstable)
         model.double_vec = model.eps
         meep.set_EPS_Callback(model.__disown__())
-        model.TestMaterials() ## detect various errors as soon as possible
         structure = init_perfectly_matched_layers()
 
         ## Add all the materials
@@ -579,7 +595,6 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
         ## Define the frequency-independent epsilon for all materials (has to be done _before_ defining s, otherwise unstable)
         my_eps = MyHiFreqPermittivity(model, sim_param['frequency'])
         meep.set_EPS_Callback(my_eps.__disown__())
-        model.TestMaterials() ## detect various errors as soon as possible
         structure = init_perfectly_matched_layers()
         # TODO display a warning about freq-domain neglecting chi2, chi3 (if defined and nonzero in some of materials)
 
@@ -629,9 +644,9 @@ def harminv(x, y, d=100, f=30, amplitude_prescaling=1):#{{{
 ## Saving and loading data (not using MEEP functions)
 def savetxt(fname, X, header, **kwargs):#{{{ 
     """
-    Fixme - This function will be superseded by numpy.savetxt
     Its use is for older versions of the library that do not accept the `header' parameter
     """
+    #FIXME - This function will be superseded by numpy.savetxt
     with open(fname, "w") as outfile: 
         outfile.write(header)
         np.savetxt(outfile, X, **kwargs)
@@ -653,72 +668,6 @@ def loadtxt_columns(filename):#{{{
         for line in datafile:
             if ('column' in line.lower()): columns.append(line.strip().split(' ', 1)[-1])
     return columns
-#}}}
-def save_s_params_old(name="output.dat", freq=None, s11=None, s12=None, model=None, polar_notation=True, truncate=True): #{{{     
-    # TODO rewrite simulations to use save_txt instead, and delete this mercilessly
-    """ Saves the s-parameters to a file, including comments """
-    with open(model.simulation_name+".dat", "w") as outfile: 
-        outfile.write("#Parameters Parameters\n")
-        outfile.write("#param layer_thickness[m],%.6e\n" % (model.monitor_z2 - model.monitor_z1 - 2*model.padding))
-        if "interesting_frequencies" in dir(model): interest_freq = model.interesting_frequencies 
-        else: interest_freq = (0, model.srcFreq+model.srcWidth)
-        outfile.write("#param plot_freq_min[Hz],%.3e\n" % interest_freq[0])
-        outfile.write("#param plot_freq_max[Hz],%.3e\n" % interest_freq[1])
-        outfile.write("#param simulation_orig_name,%s\n" % model.simulation_name)
-        outfile.write(model.parameterstring)
-
-        ## Truncate the data sets
-        if truncate:
-            mask = np.logical_and(freq>interest_freq[0], freq<interest_freq[1])
-            (s11, s12, freq) = map(lambda arr: arr[mask], (s11, s12, freq))
-
-        if polar_notation:
-            ## Convert to polar notation
-            s11amp, s12amp, s11phase, s12phase = abs(s11), abs(s12), get_phase(s11), get_phase(s12)
-            ## Save polar
-            outfile.write("#x-column Frequency [Hz]\n#Column Reflection amplitude\n#Column Reflection phase\n" + \
-                        "#Column Transmission amplitude\n#Column Transmission phase\n")
-            np.savetxt(outfile, zip(freq, s11amp, s11phase, s12amp, s12phase), fmt="%.8e")
-        else:
-            ## Save cartesian
-            # TODO should save in such format that PKGraph understands complex values
-            outfile.write("#x-column Frequency [Hz]\n#Column Reflection Re\n#Column Reflection Im\n" + \
-                        "#Column Transmission Re\n#Column Transmission Im\n")
-            np.savetxt(outfile, zip(freq, s11.real, s11.imag, s12.real, s12.imag), fmt="%.8e")
-#}}}
-def load_rt_old(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=None, truncate=True): #{{{   # TODO rename this to load_s_params
-    """ Loads the reflection and transmission spectra and simulation settings 
-
-    Returns:
-    * frequency axis
-    * reflection s11 and transmission s12 as complex np arrays
-
-    Compatible with the program used in our laboratory (PKGraph), uses polar notation for complex data: 
-    * parameters in header like: #param name,value
-    * column identification like: #column Ydata
-    * data columns in ascii separated by space
-    Expects polar data with columns: frequency, s11 ampli, s11 phase, s12 ampli, s12 phase
-    """
-    with open(filename+'.dat') as datafile:
-        for line in datafile:
-            if line[0:1] in "0123456789": break         # end of file header
-            value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
-            if ("layer_thickness" in line) and (layer_thickness == None): d = float(value)
-            if ("plot_freq_min" in line) and (plot_freq_min == None): plot_freq_min = float(value)
-            if ("plot_freq_max" in line) and (plot_freq_max == None): plot_freq_max = float(value)
-    xlim = (plot_freq_min, plot_freq_max)
-    (freq, s11amp, s11phase, s12amp, s12phase) = \
-            map(lambda a: np.array(a, ndmin=1), np.loadtxt(filename+".dat", unpack=True)) 
-
-    ## Limit the frequency range to what will be plotted (recommended)
-    #TODO better: 
-    #truncated = np.logical_and(freq>minf, freq<maxf) 
-    #(a, b, c, freq) = map(lambda x: x[truncated], (a, b, c, freq))
-    if truncate:
-        (d0,d1) = np.interp((plot_freq_min, plot_freq_max), freq, range(len(freq)))
-        (freq, s11amp, s11phase, s12amp, s12phase) = \
-                map(lambda a: a[int(d0):int(d1)], (freq, s11amp, s11phase, s12amp, s12phase))
-    return freq, s11amp, s11phase, s12amp, s12phase, xlim, (d, plot_freq_min, plot_freq_min)
 #}}}
 
 ## Useful for making 3D snapshots of the fields
@@ -887,10 +836,12 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     (works for both time- and freq-domain simulation) 
 
     Separate forward and backward waves in time domain                   +-----------------+           
-    (both electric and magnetic field needed for this)         -- a1 ->|MP1|--+---s12--->|MP2| -- b2 --> 
+    (both electric and magnetic fields needed for this)       -- in1 ->|MP1|--+---s12--->|MP2| -- out2 --> 
          a ... inputs; b ... outputs                                   |MP1| s11         |MP2|       
-         1 ... front port, 2 ... rear port (on z-axis)         <- b1 --|MP1|<-'          |MP2| <- a2=0 --
+         1 ... front port, 2 ... rear port (on z-axis)        <- out1 -|MP1|<-'          |MP2| <- in2=0 --
     MP1 and MP2 are monitor planes provided                              +------structure--+           
+
+    Allows to separate forward/backward waves even under oblique incidence
     """
     ## TODO document function parameters
     ## TODO allow omitting second monitor (-> returns s12=None)
@@ -900,7 +851,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     t, Ex2 = monitor2_Ex.get_waveforms()
     t, Hy2 = monitor2_Hy.get_waveforms()
 
-    ## Hann-window fade-out to suppress spectral leakage
+    ## Hann-window fadeout to suppress spectral leakage
     if not frequency_domain:
         for field in (Ex1, Hy1, Ex2, Hy2 ):
             field[t>max(t)*.8] = field[t>max(t)*.8]*(.5 + .5*np.cos(np.pi * (t[t>max(t)*.8]/max(t)-.8)/(1-.8)))
@@ -909,24 +860,15 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         import matplotlib
         #matplotlib.use('Agg') ## Enable plotting even in the GNU screen session?
         from matplotlib import pyplot as plt
-        plt.figure(figsize=(6,5))
-        #matplotlib.rc('text', usetex=True)
-        #matplotlib.rc('font', size=8)
-        #matplotlib.rc('text.latex', preamble = \
-                #'\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, \usepackage{lmodern},')
+        plt.figure(figsize=(7,6))
         plt.plot(t, abs(Ex1), label="Ex1")
         plt.plot(t, abs(Hy1), label="Hy1")
         plt.plot(t, abs(Ex2), label="Ex2")
         plt.plot(t, abs(Hy2), label="Hy2")
 
-        np.savetxt("timedomain_Ex1_Kx%f.dat"%Kx, zip(t, Ex1), fmt="%.8e")
-        np.savetxt("timedomain_Ex2_Kx%f.dat"%Kx, zip(t, Ex2), fmt="%.8e")
-
-        #plt.ylim(1, 1e6)
         plt.gca().set_ylim(ymin=1e-10)
         plt.legend(prop={'size':10}, loc='upper right')
         plt.xlabel('Time'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
-        #plt.title('Time-domain field amplitudes')
         plt.yscale("log")
         plt.savefig("amplitudes_time_domain.png", bbox_inches='tight')
     except:
@@ -1190,13 +1132,13 @@ class AmplitudeMonitorPoint(AmplitudeMonitorPlane):#{{{
             s11 = amplitude_front_out / amplitude_front_in
             s12 = amplitude_rear_out / amplitude_front_in
 """#}}}
-def lorentzian_unstable_check_new(model, dt, quit_on_warning=True): #{{{
+def lorentzian_unstable_check_new(model, dt, quit_on_warning=True): #{{{ ## disused
     """
     Experimental routine
     """
     for mat in model.materials:
         eps_ts = analytic_eps(mat, 1/dt/np.pi)  
-        if np.real(eps_ts)<0: ## <--- this is WRONG, corrected newly in Test_materials
+        if np.real(eps_ts)<0: ## <--- this is WRONG, corrected newly in test_materials()
             meep.master_printf("Warning: for material '%s', the permittivity is negative at the critical frequency eps(1/pi/dt)=eps(%g)=%s.\n" % \
                         (mat.name, 1/dt/np.pi, eps_ts.__str__()));
             if quit_on_warning: quit()
@@ -1212,4 +1154,76 @@ def lorentzian_unstable_check_new(model, dt, quit_on_warning=True): #{{{
                 if quit_on_warning: quit()
 #}}}
 
+def save_s_params_old(name="output.dat", freq=None, s11=None, s12=None, model=None, polar_notation=True, truncate=True): #{{{     
+    # TODO rewrite simulations to use save_txt instead, and delete this mercilessly
+    """ Saves the s-parameters to a file, including comments """
+    with open(model.simulation_name+".dat", "w") as outfile: 
+        outfile.write(model.parameterstring)
 
+        ## Truncate the data sets
+        if truncate:
+            mask = np.logical_and(freq>interest_freq[0], freq<interest_freq[1])
+            (s11, s12, freq) = map(lambda arr: arr[mask], (s11, s12, freq))
+
+        if polar_notation:
+            ## Convert to polar notation
+            s11amp, s12amp, s11phase, s12phase = abs(s11), abs(s12), get_phase(s11), get_phase(s12)
+            ## Save polar
+            outfile.write("#x-column Frequency [Hz]\n#Column Reflection amplitude\n#Column Reflection phase\n" + \
+                        "#Column Transmission amplitude\n#Column Transmission phase\n")
+            np.savetxt(outfile, zip(freq, s11amp, s11phase, s12amp, s12phase), fmt="%.8e")
+        else:
+            ## Save cartesian
+            # TODO should save in such format that PKGraph understands complex values
+            outfile.write("#x-column Frequency [Hz]\n#Column Reflection Re\n#Column Reflection Im\n" + \
+                        "#Column Transmission Re\n#Column Transmission Im\n")
+            np.savetxt(outfile, zip(freq, s11.real, s11.imag, s12.real, s12.imag), fmt="%.8e")
+#}}}
+def load_rt_old(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=None, truncate=True): #{{{   # TODO rename this to load_s_params
+    """ Loads the reflection and transmission spectra and simulation settings 
+
+    Returns:
+    * frequency axis
+    * reflection s11 and transmission s12 as complex np arrays
+
+    Compatible with the program used in our laboratory (PKGraph), uses polar notation for complex data: 
+    * parameters in header like: #param name,value
+    * column identification like: #column Ydata
+    * data columns in ascii separated by space
+    Expects polar data with columns: frequency, s11 ampli, s11 phase, s12 ampli, s12 phase
+    """
+    with open(filename+'.dat') as datafile:
+        for line in datafile:
+            if line[0:1] in "0123456789": break         # end of file header
+            value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
+            if ("layer_thickness" in line) and (layer_thickness == None): d = float(value)
+            if ("plot_freq_min" in line) and (plot_freq_min == None): plot_freq_min = float(value)
+            if ("plot_freq_max" in line) and (plot_freq_max == None): plot_freq_max = float(value)
+    xlim = (plot_freq_min, plot_freq_max)
+    (freq, s11amp, s11phase, s12amp, s12phase) = \
+            map(lambda a: np.array(a, ndmin=1), np.loadtxt(filename+".dat", unpack=True)) 
+
+    ## Limit the frequency range to what will be plotted (recommended)
+    #TODO better: 
+    #truncated = np.logical_and(freq>minf, freq<maxf) 
+    #(a, b, c, freq) = map(lambda x: x[truncated], (a, b, c, freq))
+    if truncate:
+        (d0,d1) = np.interp((plot_freq_min, plot_freq_max), freq, range(len(freq)))
+        (freq, s11amp, s11phase, s12amp, s12phase) = \
+                map(lambda a: a[int(d0):int(d1)], (freq, s11amp, s11phase, s12amp, s12phase))
+    return freq, s11amp, s11phase, s12amp, s12phase, xlim, (d, plot_freq_min, plot_freq_min)
+#}}}
+
+        
+"""
+        
+== Possible errors and clues ==
+    HDF5-DIAG: Error detected in HDF5 (1.8.4-patch1) MPI-process 0:
+      #000: ../../../src/H5F.c line 1514 in H5Fopen(): unable to open file
+    ---> perhaps you defined two slices the same?
+
+
+mpirun has exited due to process rank 1 with PID 2670 on
+    ---> this is harmless
+
+"""

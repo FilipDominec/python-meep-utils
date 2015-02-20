@@ -37,38 +37,7 @@ import numpy as np
 from scipy.constants import epsilon_0, c, pi
 percm = c/1e-2
 
-class material_SiO2_stability_test():#{{{
-    """ Amorphous SiO2  for mid_infrared
-    Optical resonances fitted manually to experimental spectra
-    Note: Discrete Lorentzian oscillators used predict higher losses in the mid-IR region
-    Note2: crystalline SiO2 should be similar, but is slightly birefringent
 
-    From Gunde, M. K.: "Vibrational modes in amorphous silicon dioxide" 
-        Physica B: Physics of Condensed Matter, Volume 292, Issue 3-4, p. 286-295.
-    """
-    def __init__(self, where=None, sigmafactor=1):
-        #self.eps = 2.4          ## used if no VIS/UV oscillators defined; may range from 2.3-2.5 [Huber]
-        #self.eps = 1+.5+.55+ .082+ .663+ .058+ .017
-
-        ## S = 0.5783  eps(f_c)=1                   UNSTAB, ok
-        ## S = 0.5763  eps(f_c)=1                   stab      
-        ## S = 0.5763  eps(f_c)=.99                 stab, WEIRD!
-        ## S = 0.5783  eps(f_c)=.95                 UNSTAB, ok
-        ## S = 0.5763  eps(f_c)=.9989+0.015j        UNSTAB, WEIRD!
-        #M S = 0.5763  eps(f_c)=.9989+0.015j        UNSTAB, WEIRD!
-
-        omega0 = 3.0e-10
-        omega = 3.0e13
-        self.eps = 1.42
-
-        self.pol = [
-                #{'omega': 447*percm, 'gamma': 49*percm, 'sigma':.923},
-                {'omega': omega0, 'gamma': 9e12, 'sigma':.523 * (omega/omega0)**2},
-                ]
-        self.name = "Amorphous silica glass (SiO2) for IR range"
-        self.shortname = "SiO2 (IR)"
-        self.where = where
-#}}}
 
 ## -- Generic --
 class material_dielectric():#{{{
@@ -130,7 +99,6 @@ class material_DrudeMetal():#{{{
         but sometimes the simulation is unstable even though and then it has to be reduced e.g. to 1e-2 or to even smaller value.
         """
 
-        print("DRUEDE\n") 
         ## Design a new metallic model. We use 'omega_p' and 'gamma' in angular units, as is common in textbooks
         ## We need to put the scattering frequency below fc, so that Re(eps) is not constant at f_c (it would hinder
         ## our trick that ensures FDTD stability)
@@ -144,11 +112,10 @@ class material_DrudeMetal():#{{{
         ## Add such an high-frequency-epsilon value that shifts the permittivity to be positive at f_c
         ## If self.eps>1, the frequency where permittivity goes positive will generally be less than f_p
         self.eps = max((omega_p/2/np.pi / f_c)**2,   1.) + epsplus
-        print 'self.eps', self.eps
-
-        print "gamma =", self.gamma
-        print 'omega_p = ', omega_p
-        print 'LFC = %.3e' % (omega_p**2 * epsilon_0 / self.gamma)
+        #print 'self.eps', self.eps
+        #print "gamma =", self.gamma
+        #print 'omega_p = ', omega_p
+        #print 'LFC = %.3e' % (omega_p**2 * epsilon_0 / self.gamma)
 
         ## Feed MEEP with a Lorentz oscillator of arbitrarily low frequency f_0 so that it behaves as the Drude model
         omega_0 = 1e7           
@@ -156,7 +123,7 @@ class material_DrudeMetal():#{{{
                 {'omega': omega_0/(2*np.pi), 'gamma': self.gamma/(2*np.pi), 'sigma': (omega_p/omega_0)**2}, # (Lorentz) model
                 ## Note: meep also uses keywords 'omega' and 'gamma', but they are non-angular units
                 ]
-        self.name = "Drude metal for <%.2g Hz" % f_c
+        self.name = "Drude metal for up to %.2g Hz" % f_c
         self.where = where
 #}}}
 
@@ -635,32 +602,6 @@ class material_Au():#{{{
         self.shortname = "Au"
         self.where = where
 #}}}
-class material_Au2():#{{{
-    """ Drude-Lorentz model for Gold """
-    def __init__(self, where=None, resistivity=0., eps=0.):
-        #self.eps = 1. 
-        self.eps = 18.86 
-        omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
-        self.pol = [
-                {'omega': omega0,	'gamma': 1e6*c*0.042747, 'sigma': 4.0314e+41 * 1e-20**2 * (1e6*c)**2 / omega0**2},
-                ]
-        self.name = "Gold (Drude-Lorentz)"
-        self.shortname = "Au"
-        self.where = where
-#}}}
-class material_Au3():#{{{
-    """ Drude-Lorentz model for Gold """
-    def __init__(self, where=None, resistivity=0., eps=0.):
-        #self.eps = 1. 
-        self.eps = 18.86 
-        omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
-        self.pol = [
-                {'omega': omega0,	'gamma': 0, 'sigma': 4.0314e+41 * 1e-20**2 * (1e6*c)**2 / omega0**2},
-                ]
-        self.name = "Gold (Drude-Lorentz)"
-        self.shortname = "Au"
-        self.where = where
-#}}}
 
 
 ## -- Obsoleted or experimental -- 
@@ -752,3 +693,117 @@ class material_NbN_03K():#{{{
         self.where = where
 #}}}
 
+class material_AuL():#{{{
+    """ Drude-Lorentz model for Gold """
+    def __init__(self, where=None, resistivity=0., eps=0.):
+        #self.eps = 1. 
+        self.eps = 1. 
+        omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
+        self.pol = [
+                {'omega': omega0,	'gamma': 1e6*c*0.042747, 'sigma': 4.0314e+39 * 1e-20**2 * (1e6*c)**2 / omega0**2},
+                {'omega':1e6*c*0.33472, 'gamma':1e6*c*0.19438, 'sigma':11.363}, ## sum of Lorentzians = 17.86
+                {'omega':1e6*c*0.66944, 'gamma':1e6*c*0.27826, 'sigma':1.1836},
+                {'omega':1e6*c*2.3947 , 'gamma':1e6*c*0.7017 , 'sigma': 0.65677},
+                {'omega':1e6*c*3.4714 , 'gamma':1e6*c*2.0115 , 'sigma': 2.6455},
+                {'omega':1e6*c*10.743 , 'gamma':1e6*c*1.7857 , 'sigma': 2.0148},
+                ]
+        self.name = "Gold (Drude-Lorentz)"
+        self.shortname = "Au"
+        self.where = where
+#}}}
+class material_Au2():#{{{
+    """ Drude-Lorentz model for Gold """
+    def __init__(self, where=None, resistivity=0., eps=0.):
+        #self.eps = 1. 
+        self.eps = 18.86 
+        omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
+        self.pol = [
+                {'omega': omega0,	'gamma': 1e6*c*0.042747, 'sigma': 4.0314e+41 * 1e-20**2 * (1e6*c)**2 / omega0**2},
+                ]
+        self.name = "Gold (Drude-Lorentz)"
+        self.shortname = "Au"
+        self.where = where
+#}}}
+class material_Au3():#{{{
+    """ Drude-Lorentz model for Gold """
+    def __init__(self, where=None, resistivity=0., eps=0.):
+        #self.eps = 1. 
+        self.eps = 18.86 
+        omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
+        self.pol = [
+                {'omega': omega0,	'gamma': 0, 'sigma': 4.0314e+41 * 1e-20**2 * (1e6*c)**2 / omega0**2},
+                ]
+        self.name = "Gold (lossy Drude)"
+        self.shortname = "Au"
+        self.where = where
+#}}}
+
+class material_AuL():#{{{
+    """ Drude-Lorentz model for Gold - new prototype
+    
+    
+    """
+    def __init__(self, where=None, resistivity=0., eps=0.):
+        #self.eps = 1. 
+        self.eps = 1. 
+        self.pol = [
+                #{'omega': omega0,	    'gamma': 1e6*c*0.042747, 'sigma': 4.0314e+39 * 1e-20**2 * (1e6*c)**2 / omega0**2},
+                {'omega':1e6*c*0.33472, 'gamma':1e6*c*0.19438, 'sigma':11.363}, ## sum of Lorentzians = 17.86
+                {'omega':1e6*c*0.66944, 'gamma':1e6*c*0.27826, 'sigma':1.1836},
+                {'omega':1e6*c*2.3947 , 'gamma':1e6*c*0.7017 , 'sigma': 0.65677},
+                {'omega':1e6*c*3.4714 , 'gamma':1e6*c*2.0115 , 'sigma': 2.6455},
+                {'omega':1e6*c*10.743 , 'gamma':1e6*c*1.7857 , 'sigma': 2.0148},
+                ]
+
+        #self.Drude_omegap = 4.0314e+39 * 1e-20**2 * (1e6*c)**2)**.5, 
+        #self.Drude_gamma = 1e6*c*0.042747
+
+        self.name = "Gold (New Drude-Lorentz)"
+        self.shortname = "Au"
+        self.where = where
+#}}}
+
+class material_SiO2_stability_test():#{{{
+    """ Amorphous SiO2  for mid_infrared
+    Optical resonances fitted manually to experimental spectra
+    Note: Discrete Lorentzian oscillators used predict higher losses in the mid-IR region
+    Note2: crystalline SiO2 should be similar, but is slightly birefringent
+
+    From Gunde, M. K.: "Vibrational modes in amorphous silicon dioxide" 
+        Physica B: Physics of Condensed Matter, Volume 292, Issue 3-4, p. 286-295.
+    """
+    def __init__(self, where=None, sigmafactor=1):
+        #self.eps = 2.4          ## used if no VIS/UV oscillators defined; may range from 2.3-2.5 [Huber]
+        #self.eps = 1+.5+.55+ .082+ .663+ .058+ .017
+
+        ## S = 0.5783  eps(f_c)=1                   UNSTAB, ok
+        ## S = 0.5763  eps(f_c)=1                   stab      
+        ## S = 0.5763  eps(f_c)=.99                 stab, WEIRD!
+        ## S = 0.5783  eps(f_c)=.95                 UNSTAB, ok
+        ## S = 0.5763  eps(f_c)=.9989+0.015j        UNSTAB, WEIRD!
+        #M S = 0.5763  eps(f_c)=.9989+0.015j        UNSTAB, WEIRD!
+
+        omega0 = 3.0e-10
+        omega = 3.0e13
+        self.eps = 1.42
+
+        self.pol = [
+                #{'omega': 447*percm, 'gamma': 49*percm, 'sigma':.923},
+                {'omega': omega0, 'gamma': 9e12, 'sigma':.523 * (omega/omega0)**2},
+                ]
+        self.name = "Amorphous silica glass (SiO2) for IR range"
+        self.shortname = "SiO2 (IR)"
+        self.where = where
+#}}}
+
+class material():#{{{
+    """ Base class for materials """
+    def __init__(self, where=None):
+        self.eps = 1
+        self.pol = [
+                ]
+        self.name = "default material"
+        self.shortname = "default"
+        self.where = where
+
+#}}}
