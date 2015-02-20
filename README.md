@@ -41,16 +41,16 @@ materials, data postprocessing etc. is elaborated there.
 
 
 ## TODO
- * from scipy.misc import imsave; imsave('../docs/static/tutorial-epsilon.png', -N.rot90(epsilon))
- * Use average_field_function instead of my own averaging!
- * use synchronize_fields() instead of shifting H(t) ? - benchmark
- * test averaging on SRR
- * test the Fresnel inversion algorithm on dispersive dielectric slabs
- * fix the stupid SWIG bug: http://sourceforge.net/donate/?user_id=246059#recognition
- * resonant modes extraction via HarmInv, done in a branched file 
- * optimize the structure using D.E (http://inspyred.github.com) or CMA-ES
- * mode separation on the user-defined ports
- * add examples (tests / case study?):
+- [ ] from scipy.misc import imsave; imsave('../docs/static/tutorial-epsilon.png', -N.rot90(epsilon))
+- [ ] Use average_field_function instead of my own averaging!
+- [ ] use synchronize_fields() instead of shifting H(t) ? - benchmark
+- [ ] test averaging on SRR
+- [ ] test the Fresnel inversion algorithm on dispersive dielectric slabs
+- [ ] fix the stupid SWIG bug: http://sourceforge.net/donate/?user_id=246059#recognition
+- [x] resonant modes extraction via HarmInv, done in a branched file 
+- [ ] optimize the structure using D.E (http://inspyred.github.com) or CMA-ES
+- [ ] mode separation on the user-defined ports
+- [x] add examples (tests / case study?):
    * waveguide-splitter
    * metamaterial parameters of dielectric rods (CASE STUDY)
    * metamaterial parameters of dielectric sphere in wire mesh (CASE STUDY)
