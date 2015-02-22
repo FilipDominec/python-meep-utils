@@ -21,16 +21,14 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
         
         ## Constant parameters for the simulation
         self.simulation_name = "SphereArray"    
-        self.pml_thickness = 20e-6
-        self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
-        self.simtime = simtime                          # in seconds 
-        self.srcFreq, self.srcWidth = 1000e9, 2000e9    # [Hz] (note: gaussian source ends at t=10/srcWidth)
+        self.src_freq, self.src_width = 1000e9, 2000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (0e9, 2000e9)    # Which frequencies will be saved to disk
+        self.pml_thickness = 20e-6
 
         self.size_x = cell_size 
         self.size_y = cell_size
-        self.size_z = cells*cell_size + 2*self.pml_thickness + 4*padding
-        self.interesting_frequencies = 1e9, 3e12 
+        self.size_z = cells*cell_size + 2*padding + 4*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
 
         self.register_locals(locals())          ## Remember the parameters
 
@@ -71,8 +69,8 @@ f.use_bloch(meep.Y, -model.Ky/(2*np.pi))
 
 # Add the field source (see meep_utils for an example of how an arbitrary source waveform is defined)
 if not sim_param['frequency_domain']:       ## (temporal source shape)
-    #src_time_type = meep.band_src_time(model.srcFreq/c, model.srcWidth/c, model.simtime*c/1.1)
-    src_time_type = meep.gaussian_src_time(model.srcFreq/c, model.srcWidth/c)
+    #src_time_type = meep.band_src_time(model.src_freq/c, model.src_width/c, model.simtime*c/1.1)
+    src_time_type = meep.gaussian_src_time(model.src_freq/c, model.src_width/c)
 else:
     src_time_type = meep.continuous_src_time(sim_param['frequency']/c)
 srcvolume = meep.volume(                    ## (spatial source shape)
@@ -87,8 +85,9 @@ monitor1_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.mo
 monitor2_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.monitor_z2, **monitor_options)
 monitor2_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
 
-slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
-slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, min_timestep=.05e-12)]
+slices = []
+#slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
+#slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, min_timestep=.05e-12)]
 
 ## Run the FDTD simulation or the frequency-domain solver
 if not sim_param['frequency_domain']:       ## time-domain computation
@@ -112,11 +111,12 @@ else:                                       ## frequency-domain computation
 if meep.my_rank() == 0:
     freq, s11, s12 = meep_utils.get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, 
             frequency_domain=sim_param['frequency_domain'], frequency=sim_param['frequency'], 
-            maxf=model.srcFreq+model.srcWidth, pad_zeros=1.0, Kx=model.Kx, Ky=model.Ky)
+            intf=getattr(model, 'interesting_frequencies', [0, model.src_freq+model.src_width]),
+            pad_zeros=1.0, Kx=model.Kx, Ky=model.Ky)
 
     meep_utils.savetxt(fname=model.simulation_name+".dat", 
             X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)), 
-            header=model.parameterstring)
+            header=model.parameterstring, fmt="%.6e")
 
     with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
     import effparam        # process effective parameters for metamaterials
