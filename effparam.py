@@ -47,7 +47,7 @@ plot_freq_min = 0
 #plot_freq_max = None  ## if None, decide from the input file header
 plot_freq_max = 2.5e12
 padding = None
-autobranch_sampler_position = 0.03
+autobranch_sampler_position = 0.06
 
 np.seterr(all='ignore')      ## do not print warnings for negative-number logarithms etc.
 ## == </user settings> == 

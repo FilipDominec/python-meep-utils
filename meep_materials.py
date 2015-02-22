@@ -591,7 +591,7 @@ class material_Au():#{{{
         self.eps = 1. 
         omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
         self.pol = [
-                {'omega': omega0,	'gamma': 1e6*c*0.042747, 'sigma': 4.0314e+41 * 1e-20**2 * (1e6*c)**2 / omega0**2},
+                {'omega': omega0, 'gamma': 1e6*c*0.042747, 'sigma': 4.0314e+41 * 1e-20**2 * (1e6*c)**2 / omega0**2},
                 {'omega':1e6*c*0.33472, 'gamma':1e6*c*0.19438, 'sigma':11.363}, ## sum of Lorentzians = 17.86
                 {'omega':1e6*c*0.66944, 'gamma':1e6*c*0.27826, 'sigma':1.1836},
                 {'omega':1e6*c*2.3947 , 'gamma':1e6*c*0.7017 , 'sigma': 0.65677},
