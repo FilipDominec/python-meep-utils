@@ -860,8 +860,10 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         if pad_zeros: 
             ## Extend the data range by zeros so that FFT is efficient; (artificially prolonging stable eff param retrieval)
             target_len = 2**np.ceil(np.log(len(Ex1)*(1+pad_zeros))/np.log(2))      ## must be power of two for efficient FFT!
+            print  'target_len', target_len
             append_len = target_len - len(Ex1)
             Ex1, Hy1, Ex2, Hy2  =  map(lambda x: np.append(x, np.zeros(append_len)), (Ex1, Hy1, Ex2, Hy2))
+            print  'target_lenxx', len(Ex1)
 
         ## Calculate the Fourier transform of the recorded time-domain waves
         numpoints = len(Ex1)
@@ -874,11 +876,8 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         (Ex1f, Hy1f, Ex2f, Hy2f) = map(lambda x: np.fft.fft(np.real(x))[0:int(numpoints/2)], (Ex1, Hy1, Ex2, Hy2))
         
         ## Truncate the data ranges to allowed radiating angles, and possibly to minf<freq<maxf
-        print "MAXFFFFFFFFFFFFFFFFFF", np.max(freq)
         truncated = np.logical_and(np.logical_and((Ky**2+Kx**2)<((2*np.pi*freq/c)**2), freq>minf), freq<maxf)
         (Ex1f, Hy1f, Ex2f, Hy2f, freq) = map(lambda x: x[truncated], (Ex1f, Hy1f, Ex2f, Hy2f, freq))
-        print "MAXFFFFFFFFFFFFFFFFFF", np.max(freq)
-        print "MAXFFFFFFFFFFFFFFFFFF", maxf
 
 
     try:
