@@ -875,8 +875,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         
         ## Truncate the data ranges to allowed radiating angles, and possibly to minf<freq<maxf
         print "MAXFFFFFFFFFFFFFFFFFF", np.max(freq)
-        #truncated = np.logical_and((Ky**2+Kx**2)<(2*np.pi*freq/c)**2, freq>minf, freq<maxf) ## did not work at np 1.6.2
-        truncated = np.logical_and(freq>minf, freq<maxf)
+        truncated = np.logical_and(np.logical_and((Ky**2+Kx**2)<((2*np.pi*freq/c)**2), freq>minf), freq<maxf)
         (Ex1f, Hy1f, Ex2f, Hy2f, freq) = map(lambda x: x[truncated], (Ex1f, Hy1f, Ex2f, Hy2f, freq))
         print "MAXFFFFFFFFFFFFFFFFFF", np.max(freq)
         print "MAXFFFFFFFFFFFFFFFFFF", maxf
@@ -891,7 +890,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
 
         plt.yscale("log");   plt.gca().set_ylim(ymin=1e-8)
         plt.yscale("log");   plt.gca().set_ylim(ymin=1e-8)
-        plt.xlim(0, np.max(freq)/15)
+        plt.xlim(0, np.max(freq))
         plt.legend(prop={'size':10}, loc='upper right')
         plt.xlabel('Frequency'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
         plt.savefig("amplitudes_freq_domain.png", bbox_inches='tight')
@@ -940,7 +939,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         plt.plot(freq, abs(out1), label="out1")
         plt.plot(freq, abs(in2), label="in2")
         plt.plot(freq, abs(out2), label="out2")
-        plt.xlim(0, np.max(freq)/15)
+        plt.xlim(0, np.max(freq))
         plt.legend(prop={'size':10}, loc='lower left')
         plt.xlabel('Frequency'); plt.ylabel('Transmitted amplitude')
         #plt.title('Frequency-domain wave amplitudes')

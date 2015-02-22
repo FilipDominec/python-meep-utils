@@ -19,9 +19,7 @@ TODOs:
 """
 import numpy as np
 import sys, os, re, matplotlib 
-matplotlib.use('Agg') ## Enable plotting even in the GNU screen session?
 import matplotlib.pyplot as plt
-plt.ioff() ## is this useful?
 from scipy.optimize import fsolve, fmin
 c = 2.99792458e8        # speed of light
 
@@ -38,18 +36,19 @@ brillouin_boundaries = 1    ## Plots thin lines where the N would exceed the all
                             ## range for 0-th Bloch mode
 autobranch      = 0
 
-plot_publi  = 0     ## prepares nice small graphs for publication
-plot_polar  = 0     ## plots them to polar graphs for diagnostics
-plot_bands  = 0     ## plots them to k-omega graphs for diagnostics
-plot_expe   = 0     ## if 'r.dat', 't.dat', 'N.dat', 'Z.dat', 'eps.dat' or 'mu.dat' available, overlay them
-savedat     = 1     ## saves eff params to PKGraph-compatible ascii file
-savedat_wd  = 1     ##   uses the working directory to save the  eff params
+plot_publi  = 1     ## prepares nice small graphs for publication
+plot_polar  = 1     ## plots them to polar graphs for diagnostics
+plot_bands  = 1     ## plots them to k-omega graphs for diagnostics
+plot_expe   = 1     ## if 'r.dat', 't.dat', 'N.dat', 'Z.dat', 'eps.dat' or 'mu.dat' available, overlay them
+savedat     = 1     ## saves eff params to an ascii file with header
+savedat_wd  = 1     ##   creates an `effparam' directory in the working directory to save the eff params
 find_plasma_frequency = 0 ## find frequencies where epsilon crosses zero
 
 plot_freq_min = 0
 #plot_freq_max = None  ## if None, decide from the input file header
 plot_freq_max = 2.5e12
 padding = None
+autobranch_sampler_position = 0.03
 
 np.seterr(all='ignore')      ## do not print warnings for negative-number logarithms etc.
 ## == </user settings> == 
@@ -72,6 +71,17 @@ def get_simulation_name(argindex=1): #{{{
     if (last_simulation_name[-4:] == ".dat"): last_simulation_name = last_simulation_name[:-4] # strip the .dat extension
     return  last_simulation_name
 #}}}
+def get_cmdline_parameters():#{{{ (unused)
+    # (optional) Manual N branch override
+    if len(sys.argv)>2 and sys.argv[2] != "-"  and __name__ == "__main__": 
+        print "Setting branch:", sys.argv[2]
+        branch_offset = np.ones(len(freq))*int(sys.argv[2])
+        last_simulation_name += "_BRANCH=%s" % sys.argv[2]
+    if len(sys.argv)>3 and sys.argv[3] != "-"  and __name__ == "__main__": 
+        print "Setting branch sign:", sys.argv[3]
+        Nsign = np.ones(len(freq))*int(sys.argv[3])
+        last_simulation_name += "_SIGN=%s" % sys.argv[3]
+    return branch_offset, Nsign#}}}
 def load_rt(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=None, truncate=True, padding=None): #{{{
     """ Loads the reflection and transmission spectra and simulation settings 
 
@@ -373,9 +383,13 @@ last_simulation_name = get_simulation_name()
 freq, s11amp, s11phase, s12amp, s12phase, d, plot_freq_min, plot_freq_max, padding = \
         load_rt(last_simulation_name, plot_freq_min=plot_freq_min, plot_freq_max=plot_freq_max, truncate=False, padding=padding)
 
-## Compensating the additional padding of the monitor planes
+## Convert to complex numbers and compensate for the additional padding of the monitor planes
 s11 = shiftmp(freq, polar2complex(s11amp, s11phase), padding*np.ones_like(freq))
 s12 = shiftmp(freq, polar2complex(s12amp, s12phase), padding*np.ones_like(freq))
+
+## Build the debug plots
+arg = (1+0j-s11**2+s12**2)/2/(s12)
+argLog = np.e**(1j*np.angle(arg))*np.log(1+abs(arg)) ## radially shrinked graph to see the topology
 
 ## Calculate N, Z and try to correct the signs (TODO use K-K branch selection!)
 if len(freq)>2:
@@ -385,10 +399,10 @@ if len(freq)>2:
     if autocorrect_signs: 
 
         ## Take a sample
-        ii = int(float(len(N))/30)
+        ii = int(float(len(N)) * autobranch_sampler_position)
         sampleR = np.real(N[ii])
         sampleI = np.imag(N[ii])
-        #print 'sampleR, sampleI =', sampleR, sampleI
+        print 'sampleR, sampleI =', sampleR, sampleI
 
         ## Fix N sign so that N.imag > 0 
         #nimag = sum(np.clip(N.imag,-10., 10.))
@@ -427,12 +441,8 @@ np.savetxt("last_found_modes.dat", loss_maxima)
 ## Get epsilon and mu
 eps, mu = nz2epsmu(N, Z)
 
-## Verify the results by back-calculating s11, s12
+## Verify the results by back-calculating s11 and s12 to compare with the original values
 s11backcalc, s12backcalc = nz2rt(freq, N, Z, d)
-
-## Build the debug plots
-arg = (1+0j-s11**2+s12**2)/2/(s12)
-argLog = np.e**(1j*np.angle(arg))*np.log(1+abs(arg)) ## shrinked graph to see the topology
 
 ## --- Plotting to cartesian graphs -------------------------------------------- #{{{
 plt.figure(figsize=(15,15))
@@ -720,7 +730,7 @@ if plot_bands and os.path.isdir("band"):
     plt.plot(np.imag(N*freq*d/c), freq, color="#33AA33", label=u'$\\kappa$', ls='--')
 
     ## Detection of bandgap: ratio of the real to the imaginary part of complex wavenumber
-    ## the real part however may reach borders of Brillouin zone: we will use its sine
+    ## we will use the sin() of the real part of k so that it does not matter in which Brillouin zone it is
     try:
         realpart = np.arcsin(np.sin(np.pi * 2*np.real(N*freq/c*d)))
         imagpart = np.abs(np.imag(N*freq/c*d))
@@ -728,14 +738,10 @@ if plot_bands and os.path.isdir("band"):
         ## starts and ends of band-gap
         pbg_starts = np.interp(np.where(pbg_indicator[1:] < pbg_indicator[0:-1]), range(len(freq)), freq)[0]
         pbg_ends   = np.interp(np.where(pbg_indicator[1:] > pbg_indicator[0:-1]), range(len(freq)), freq)[0] 
-        ## Fix the un-started and un-ended bandgaps (TODO)
-        #print len(pbg_starts), len(pbg_ends)
+        ## Fix the un-started and un-ended bandgaps
         if len(pbg_starts) < len(pbg_ends): pbg_starts = np.concatenate([np.array([0]), pbg_starts])
-        #print len(pbg_starts), len(pbg_ends)
         if len(pbg_starts) > len(pbg_ends): pbg_starts = pbg_starts[:-1]
-        #print pbg_ends, pbg_starts
         for start, end in np.vstack([pbg_starts, pbg_ends]).T:
-            #print  start, end
             plt.axhspan(start, end, color='#FFDD00', alpha=.1)
     except:
         print "Bandgap detection failed"
@@ -963,15 +969,4 @@ if plot_polar and os.path.isdir("polar"):
 
 #}}}
 
-def get_cmdline_parameters():#{{{
-    # (optional) Manual N branch override
-    if len(sys.argv)>2 and sys.argv[2] != "-"  and __name__ == "__main__": 
-        print "Setting branch:", sys.argv[2]
-        branch_offset = np.ones(len(freq))*int(sys.argv[2])
-        last_simulation_name += "_BRANCH=%s" % sys.argv[2]
-    if len(sys.argv)>3 and sys.argv[3] != "-"  and __name__ == "__main__": 
-        print "Setting branch sign:", sys.argv[3]
-        Nsign = np.ones(len(freq))*int(sys.argv[3])
-        last_simulation_name += "_SIGN=%s" % sys.argv[3]
-    return branch_offset, Nsign#}}}
 
