@@ -36,12 +36,11 @@ brillouin_boundaries = 1    ## Plots thin lines where the N would exceed the all
                             ## range for 0-th Bloch mode
 autobranch      = 0
 
+savedat     = 1     ## created directory 'effparam' and saves all params to an ascii file with header
 plot_publi  = 1     ## prepares nice small graphs for publication
-plot_polar  = 1     ## plots them to polar graphs for diagnostics
-plot_bands  = 1     ## plots them to k-omega graphs for diagnostics
+plot_polar  = 1     ## plots results to polar graphs for diagnostics
+plot_bands  = 1     ## plots index of refraction as dispersion curves (k-omega)
 plot_expe   = 1     ## if 'r.dat', 't.dat', 'N.dat', 'Z.dat', 'eps.dat' or 'mu.dat' available, overlay them
-savedat     = 1     ## saves eff params to an ascii file with header
-savedat_wd  = 1     ##   creates an `effparam' directory in the working directory to save the eff params
 find_plasma_frequency = 0 ## find frequencies where epsilon crosses zero
 
 plot_freq_min = 0
@@ -875,16 +874,13 @@ if plot_publi:
     outfile = os.path.join(splitpath[0], "publi", splitpath[1]+"_publi.pdf")
     plt.savefig(outfile, bbox_inches='tight')
     #}}}
-## --- Save data to effparam.dat (to /tmp/ or current dir) ------------------------------------------#{{{
-## This is again in the PKGraph ascii format; see loadrt() docstring for further info
-if savedat_wd:
-    if not os.path.exists("effparam"): os.mkdir("effparam")
-    splitpath = os.path.split(last_simulation_name)
-    savedatfile = os.path.join(splitpath[0], "effparam", splitpath[1]+"_effparam.dat")
-else:
-    savedatfile = "/tmp/effparam.dat"
 
-if savedat or savedat_wd:
+## --- Save data to effparam.dat (to /tmp/ or current dir) ------------------------------------------#{{{
+if not os.path.exists("effparam"): os.mkdir("effparam")
+splitpath = os.path.split(last_simulation_name)
+savedatfile = os.path.join(splitpath[0], "effparam", splitpath[1]+"_effparam.dat")
+
+if savedat:
     header = ""
     ## Copy parameters
     with open(last_simulation_name+".dat") as datafile:
