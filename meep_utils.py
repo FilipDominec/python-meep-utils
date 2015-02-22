@@ -454,7 +454,7 @@ def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y
                 arrowprops  = arrowprops,       # comment out to disable arrow
                 )
 #}}}
-def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range=(1e10, 1e18), mark_freq=[], draw_instability_block=None):#{{{
+def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range=(1e10, 1e18), mark_freq=[], draw_instability_area=None):#{{{
     """ Plots complex permittivity of the materials to a PNG file
 
     Accepts list of materials
@@ -471,7 +471,7 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
 
     plt.figure(figsize=(7,6))
     colors = ['#000000', '#004400', '#003366', '#000088', '#440077', 
-              '#661100', '#AA8800', '#00AA00', '#0099DD',  '#dd2200', 
+              '#661100', '#AA8800', '#00AA00', '#0099DD', '#dd2200', 
               '#0044dd','#888888']
 
     subplotnumber = 2 if plot_conductivity else 1
@@ -536,10 +536,9 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
     plt.ylabel(u"relative permittivity $\\varepsilon_r$")
     plt.xscale('log'); plt.grid(True)
     ylim = (-1e7, 1e6); plt.ylim(ylim); plt.yscale('symlog')
-    #ylim = (-420, 280); plt.ylim(ylim); plt.yscale('linear')
     annotate_frequency_axis(mark_freq, log_y=True, arrow_length=50) # TODO , print_freq=True
-    if draw_instability_block:
-        plt.gca().add_patch(plt.Rectangle((draw_instability_block[0], ylim[0]), 1e20, draw_instability_block[1]-ylim[0], color='#ffddaa'))
+    if draw_instability_area:
+        plt.gca().add_patch(plt.Rectangle((draw_instability_area[0], ylim[0]), 1e20, draw_instability_area[1]-ylim[0], color='#ffddaa'))
 
     if plot_conductivity:
         plt.subplot(subplotnumber,1,2)
@@ -855,24 +854,6 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     if not frequency_domain:
         for field in (Ex1, Hy1, Ex2, Hy2):
             field[t>max(t)*.8] = field[t>max(t)*.8]*(.5 + .5*np.cos(np.pi * (t[t>max(t)*.8]/max(t)-.8)/(1-.8)))
-
-    try:
-        import matplotlib
-        #matplotlib.use('Agg') ## Enable plotting even in the GNU screen session?
-        from matplotlib import pyplot as plt
-        plt.figure(figsize=(7,6))
-        plt.plot(t, abs(Ex1), label="Ex1")
-        plt.plot(t, abs(Hy1), label="Hy1")
-        plt.plot(t, abs(Ex2), label="Ex2", lw=3)
-        plt.plot(t, abs(Hy2), label="Hy2")
-
-        plt.gca().set_ylim(ymin=1e-10)
-        plt.legend(prop={'size':10}, loc='upper right')
-        plt.xlabel('Time'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
-        plt.yscale("log")
-        plt.savefig("amplitudes_time_domain.png", bbox_inches='tight')
-    except:
-        print "Timedomain plot failed"
 
     ## Obtain the electric and magnetic fields spectra
     if frequency_domain:            ## No need for FFT in frequency domain, just copy the value

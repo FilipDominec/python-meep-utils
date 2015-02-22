@@ -434,7 +434,6 @@ s11backcalc, s12backcalc = nz2rt(freq, N, Z, d)
 arg = (1+0j-s11**2+s12**2)/2/(s12)
 argLog = np.e**(1j*np.angle(arg))*np.log(1+abs(arg)) ## shrinked graph to see the topology
 
-
 ## --- Plotting to cartesian graphs -------------------------------------------- #{{{
 plt.figure(figsize=(15,15))
 xticks = np.arange(plot_freq_min, plot_freq_max, reasonable_ticks((plot_freq_max-plot_freq_min)/10))
@@ -448,7 +447,7 @@ plt.plot(freq, s11amp, marker=marker, color="#AA4A00", label=u'$|s_{11}|$')
 plt.plot(freq, s12amp, marker=marker, color="#004AAA", label=u'$|s_{12}|$')
 plt.plot(freq, s12amp*1000, marker=marker, color="#00AA4A", label=u'$|s_{12}|*1000$')
 plt.plot(freq, s12amp*1000, marker=marker, color="#4AAA00", label=u'$|s_{12}|*100$')
-plt.plot(freq, losses, color="#aaaaaa", label=u'loss')
+plt.plot(freq, losses, color="#AAAAAA", label=u'loss')
 if plot_expe and os.path.exists('t.dat'):
     tf, ty = np.loadtxt('t.dat', usecols=list(range(2)), unpack=True)
     plt.plot(tf*frequnit, ty, lw=0, color='#004AAA', marker='o') 
@@ -466,9 +465,8 @@ plt.plot(freq, abs(s11backcalc), color="#FA9962", label=u'$|s_{11FD}|$', ls='--'
 plt.plot(freq, abs(s12backcalc), color="#6299FA", label=u'$|s_{12FD}|$', ls='--')
 #plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(1)
 
-#plt.ylabel(u"Amplitude"); plt.ylim((-0.1,1.1)); plt.xlim((plot_freq_min, plot_freq_max)) # XXX
-plt.ylabel(u"Amplitude"); plt.ylim((-0.1, 3.1)); plt.xlim((plot_freq_min, plot_freq_max))
-#plt.xticks(xticks, xnumbers); plt.minorticks_on();  plt.grid(True)
+plt.ylabel(u"Amplitude"); plt.ylim((-0.1,1.1)); plt.xlim((plot_freq_min, plot_freq_max)) # XXX
+plt.xticks(xticks, xnumbers); plt.minorticks_on();  plt.grid(True)
 if legend_enable: plt.legend(loc="upper right"); 
 
 
@@ -964,7 +962,6 @@ if plot_polar and os.path.isdir("polar"):
     plt.savefig(outfile, bbox_inches='tight')
 
 #}}}
-
 
 def get_cmdline_parameters():#{{{
     # (optional) Manual N branch override
