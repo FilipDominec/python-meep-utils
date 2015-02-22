@@ -35,6 +35,17 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
         ## Define materials
         self.materials = []  
         self.materials += [meep_materials.material_TiO2(where=self.where_sphere)]  
+        if wirethick > 0:
+            #au = meep_materials.material_Au(where=self.where_wire)
+            #au.pol[0]['gamma'] = self.f_c()/5
+            #self.materials += [au]  
+            #self.materials += [meep_materials.material_Metal_THz(where=None)]
+
+            au = meep_materials.material_Au(where=None)
+            au.pol[0]['gamma'] = self.f_c()/5
+            self.materials += [au]  
+            self.materials += [meep_materials.material_Metal_THz(where=self.where_wire)]
+
 
         ## Test the validity of the model
         for n, material in enumerate(self.materials): self.fix_material_stability(material)
@@ -44,6 +55,11 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
 
     def where_sphere(self, r):
         if  in_sphere(r, cx=0, cy=0, cz=0, rad=self.radius):
+            return self.return_value             # (do not change this line)
+        return 0
+    def where_wire(self, r):
+        if  in_xcyl(r, cz=0, cy=self.size_y/2, rad=self.wirethick) or \
+                in_xcyl(r, cz=0, cy=-self.size_y/2, rad=self.wirethick):
             return self.return_value             # (do not change this line)
         return 0
 #}}}
@@ -92,6 +108,7 @@ if not sim_param['frequency_domain']:       ## time-domain computation
     while (f.time()/c < model.simtime):                               # timestepping cycle
         f.step()
         timer.print_progress(f.time()/c)
+        print f.get_field(meep.Ex, meep.vec(0,0,0))
         for monitor in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy): monitor.record(field=f)
         for slice_ in slices: slice_.poll(f.time()/c)
     for slice_ in slices: slice_.finalize()
