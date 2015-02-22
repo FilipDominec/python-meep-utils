@@ -797,7 +797,7 @@ class Slice(): #{{{
         if forcesave:
             self.images_number += 1 
             for component in self.components:
-                self.field.output_hdf5(component, self.volume, self.openfile, 1)  ## TODO: test
+                self.field.output_hdf5(component, self.volume, self.openfile, 1) 
         del(self.openfile)          ## all processes must release the HDF5 file
         if meep.my_rank() == 0:        ## but postprocessing is to be done by a single process
             if self.outputgif or self.outputpng:
