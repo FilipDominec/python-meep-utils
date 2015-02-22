@@ -214,7 +214,7 @@ class AbstractMeepModel(meep.Callback):
                 meep.set_DBL2_Callback, meep.set_DBL1_Callback,]
         for material in self.materials:
             meep.master_printf("\tAdding material: %s with epsilon: %s at frequency %.4g Hz\n" % 
-                    (material.name, analytic_eps(material, self.srcFreq).__str__(), self.srcFreq))
+                    (material.name, analytic_eps(material, self.src_freq).__str__(), self.src_freq))
             self.double_vec = material.where  ## redirect the double_vec() function callback
             for polariz in material.pol:
                 if avail_cbs == []: 
@@ -782,7 +782,10 @@ class Slice(): #{{{
         self.openfile = meep.prepareHDF5File(output_file_name)
 
     def poll(self, now):
-        """ Check if the time has come to save a slice """
+        """ Check whether the time has come to save a slice
+
+        The first condition is for a time span, the second one is for single snapshot.
+        """
         if (((now > self.at_t[0]) and (now < self.at_t[1]) and (now-self.last_slice_time > self.min_timestep)) or 
                 (now > self.at_t[0] and self.images_number==0)):
             self.images_number += 1 
@@ -792,6 +795,7 @@ class Slice(): #{{{
 
     def finalize(self, forcesave=True):
         if forcesave:
+            self.images_number += 1 
             for component in self.components:
                 self.field.output_hdf5(component, self.volume, self.openfile, 1)  ## TODO: test
         del(self.openfile)          ## all processes must release the HDF5 file
@@ -799,7 +803,7 @@ class Slice(): #{{{
             if self.outputgif or self.outputpng:
                 meep.master_printf("Generating %d images\n" % self.images_number)
                 #run_bash("cd %s; h5topng -t 0:%d -R -Zc dkbluered -a yarg %s.h5 -S 1 -o %s.png" %   ## XXX
-                run_bash("cd %s; h5topng -t 0:%d -R -Zc hcbluered -a yarg %s.h5 -S 1 -o %s.png" % 
+                run_bash("cd %s; h5topng -t 0:%d -R -Zc dkbluered -a yarg %s.h5 -S 1 -o %s.png" % 
                         (self.outputdir, self.images_number-1, self.name, self.name))
             if self.outputgif: 
                 meep.master_printf("Converting %d images to gif\n" % self.images_number)
