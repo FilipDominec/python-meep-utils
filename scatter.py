@@ -15,16 +15,15 @@ c = 2.997e8
 
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
 class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=2e-12, resolution=2e-6, cells=1, cell_size=50e-6, padding=0e-6, Kx=0, Ky=0, 
+    def __init__(self, comment="", simtime=2e-12, resolution=2e-6, cells=1, cell_size=50e-6, padding=20e-6, Kx=0, Ky=0, 
             radius=13e-6):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
         self.simulation_name = "SphereArray"    
         
-
-
         ## Constants for the simulation
         self.pml_thickness = 20e-6
-        self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
+        #self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
+        self.monitor_z1, self.monitor_z2 = ((-cells*cell_size/2)-padding, (cells*cell_size/2)+padding)
         self.simtime = simtime      # [s]
         self.srcFreq, self.srcWidth = 1000e9, 2000e9     # [Hz] (note: gaussian source ends at t=10/srcWidth)
         self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
@@ -41,28 +40,27 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
 
         self.size_x = self.cell_size 
         self.size_y = self.cell_size
-        self.size_z = self.cells*self.cell_size + 2*self.pml_thickness + 2*self.padding
+        self.size_z = self.cells*self.cell_size + 2*self.pml_thickness + 4*self.padding
 
         ## Define materials
         self.materials = []  
-        self.materials += [meep_materials.material_Au(where=self.where_sphere)]  
+        #self.materials += [meep_materials.material_Au(where=self.where_sphere)]  
+        self.materials += [meep_materials.material_dielectric(where=self.where_sphere, eps=100)]  
         #for x in [.01, .1, 1, 10]: ## TODO remove
             #self.materials += [make_stable_Drude(meep_materials.material_Au(where = None), f_c=f_c*x)]  
             #self.materials += [make_stable_Drude(meep_materials.material_AuL(where = None), f_c=f_c*x)]  
             #self.materials += [meep_materials.material_DrudeMetal(where = self.where_TiO2, lfconductivity=2.5e6*2*np.pi, f_c=f_c)]  
 
         for n, material in enumerate(self.materials): self.fix_material_stability(material)
-        meep_utils.plot_eps(self.materials, plot_conductivity=True, draw_instability_block=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_block=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
         self.test_materials()
 
     def where_sphere(self, r):
-        return 0
-
         if  in_sphere(r, cx=0, cy=0, cz=0, rad=self.radius):
         #if  in_zslab(r, cz=0, d=self.radius):
             return self.return_value             # (do not change this line)
         return 0
-        #meep.use_Courant(3**-.5 - 0.001); print "Courant =", meep.use_Courant() #XXX
         #print "analytic eps(f_c) = ", eps_fc, (" [the limit is %f]" % lim_tmp), "******* UNSTABLE ******* " if (eps_fc.real< lim_tmp) else ""
         #eps_fc = meep_utils.analytic_eps(self.materials[0], f_c)
         #lim_tmp = meep.use_Courant()**2 * 3
@@ -102,7 +100,6 @@ f.add_volume_source(meep.Ex, src_time_type, srcvolume)
 monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'Kx':model.Kx, 'Ky':model.Ky}
 monitor1_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.monitor_z1, **monitor_options)
 monitor1_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.monitor_z1, **monitor_options)
-monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'Kx':model.Kx, 'Ky':model.Ky} 
 monitor2_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.monitor_z2, **monitor_options)
 monitor2_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
 
@@ -128,6 +125,7 @@ else:                                       ## frequency-domain computation
 
 ## Get the reflection and transmission of the structure
 if meep.my_rank() == 0:
+
     freq, s11, s12 = meep_utils.get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, 
             frequency_domain=sim_param['frequency_domain'], frequency=sim_param['frequency'], 
             maxf=model.srcFreq+model.srcWidth, pad_zeros=1.0, Kx=model.Kx, Ky=model.Ky)

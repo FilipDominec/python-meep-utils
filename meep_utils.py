@@ -853,7 +853,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
 
     ## Hann-window fadeout to suppress spectral leakage
     if not frequency_domain:
-        for field in (Ex1, Hy1, Ex2, Hy2 ):
+        for field in (Ex1, Hy1, Ex2, Hy2):
             field[t>max(t)*.8] = field[t>max(t)*.8]*(.5 + .5*np.cos(np.pi * (t[t>max(t)*.8]/max(t)-.8)/(1-.8)))
 
     try:
@@ -863,7 +863,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         plt.figure(figsize=(7,6))
         plt.plot(t, abs(Ex1), label="Ex1")
         plt.plot(t, abs(Hy1), label="Hy1")
-        plt.plot(t, abs(Ex2), label="Ex2")
+        plt.plot(t, abs(Ex2), label="Ex2", lw=3)
         plt.plot(t, abs(Hy2), label="Hy2")
 
         plt.gca().set_ylim(ymin=1e-10)
@@ -899,13 +899,31 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         truncated = np.logical_and((Ky**2+Kx**2)<(2*np.pi*freq/c)**2, freq>minf, freq<maxf)
         (Ex1f, Hy1f, Ex2f, Hy2f, freq) = map(lambda x: x[truncated], (Ex1f, Hy1f, Ex2f, Hy2f, freq))
 
+
+    try:
+        plt.figure(figsize=(7,6))
+        plt.plot(freq, abs(Ex1f), label="Ex1")
+        plt.plot(freq, abs(Hy1f), label="Hy1")
+        plt.plot(freq, abs(Ex2f), label="Ex2")
+        plt.plot(freq, abs(Hy2f), label="Hy2")
+
+        plt.gca().set_ylim(ymin=1e-8)
+        plt.xlim(0, np.max(freq)/15)
+        plt.legend(prop={'size':10}, loc='upper right')
+        plt.xlabel('Frequency'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
+        plt.yscale("log")
+        plt.savefig("amplitudes_freq_domain.png", bbox_inches='tight')
+    except:
+        print "Raw freq-domain plot failed"
+
+
     ## Prepare the angles at which the wave propagates (dependent on frequency, Kx and Ky)
     ## Separate the forward and backward wave in frequency domain 
     ##    (Efield+Hfield)/2 ->    forward wave amplitude, 
     ##    (Efield-Hfield)/2 ->    backward wave amplitude
-    beta0 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c))
-    #in1, out1 =  (Ex1f+Hy1f)/2, (Ex1f-Hy1f)/2 ## old: works only for perp. incidence beta0=0
-    #in2, out2 =  (Ex2f-Hy2f)/2, (Ex2f+Hy2f)/2
+    #beta0 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c))
+    in1, out1 =  (Ex1f+Hy1f)/2, (Ex1f-Hy1f)/2 ## old: works only for perp. incidence beta0=0
+    in2, out2 =  (Ex2f-Hy2f)/2, (Ex2f+Hy2f)/2
     #in1, out1 =  (Ex1f+Hy1f/np.cos(beta0))/2, (Ex1f-Hy1f/np.cos(beta0))/2 ## old: works only for monitors placed in vacuum
     #in2, out2 =  (Ex2f-Hy2f/np.cos(beta0))/2, (Ex2f+Hy2f/np.cos(beta0))/2
 
@@ -918,29 +936,29 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
 
     # **********************
 
-    n1, n2 = eps1**.5,  eps2**.5
-    z1, z2 = eps1**-.5, eps2**-.5
-    Ktot1 = (2*np.pi*freq*n1/c)
-    angles1 = np.arcsin((Kx**2+Ky**2)**.5 / Ktot1)
-    in1 =  (Ex1f/z1  +Hy1f/np.cos(angles1))/2/eps1**.5 * n1**.5 
-    out1 = (Ex1f/z1  -Hy1f/np.cos(angles1))/2/eps1**.5 * n1**.5
-
-    Ktot2 = (2*np.pi*freq*n1/c)
-    angles2 = np.arcsin((Kx**2+Ky**2)**.5 / Ktot2)
-    in2  = (Ex2f/z2  -Hy2f/np.cos(angles2))/2/eps2**.5 * n2**.5
-    out2 = (Ex2f/z2  +Hy2f/np.cos(angles2))/2/eps2**.5 * n2**.5
+    #n1, n2 = eps1**.5,  eps2**.5
+    #z1, z2 = eps1**-.5, eps2**-.5
+    #Ktot1 = (2*np.pi*freq*n1/c)
+    #angles1 = np.arcsin((Kx**2+Ky**2)**.5 / Ktot1)
+    #in1 =  (Ex1f/z1  +Hy1f/np.cos(angles1))/2/eps1**.5 * n1**.5 
+    #out1 = (Ex1f/z1  -Hy1f/np.cos(angles1))/2/eps1**.5 * n1**.5
+    #
+    #Ktot2 = (2*np.pi*freq*n1/c)
+    #angles2 = np.arcsin((Kx**2+Ky**2)**.5 / Ktot2)
+    #in2  = (Ex2f/z2  -Hy2f/np.cos(angles2))/2/eps2**.5 * n2**.5
+    #out2 = (Ex2f/z2  +Hy2f/np.cos(angles2))/2/eps2**.5 * n2**.5
     
     #in2, out2 =  (Ex2f      -Hy2f/np.cos(beta0mon2))/2, (Ex2f  +Hy2f/np.cos(beta0mon2))/2
     ## Todo optimize cos(arcsin x ) = sqrt(1-x**2)
 
     ## Diagnostics: Plot spectral profile
     try:
-        plt.figure(figsize=(6,5))
+        plt.figure(figsize=(7,6))
         plt.plot(freq, abs(in1), label="in1")
         plt.plot(freq, abs(out1), label="out1")
         plt.plot(freq, abs(in2), label="in2")
         plt.plot(freq, abs(out2), label="out2")
-        plt.xlim(0, np.max(freq)/10)
+        plt.xlim(0, np.max(freq)/15)
         plt.legend(prop={'size':10}, loc='lower left')
         plt.xlabel('Frequency'); plt.ylabel('Transmitted amplitude')
         #plt.title('Frequency-domain wave amplitudes')
@@ -1040,10 +1058,10 @@ class AmplitudeMonitorPlane():#{{{
         #meep::fields::integrate(int,meep::component const *,meep::field_rfunction,void *,meep::volume const &,double *)
         #meep::fields::integrate(int,meep::component const *,meep::field_rfunction,void *,meep::volume const &)
         #fields::integrate(int num_fvals, const component *components,
-				  #field_function integrand,
-				  #void *integrand_data_,
-				  #const volume &where,
-				  #double *maxabs
+        #field_function integrand,
+        #void *integrand_data_,
+        #const volume &where,
+        #double *maxabs
     
     def record(self, field=None):
         """ 
@@ -1222,8 +1240,7 @@ def load_rt_old(filename, layer_thickness=None, plot_freq_min=None, plot_freq_ma
       #000: ../../../src/H5F.c line 1514 in H5Fopen(): unable to open file
     ---> perhaps you defined two slices the same?
 
-
-mpirun has exited due to process rank 1 with PID 2670 on
+mpirun has exited due to process rank * with PID **** on *
     ---> this is harmless
 
 """

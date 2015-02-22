@@ -33,15 +33,15 @@ N_init_sign     =   1
 autocorrect_signs = True
 Z_init_sign     =   -1
 check_hilbert   =   0       ## Verifies if Kramers-Kronig relations hold for N  ###XXX
-legend_enable   =   1      
+legend_enable   =   0      
 brillouin_boundaries = 1    ## Plots thin lines where the N would exceed the allowed 
                             ## range for 0-th Bloch mode
 autobranch      = 0
 
-plot_publi  = 1     ## prepares nice small graphs for publication
+plot_publi  = 0     ## prepares nice small graphs for publication
 plot_polar  = 0     ## plots them to polar graphs for diagnostics
 plot_bands  = 0     ## plots them to k-omega graphs for diagnostics
-plot_expe   = 1     ## if 'r.dat', 't.dat', 'N.dat', 'Z.dat', 'eps.dat' or 'mu.dat' available, overlay them
+plot_expe   = 0     ## if 'r.dat', 't.dat', 'N.dat', 'Z.dat', 'eps.dat' or 'mu.dat' available, overlay them
 savedat     = 1     ## saves eff params to PKGraph-compatible ascii file
 savedat_wd  = 1     ##   uses the working directory to save the  eff params
 find_plasma_frequency = 0 ## find frequencies where epsilon crosses zero
@@ -460,9 +460,17 @@ if plot_expe and os.path.exists('../t90kVcm_Comsol.dat'):
     tf, ty = np.loadtxt('../t90kVcm_Comsol.dat', usecols=list(range(2)), unpack=True)
     plt.plot(tf*frequnit, ty, lw=2, color='#00AA4A', marker='s', alpha=.3, label='$|t_{90kV/cm}^{(Coms)}|$') 
 
-plt.ylabel(u"Amplitude"); plt.ylim((-0.1,1.1)); plt.xlim((plot_freq_min, plot_freq_max))
+## Verification of calculated data by calculating reflection and transmission again
+plt.subplot(subplot_number, 1, 1) 
+plt.plot(freq, abs(s11backcalc), color="#FA9962", label=u'$|s_{11FD}|$', ls='--')
+plt.plot(freq, abs(s12backcalc), color="#6299FA", label=u'$|s_{12FD}|$', ls='--')
+#plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(1)
+
+#plt.ylabel(u"Amplitude"); plt.ylim((-0.1,1.1)); plt.xlim((plot_freq_min, plot_freq_max)) # XXX
+plt.ylabel(u"Amplitude"); plt.ylim((-0.1, 3.1)); plt.xlim((plot_freq_min, plot_freq_max))
 #plt.xticks(xticks, xnumbers); plt.minorticks_on();  plt.grid(True)
 if legend_enable: plt.legend(loc="upper right"); 
+
 
 #print '*********************************************'
 #print 'R', s11amp[10]
@@ -702,15 +710,6 @@ plt.plot(freq, np.imag(mu),  color="#AA8844", label=u'$\\mu_{eff}$"', ls='--')
 plt.ylabel(u"Value"); plt.ylim((-1000.,1000.)); plt.yscale('symlog', linthreshy=10.); plt.xlim((plot_freq_min, plot_freq_max))
 #plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(True)
 if legend_enable: plt.legend(); 
-
-
-
-## 5) Verification of calculated data by calculating reflection and transmission again
-plt.subplot(subplot_number, 1, 1) 
-plt.plot(freq, abs(s11backcalc), color="#FA9962", label=u'$|s_{11FD}|$', ls='--')
-plt.plot(freq, abs(s12backcalc), color="#6299FA", label=u'$|s_{12FD}|$', ls='--')
-plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(1)
-plt.xlim((plot_freq_min, plot_freq_max)); plt.ylim((-0.1,1.1))
 
 ## Final plotting 
 plt.savefig(last_simulation_name+".png", bbox_inches='tight')
