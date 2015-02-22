@@ -333,10 +333,7 @@ def in_sphere(r,cx,cy,cz,rad):
     return ((cx-r.x())**2 + (cy-r.y())**2 + (cz-r.z())**2)**.5 < rad
 def in_ellipsoid(r,cx,cy,cz,rad,ex):
     xd, yd, zd = (cx-r.x()), (cy-r.y()), (cz-r.z())
-    #return ((xd+yd)**2/2*ex + (xd-yd)**2/2/ex + zd**2)**.5 < rad
     return ((xd+yd)**2/2.*ex**2 + (xd-yd)**2/2./ex**2 + zd**2)**.5 < rad
-#def in_xcone(r,cy,cz,cx,d):
-    #return (abs(r.x()-cx) < d/2)
 #}}}
 
 ## Note: An example of how to define a custom source - put this code into your simulation script 
