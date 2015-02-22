@@ -1,9 +1,9 @@
 #!/bin/bash
 
-COMMAND='mpirun -np 1   python ../scatter.py resolution=4u simtime=50p padding=00u'
+COMMAND='mpirun -np 1   python ../scatter.py resolution=4u simtime=100p padding=0u'
 
 ## Generate frequency-domain results
-for ff in `seq 1250 10 1300`; do  
+for ff in `seq 1160 10 1200`; do  
      $COMMAND frequency=${ff}e9
 done
 
@@ -17,7 +17,10 @@ mkdir png
 mv SphereArray_/*png png/
 
 ## Clean up
-rm -r SphereArray*frequency*.dat
+rm    SphereArray*frequency*.dat
+rm    SphereArray*frequency*.png
+rm -r SphereArray*frequency*/
 
 ## Run one time-domain simulation for comparison
 $COMMAND 
+python ../effparam.py

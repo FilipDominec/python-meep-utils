@@ -397,7 +397,7 @@ def permittivity2conductivity(complex_eps, freq):#{{{
     # return complex_eps.imag / complex_eps.real * 2*np.pi * c
     #return complex_eps.imag / complex_eps.real * 6.28*freq * 8.85e-12 * c
     magic_constant = 1.65e13       ## A. K. A. bulgarian constant...
-    return complex_eps.imag / complex_eps.real * 6.28 * freq / c * epsilon_0 * magic_constant
+    return complex_eps.imag / complex_eps.real * 2 * np.pi * freq * epsilon_0 * c**.5 * np.pi
 #}}}
 def analytic_eps(mat, freq):#{{{
     complex_eps = np.ones_like(freq)*(mat.eps+0j)

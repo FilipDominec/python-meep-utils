@@ -457,10 +457,14 @@ plt.plot(freq, s12amp, marker=marker, color="#004AAA", label=u'$|s_{12}|$')
 plt.plot(freq, s12amp*1000, marker=marker, color="#00AA4A", label=u'$|s_{12}|*1000$')
 plt.plot(freq, s12amp*1000, marker=marker, color="#4AAA00", label=u'$|s_{12}|*100$')
 plt.plot(freq, losses, color="#AAAAAA", label=u'loss')
+if plot_expe and os.path.exists('r.dat'):
+    rf, ry = np.loadtxt('r.dat', usecols=list(range(2)), unpack=True)
+    plt.plot(rf, ry, lw=.5, ms=3, color='#AA8A40', marker='o') 
 if plot_expe and os.path.exists('t.dat'):
     tf, ty = np.loadtxt('t.dat', usecols=list(range(2)), unpack=True)
-    plt.plot(tf*frequnit, ty, lw=0, color='#004AAA', marker='o') 
+    plt.plot(tf, ty, lw=.5, ms=3, color='#408AAA', marker='o') 
 
+# - temporary -
 if plot_expe and os.path.exists('../t00kVcm_Comsol.dat'):           ## XXX
     tf, ty = np.loadtxt('../t00kVcm_Comsol.dat', usecols=list(range(2)), unpack=True)
     plt.plot(tf*frequnit, ty, lw=2, color='#4A00AA', marker='o', alpha=.3, label='$|t_{0kV/cm}^{(Coms)}|$') 
@@ -758,8 +762,9 @@ if plot_bands and os.path.isdir("band"):
     plt.savefig(outfile, bbox_inches='tight')
 #}}}
 ## --- Nice plotting to PDF ----------------------------------------------------------------------------------#{{{
-if plot_publi and not os.path.exists("publi"): os.mkdir("publi")
+#if plot_publi and not os.path.exists("publi"): os.mkdir("publi") TODO remove
 if plot_publi:
+    if not os.path.exists("publi"): os.mkdir("publi")
     #matplotlib.rc('text', usetex=True)
     #matplotlib.rc('text.latex', preamble = \
             #'\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, \usepackage{lmodern},')
@@ -770,25 +775,23 @@ if plot_publi:
             '\usepackage{amsmath}, \usepackage{palatino},\usepackage{upgreek}')
     matplotlib.rc('font',**{'family':'serif','serif':['palatino, times']})  ## select fonts
 
-    fig = plt.figure(figsize=(12,10)); toplot = {'rt':1, 'N':1, 'eps':1, 'mu':1, 'Z':0} ## For XYS, XYSAs
+    fig = plt.figure(figsize=(12,10))
     fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.0, hspace=.0) ## XXX
 
-    #plt.figure(figsize=(6,6)); toplot = {'rt':1, 'N':0, 'eps':1, 'mu':1, 'Z':0} ## For XYS, XYSAs
-    #plt.figure(figsize=(6,5)); toplot = {'rt':1, 'N':0, 'eps':0, 'mu':1, 'Z':0} ## For S
-    #plt.figure(figsize=(6,5)); toplot = {'rt':1, 'N':0, 'eps':1, 'mu':0, 'Z':0} ## For XY
+    publi_toplot = {'rt':1, 'N':1, 'eps':1, 'mu':1, 'Z':0} ## select parameters by setting 1 or 0
+    publi_plot_Brillouin = True
+    publi_use_grid = False
 
-    subplot_count = sum(toplot.values())
-    subplot_index = 1
-    usegrid       = False
-    subplot_columns = [1,1,1,1,1]    
+    subplot_index  = 1
+    subplot_count  = sum(publi_toplot.values())
     ## ---- r, t -----
-    if toplot['rt']:
-        ax= plt.subplot(subplot_count, subplot_columns[subplot_index], subplot_index)
+    if publi_toplot['rt']:
+        ax= plt.subplot(subplot_count, 1, subplot_index)
         #plt.title(u"Dielectric spheres $r=%d\\;\\upmu$m" % 25) 
         #plt.title(u"Dielectric spheres in wire mesh") 
         plt.title(u"Wire mesh") 
         ax.label_outer()
-        if usegrid: plt.grid()
+        plt.grid(publi_use_grid)
         plt.plot(freq, s11amp, marker=marker, color="#880000", label=u'$|r|$', lw=1)
         plt.plot(freq, s12amp, marker=marker, color="#0088ff", label=u'$|t|$', lw=1)
         plt.ylabel(u"Amplitude"); 
@@ -802,15 +805,16 @@ if plot_publi:
     ## Todo allow plotting phase! (And in the 'cartesian' plot, too)
 
     ## ---- N -----
-    if toplot['N']:
-        ax = plt.subplot(subplot_count, subplot_columns[subplot_index], subplot_index)
+    if publi_toplot['N']:
+        ax = plt.subplot(subplot_count, 1, subplot_index)
         ax.label_outer()
-        if usegrid: plt.grid()
+        plt.grid(publi_use_grid)
         plt.ylabel(u"Index of refraction  $N_{\\text{eff}}$"); 
 
-        for ii in np.arange(-10, 10):
-            plt.plot(freq, ii*c/freq/d, color="#000000", label=u"", lw=.2)
-            plt.plot(freq, (ii+.5)*c/freq/d, color="#777777", label=u"", lw=.2)
+        if publi_plot_Brillouin:
+            for ii in np.arange(-10, 10):
+                plt.plot(freq, ii*c/freq/d, color="#000000", label=u"", lw=.2)
+                plt.plot(freq, (ii+.5)*c/freq/d, color="#777777", label=u"", lw=.2)
 
         #TODO if plot_expe and os.path.exists('k.dat'):
             #tf, ty = np.loadtxt('t.dat', usecols=list(range(2)), unpack=True)
@@ -826,10 +830,10 @@ if plot_publi:
         subplot_index += 1
 
     ## ----- EPS -----
-    if toplot['eps']:
-        ax = plt.subplot(subplot_count, subplot_columns[subplot_index], subplot_index)
+    if publi_toplot['eps']:
+        ax = plt.subplot(subplot_count, 1, subplot_index)
         ax.label_outer()
-        if usegrid: plt.grid()
+        plt.grid(publi_use_grid)
         plt.ylabel(u"Permittivity $\\varepsilon_{\\text{eff}}$") 
         plt.plot(freq, np.real(eps), color="#660044", label=u"$\\varepsilon'$")
         plt.plot(freq, np.imag(eps),       color="#660044", label=u"$\\varepsilon''$", ls='--')
@@ -842,10 +846,10 @@ if plot_publi:
         subplot_index += 1
 
     ## ----- MU -----
-    if toplot['mu']:
-        ax = plt.subplot(subplot_count, subplot_columns[subplot_index], subplot_index)
+    if publi_toplot['mu']:
+        ax = plt.subplot(subplot_count, 1, subplot_index)
         ax.label_outer()
-        if usegrid: plt.grid()
+        plt.grid(publi_use_grid)
         plt.ylabel(u"Permeability $\\mu_{\\text{eff}}$"); 
         plt.plot(freq, np.real(mu), color="#663300", label=u"$\\mu'$")
         plt.plot(freq, np.imag(mu), color="#663300", label=u"$\\mu''$", ls='--')
@@ -856,7 +860,7 @@ if plot_publi:
         subplot_index += 1
 
     ### ----- Z -----
-    if toplot['Z']:
+    if publi_toplot['Z']:
         ax = plt.subplot(subplot_number, 1, subplot_index)
         ax.label_outer()
         plt.ylabel(u"Impedance"); plt.ylim((-2.,4.))
@@ -867,20 +871,17 @@ if plot_publi:
         subplot_index += 1
 
     plt.xlabel(u"Frequency [%s]" % frequnitname) 
-    #plt.xlim((0, 1.5))
-    #plt.xlim((0, 1.5))
-    #plt.grid()
     splitpath = os.path.split(last_simulation_name)
     outfile = os.path.join(splitpath[0], "publi", splitpath[1]+"_publi.pdf")
     plt.savefig(outfile, bbox_inches='tight')
     #}}}
 
-## --- Save data to effparam.dat (to /tmp/ or current dir) ------------------------------------------#{{{
-if not os.path.exists("effparam"): os.mkdir("effparam")
-splitpath = os.path.split(last_simulation_name)
-savedatfile = os.path.join(splitpath[0], "effparam", splitpath[1]+"_effparam.dat")
-
+## --- Save data to effparam.dat (to ./effparam/*dat) ------------------------------------------#{{{
 if savedat:
+    if not os.path.exists("effparam"): os.mkdir("effparam")
+    splitpath = os.path.split(last_simulation_name)
+    savedatfile = os.path.join(splitpath[0], "effparam", splitpath[1]+"_effparam.dat")
+
     header = ""
     ## Copy parameters
     with open(last_simulation_name+".dat") as datafile:

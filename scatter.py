@@ -16,7 +16,7 @@ import meep_mpi as meep
 
 class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=2e-12, resolution=2e-6, cells=1, cell_size=50e-6, padding=20e-6, Kx=0, Ky=0, 
-            radius=13e-6):
+            radius=13e-6, wirethick=0e-6):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
         
         ## Constant parameters for the simulation
@@ -34,12 +34,7 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
 
         ## Define materials
         self.materials = []  
-        #self.materials += [meep_materials.material_Au(where=self.where_sphere)]  
         self.materials += [meep_materials.material_TiO2(where=self.where_sphere)]  
-        #for x in [.01, .1, 1, 10]: ## TODO remove
-            #self.materials += [make_stable_Drude(meep_materials.material_Au(where = None), f_c=f_c*x)]  
-            #self.materials += [make_stable_Drude(meep_materials.material_AuL(where = None), f_c=f_c*x)]  
-            #self.materials += [meep_materials.material_DrudeMetal(where = self.where_TiO2, lfconductivity=2.5e6*2*np.pi, f_c=f_c)]  
 
         ## Test the validity of the model
         for n, material in enumerate(self.materials): self.fix_material_stability(material)
@@ -87,7 +82,8 @@ monitor2_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.mo
 
 slices = []
 #slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
-#slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, min_timestep=.05e-12)]
+slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_t=np.inf, 
+    name=('At%.3eHz'%sim_param['frequency']) if sim_param['frequency_domain'] else '', outputpng=True, outputvtk=False)]
 
 ## Run the FDTD simulation or the frequency-domain solver
 if not sim_param['frequency_domain']:       ## time-domain computation
@@ -119,6 +115,6 @@ if meep.my_rank() == 0:
             header=model.parameterstring, fmt="%.6e")
 
     with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
-    import effparam        # process effective parameters for metamaterials
+    #import effparam        # process effective parameters for metamaterials
 
 meep.all_wait()         # Wait until all file operations are finished
