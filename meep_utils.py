@@ -874,8 +874,12 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         (Ex1f, Hy1f, Ex2f, Hy2f) = map(lambda x: np.fft.fft(np.real(x))[0:int(numpoints/2)], (Ex1, Hy1, Ex2, Hy2))
         
         ## Truncate the data ranges to allowed radiating angles, and possibly to minf<freq<maxf
-        truncated = np.logical_and((Ky**2+Kx**2)<(2*np.pi*freq/c)**2, freq>minf, freq<maxf)
+        print "MAXFFFFFFFFFFFFFFFFFF", np.max(freq)
+        #truncated = np.logical_and((Ky**2+Kx**2)<(2*np.pi*freq/c)**2, freq>minf, freq<maxf) ## did not work at np 1.6.2
+        truncated = np.logical_and(freq>minf, freq<maxf)
         (Ex1f, Hy1f, Ex2f, Hy2f, freq) = map(lambda x: x[truncated], (Ex1f, Hy1f, Ex2f, Hy2f, freq))
+        print "MAXFFFFFFFFFFFFFFFFFF", np.max(freq)
+        print "MAXFFFFFFFFFFFFFFFFFF", maxf
 
 
     try:
@@ -885,11 +889,11 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         plt.plot(freq, abs(Ex2f), label="Ex2")
         plt.plot(freq, abs(Hy2f), label="Hy2")
 
-        plt.gca().set_ylim(ymin=1e-8)
+        plt.yscale("log");   plt.gca().set_ylim(ymin=1e-8)
+        plt.yscale("log");   plt.gca().set_ylim(ymin=1e-8)
         plt.xlim(0, np.max(freq)/15)
         plt.legend(prop={'size':10}, loc='upper right')
         plt.xlabel('Frequency'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
-        plt.yscale("log")
         plt.savefig("amplitudes_freq_domain.png", bbox_inches='tight')
     except:
         print "Raw freq-domain plot failed"

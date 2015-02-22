@@ -64,9 +64,7 @@ if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % 
 ## Initialize volume, structure and the fields according to the model
 vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
 vol.center_origin()
-time0 = time.time()
 s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes=meep.Z)
-print "TIME FOR STRUCT SETUP", time.time()-time0
 f = meep.fields(s)
 f.use_bloch(meep.X, -model.Kx/(2*np.pi)) # (any transversal component of k-vector is allowed)
 f.use_bloch(meep.Y, -model.Ky/(2*np.pi))
