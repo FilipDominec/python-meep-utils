@@ -16,14 +16,14 @@ import meep_mpi as meep
 
 class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=100e-12, resolution=4e-6, cells=1, cell_size=50e-6, padding=20e-6, Kx=0, Ky=0, 
-            radius=13e-6, wirethick=0e-6):
+            radius=13e-6, wirethick=0e-6, g=1e14):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
         
         ## Constant parameters for the simulation
         self.simulation_name = "SphereArray"    
         self.src_freq, self.src_width = 1000e9, 2000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (0e9, 2000e9)    # Which frequencies will be saved to disk
-        self.pml_thickness = 20e-6
+        self.pml_thickness = 0e-6
 
         self.size_x = cell_size 
         self.size_y = cell_size
@@ -34,22 +34,18 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
 
         ## Define materials
         self.materials = []  
-        self.materials += [meep_materials.material_TiO2(where=self.where_sphere)]  
-        if wirethick > 0:
-            #au = meep_materials.material_Au(where=self.where_wire)
-            #au.pol[0]['gamma'] = self.f_c()/5
-            #self.materials += [au]  
-            #self.materials += [meep_materials.material_Metal_THz(where=None)]
+        #self.materials += [meep_materials.material_TiO2(where=self.where_sphere)]  
 
-            au = meep_materials.material_Au(where=None)
-            au.pol[0]['gamma'] = self.f_c()/5
-            self.materials += [au]  
-            self.materials += [meep_materials.material_Metal_THz(where=self.where_wire)]
+        au = meep_materials.material_Au(where=self.where_wire)
+        self.materials += [au]  
+
+        #drudetest = meep_materials.material_DrudeTest(where=self.where_wire, g=g)
+        #self.materials += [drudetest]  
 
 
         ## Test the validity of the model
         for n, material in enumerate(self.materials): self.fix_material_stability(material)
-        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+        meep_utils.plot_eps(self.materials, plot_conductivity=False, 
                 draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
         self.test_materials()
 
@@ -58,8 +54,7 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
             return self.return_value             # (do not change this line)
         return 0
     def where_wire(self, r):
-        if  in_xcyl(r, cz=0, cy=self.size_y/2, rad=self.wirethick) or \
-                in_xcyl(r, cz=0, cy=-self.size_y/2, rad=self.wirethick):
+        if  in_xcyl(r, cz=0, cy=self.size_y/2, rad=self.wirethick) :
             return self.return_value             # (do not change this line)
         return 0
 #}}}
@@ -73,7 +68,7 @@ if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % 
 ## Initialize volume, structure and the fields according to the model
 vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
 vol.center_origin()
-s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes=meep.Z)
+s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes='none')
 f = meep.fields(s)
 f.use_bloch(meep.X, -model.Kx/(2*np.pi)) # (any transversal component of k-vector is allowed)
 f.use_bloch(meep.Y, -model.Ky/(2*np.pi))
@@ -89,50 +84,33 @@ srcvolume = meep.volume(                    ## (spatial source shape)
         meep.vec( model.size_x/2,  model.size_y/2, -model.size_z/2+model.pml_thickness))
 f.add_volume_source(meep.Ex, src_time_type, srcvolume)
 
-## Define monitors planes and visualisation output
-monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'Kx':model.Kx, 'Ky':model.Ky}
-monitor1_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.monitor_z1, **monitor_options)
-monitor1_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.monitor_z1, **monitor_options)
-monitor2_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.monitor_z2, **monitor_options)
-monitor2_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
 
 slices = []
 slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
-slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution')]
-slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_t=np.inf, 
-    name=('At%.3eHz'%sim_param['frequency']) if sim_param['frequency_domain'] else '', outputpng=True, outputvtk=False)]
+#slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution')]
+#slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_t=np.inf, 
+    #name=('At%.3eHz'%sim_param['frequency']) if sim_param['frequency_domain'] else '', outputpng=True, outputvtk=False)]
 
 ## Run the FDTD simulation or the frequency-domain solver
+n = 0
 if not sim_param['frequency_domain']:       ## time-domain computation
     f.step()
     timer = meep_utils.Timer(simtime=model.simtime); meep.quiet(True) # use custom progress messages
     while (f.time()/c < model.simtime):                               # timestepping cycle
         f.step()
         timer.print_progress(f.time()/c)
-        #print f.get_field(meep.Ex, meep.vec(0,0,0))
-        for monitor in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy): monitor.record(field=f)
+
+        n+=1
+        if n%100 == 0: print f.get_field(meep.Ex, meep.vec(0,0,0))
+
+        #for monitor in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy): monitor.record(field=f)
         for slice_ in slices: slice_.poll(f.time()/c)
     for slice_ in slices: slice_.finalize()
     meep_utils.notify(model.simulation_name, run_time=timer.get_time())
 else:                                       ## frequency-domain computation
     f.step()
     f.solve_cw(sim_param['MaxTol'], sim_param['MaxIter'], sim_param['BiCGStab']) 
-    for monitor in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy): monitor.record(field=f)
     for slice_ in slices: slice_.finalize()
     meep_utils.notify(model.simulation_name)
-
-## Get the reflection and transmission of the structure
-if meep.my_rank() == 0:
-    freq, s11, s12 = meep_utils.get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, 
-            frequency_domain=sim_param['frequency_domain'], frequency=sim_param['frequency'], 
-            intf=getattr(model, 'interesting_frequencies', [0, model.src_freq+model.src_width]),
-            pad_zeros=1.0, Kx=model.Kx, Ky=model.Ky)
-
-    meep_utils.savetxt(fname=model.simulation_name+".dat", 
-            X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)), 
-            header=model.parameterstring, fmt="%.6e")
-
-    with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
-    #import effparam        # process effective parameters for metamaterials
 
 meep.all_wait()         # Wait until all file operations are finished

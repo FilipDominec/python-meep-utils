@@ -861,9 +861,9 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         #matplotlib.use('Agg') ## Enable plotting even in the GNU screen session?
         from matplotlib import pyplot as plt
         plt.figure(figsize=(7,6))
-        plt.plot(t, abs(Ex1), label="Ex1")
+        plt.plot(t, abs(Ex1), label="Ex1", lw=2)
         plt.plot(t, abs(Hy1), label="Hy1")
-        plt.plot(t, abs(Ex2), label="Ex2", lw=3)
+        plt.plot(t, abs(Ex2), label="Ex2", lw=2)
         plt.plot(t, abs(Hy2), label="Hy2")
 
         plt.gca().set_ylim(ymin=1e-10)
