@@ -1,9 +1,9 @@
 #!/bin/bash
 
-COMMAND='mpirun -np 1   python ../scatter.py resolution=4u simtime=100p padding=0u'
+COMMAND='mpirun -np 1   python ../scatter.py resolution=4u simtime=100p padding=0u wirethick=10u'
 
 ## Generate frequency-domain results
-for ff in `seq 1160 10 1200`; do  
+for ff in `seq 1000 10 1300`; do  
      $COMMAND frequency=${ff}e9
 done
 
