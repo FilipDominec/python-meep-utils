@@ -395,17 +395,15 @@ class material_TiO2():#{{{
         eps=7 or something.
         The magnitude of the first resonance is more importand, one has to fine tune it.
     Additionally, the width of the resonance at omega=5.6 THz can be changed from gamma=810 GHz to higher values 
-        to account for higher losses due to impurities etc.
-        We used 1.05e12 to match our experimental data for losses in bulk TiO2.
+        to account for higher losses due to impurities etc. (For example, 1.05e12 better matched THz experimental data.)
     The ultraviolet absorption could not be exactly modelled using finite number of lorentzian oscillators. Two 
         of them are used, but note they introduce unrealistic high damping in the optical region.
     """
     def __init__(self, where=None, extraordinary=.33):
-        #self.eps = 5.8 + .9*extraordinary
         self.eps = 1
         self.pol = [
                 # Optical phonon resonance in THz range from Baumard1977, manually tuned to better fit experiment
-                {'omega':5.67e12, 'gamma':1.05e12, 'sigma':50+90*extraordinary},      
+                {'omega':5.67e12, 'gamma':.85e12, 'sigma':50+90*extraordinary},      
                 {'omega':11.43e12, 'gamma':.495e12, 'sigma':0.9*extraordinary},            
                 {'omega':15.24e12, 'gamma':.72e12, 'sigma':2.6*extraordinary},            
                 {'omega':1.0e15, 'gamma':.15e15, 'sigma':2.8 + .5*extraordinary},     ## imprecise two-Lorentzian approximation in UV

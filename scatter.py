@@ -15,8 +15,8 @@ import meep_mpi as meep
 #import meep
 
 class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=100e-12, resolution=4e-6, cells=1, cell_size=50e-6, padding=20e-6, Kx=0, Ky=0, 
-            radius=13e-6, wirethick=0e-6):
+    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cells=1, cell_size=50e-6, padding=20e-6, Kx=0, Ky=0, 
+            radius=13e-6, wirethick=2e-6):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
         
         ## Constant parameters for the simulation
@@ -34,21 +34,26 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
 
         ## Define materials
         self.materials = []  
-        self.materials += [meep_materials.material_TiO2(where=self.where_sphere)]  
+
+        tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
+        self.fix_material_stability(tio2, f_c=2e13, verbose=0) ## optimize for speed, rm all osc above THz range
+        self.materials.append(tio2)
+
         if wirethick > 0:
-            #au = meep_materials.material_Au(where=self.where_wire)
+            au = meep_materials.material_Au(where=self.where_wire)
+            self.fix_material_stability(au, verbose=0)
+            self.materials.append(au)
+
+            #au.pol[0]['gamma'] = self.f_c()/5
+            #self.materials += [meep_materials.material_Metal_THz(where=None)]
+            #au = meep_materials.material_Au(where=None)
             #au.pol[0]['gamma'] = self.f_c()/5
             #self.materials += [au]  
-            #self.materials += [meep_materials.material_Metal_THz(where=None)]
+            #self.materials += [meep_materials.material_Metal_THz(where=self.where_wire)]
 
-            au = meep_materials.material_Au(where=None)
-            au.pol[0]['gamma'] = self.f_c()/5
-            self.materials += [au]  
-            self.materials += [meep_materials.material_Metal_THz(where=self.where_wire)]
 
 
         ## Test the validity of the model
-        for n, material in enumerate(self.materials): self.fix_material_stability(material)
         meep_utils.plot_eps(self.materials, plot_conductivity=True, 
                 draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
         self.test_materials()

@@ -213,12 +213,13 @@ class AbstractMeepModel(meep.Callback):
         avail_cb_setters = [meep.set_DBL5_Callback, meep.set_DBL4_Callback, meep.set_DBL3_Callback, 
                 meep.set_DBL2_Callback, meep.set_DBL1_Callback,]
         for material in self.materials:
-            meep.master_printf("\tAdding material: %s with epsilon: %s at frequency %.4g Hz\n" % 
-                    (material.name, analytic_eps(material, self.src_freq).__str__(), self.src_freq))
+            aeps = analytic_eps(material, self.src_freq)
+            meep.master_printf("Info\tAdding material: %s with %d oscillator(s); (eps @ %.2e Hz = %.1f+%.3fj)\n" % 
+                    (material.name, len(material.pol), self.src_freq, aeps.real, aeps.imag))
             self.double_vec = material.where  ## redirect the double_vec() function callback
             for polariz in material.pol:
                 if avail_cbs == []: 
-                    meep.master_printf("Error: too many polarizabilities defined (5) Reduce their number.")
+                    meep.master_printf("Error: too many oscillators defined in total (>5)."+"Perhaps the simulation can be made with less?")
                     exit()
                 next_cb, next_cb_setter = avail_cbs.pop(), avail_cb_setters.pop()
                 self.return_value = polariz['sigma']
@@ -255,13 +256,30 @@ class AbstractMeepModel(meep.Callback):
             #             #set_chi3(meep::structure *,double (*)(meep::vec const &)) XXX this is perhaps used XXX
         #}}}
     def fix_material_stability(self, material, f_c="Auto", verbose="false"):#{{{
+        """ Little heuristics to make the time-domain simulation (mostly) stable
+
+        First, all oscillators with too high frequencies are removed, and the nondispersive
+        part of permittivity is increased. Second, the possible Drude term is detected and fixed
+        so that metals work in low-resolution simulations as well.
+
+        Note that this function is not guarranteed to give optimal results. Sometimes an oscillator 
+        is so strong that it pulls permittivity negative above the critical frequency f_c, and 
+        simulation goes unstable. Very often the models need to be adjusted for the simulation to
+        be faster and more accurate.
+
+        More information is on the authors website.
+        """
         if f_c == "Auto": f_c = self.f_c()
+        f_c_safe = f_c * 0.5
 
         ## Check and fix the first stability criterion
-        for osc in material.pol[:]:
-            if osc['omega'] > f_c: 
+        for n, osc in enumerate(material.pol[:]):
+            if osc['omega'] > f_c_safe: 
                 material.eps += osc['sigma']
                 material.pol.remove(osc)
+                if verbose: 
+                    meep.master_printf("Removing oscillator #%d at too a high frequency (%.2e) from material: %s\n" % \
+                            (n+1, osc['omega'], material.name))
 
         ## Find possible Drude terms and fix them if they break the 2nd stability criterion
         for osc in material.pol:
@@ -270,17 +288,21 @@ class AbstractMeepModel(meep.Callback):
                 gamma    = osc['gamma'] * 2*np.pi  # angular scattering frequency 
 
                 ## Real part of permittivity is roughly constant under the scattering frequency, `gamma', 
-                ## and grows above it. To push permittivity above zero at f_c, gamma must be lower than f_c. 
-                max_gamma = f_c * 0.5
+                ## and grows above it. To push permittivity above zero at f_c, gamma must be lower than f_c
+                ## but not too much. One half is reasonable.
+                max_gamma = f_c_safe
                 if osc['gamma'] > max_gamma: 
                     osc['gamma'] = max_gamma
 
-                ## For a typical Drude conductive material, permittivity is so a big negative number at low frequencies,
+                ## For a typical Drude conductive material, permittivity is such a big negative number at low frequencies,
                 ## so pushing it above 1 at high frequencies does not make any appreciable error.
                 ## To be on the safe side, we ensure eps' > 1 even at f_c*0.5.
                 eps_at_fc = np.real(analytic_eps(material, freq=f_c * 0.5))
                 if eps_at_fc < 1:
                     material.eps += 1 - eps_at_fc
+                    if verbose: 
+                        meep.master_printf(("Increasing high-frequency permittivity by %.1f to "+ \
+                                "make stable the material: %s\n") % (1 - eps_at_fc, material.name))
         #}}}
     def test_materials(self, verbose="false"):#{{{
         """ 
