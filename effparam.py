@@ -397,18 +397,17 @@ if len(freq)>2:
     Z, Z_uo             = rt2z(s11, s12, init_sign=Z_init_sign)
     if autocorrect_signs: 
 
+        ## Fix N sign so that N.imag > 0 
+        nimag = np.sum(np.clip(N.imag,-10., 10.))
+        if nimag<0: N *= -1
+
         ## Take a sample
         ii = int(float(len(N)) * autobranch_sampler_position)
         sampleR = np.real(N[ii])
         sampleI = np.imag(N[ii])
         print 'sampleR, sampleI =', sampleR, sampleI
 
-        ## Fix N sign so that N.imag > 0 
-        #nimag = sum(np.clip(N.imag,-10., 10.))
-        #print nimag
-        #if nimag<0: 
-            #N *= -1
-        #if ii == -0: N *= -1 ## 
+        #if ii == -0: N *= -1  ## alternative way of fixing sign?
 
         ## Fix N branch so that N.real does not diverge  at low frequencies
         branch_selector = 2*sampleR*freq[ii]/c*d

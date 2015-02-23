@@ -36,22 +36,13 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
         self.materials = []  
 
         tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
-        self.fix_material_stability(tio2, f_c=2e13, verbose=0) ## optimize for speed, rm all osc above THz range
+        self.fix_material_stability(tio2, f_c=2e13, verbose=0) ## rm all osc above THz, to optimize for speed 
         self.materials.append(tio2)
 
         if wirethick > 0:
             au = meep_materials.material_Au(where=self.where_wire)
             self.fix_material_stability(au, verbose=0)
             self.materials.append(au)
-
-            #au.pol[0]['gamma'] = self.f_c()/5
-            #self.materials += [meep_materials.material_Metal_THz(where=None)]
-            #au = meep_materials.material_Au(where=None)
-            #au.pol[0]['gamma'] = self.f_c()/5
-            #self.materials += [au]  
-            #self.materials += [meep_materials.material_Metal_THz(where=self.where_wire)]
-
-
 
         ## Test the validity of the model
         meep_utils.plot_eps(self.materials, plot_conductivity=True, 
@@ -102,8 +93,8 @@ monitor2_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.mo
 monitor2_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
 
 slices = []
-slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
-slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution')]
+#slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
+#slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution')]
 slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_t=np.inf, 
     name=('At%.3eHz'%sim_param['frequency']) if sim_param['frequency_domain'] else '', outputpng=True, outputvtk=False)]
 
