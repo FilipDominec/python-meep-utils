@@ -108,7 +108,7 @@ if not sim_param['frequency_domain']:       ## time-domain computation
     while (f.time()/c < model.simtime):                               # timestepping cycle
         f.step()
         timer.print_progress(f.time()/c)
-        print f.get_field(meep.Ex, meep.vec(0,0,0))
+        #print f.get_field(meep.Ex, meep.vec(0,0,0))
         for monitor in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy): monitor.record(field=f)
         for slice_ in slices: slice_.poll(f.time()/c)
     for slice_ in slices: slice_.finalize()
