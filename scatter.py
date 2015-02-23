@@ -15,7 +15,7 @@ import meep_mpi as meep
 #import meep
 
 class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=2e-12, resolution=2e-6, cells=1, cell_size=50e-6, padding=20e-6, Kx=0, Ky=0, 
+    def __init__(self, comment="", simtime=100e-12, resolution=4e-6, cells=1, cell_size=50e-6, padding=20e-6, Kx=0, Ky=0, 
             radius=13e-6, wirethick=0e-6):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
         
