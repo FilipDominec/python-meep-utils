@@ -458,7 +458,7 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
     """
 
     matplotlib.rc('text', usetex=True)
-    matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}') # \usepackage{lmodern}, 
+    matplotlib.rc('text.latex', preamble = '') # \usepackage{lmodern}, 
 
     #for material in list(to_plot): ## autoscale x axis?
         #for pol in material.pol:
