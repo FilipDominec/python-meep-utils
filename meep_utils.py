@@ -856,6 +856,25 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         for field in (Ex1, Hy1, Ex2, Hy2):
             field[t>max(t)*.8] = field[t>max(t)*.8]*(.5 + .5*np.cos(np.pi * (t[t>max(t)*.8]/max(t)-.8)/(1-.8)))
 
+    try:
+        import matplotlib
+        #matplotlib.use('Agg') ## Enable plotting even in the GNU screen session?
+        from matplotlib import pyplot as plt
+        plt.figure(figsize=(7,6))
+        plt.plot(t, abs(Ex1), label="Ex1")
+        plt.plot(t, abs(Hy1), label="Hy1")
+        plt.plot(t, abs(Ex2), label="Ex2", lw=3)
+        plt.plot(t, abs(Hy2), label="Hy2")
+
+        plt.gca().set_ylim(ymin=1e-10)
+        plt.legend(prop={'size':10}, loc='upper right')
+        plt.xlabel('Time'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
+        plt.yscale("log")
+        plt.savefig("amplitudes_time_domain.png", bbox_inches='tight')
+    except:
+        print "Timedomain plot failed"
+
+
     ## Obtain the electric and magnetic fields spectra
     if frequency_domain:            ## No need for FFT in frequency domain, just copy the value
         freq = np.array([frequency])
