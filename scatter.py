@@ -27,7 +27,7 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
 
         self.size_x = cell_size 
         self.size_y = cell_size
-        self.size_z = cells*cell_size + 2*padding + 4*self.pml_thickness
+        self.size_z = cells*cell_size + 4*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
 
         self.register_locals(locals())          ## Remember the parameters
