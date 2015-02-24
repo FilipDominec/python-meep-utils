@@ -29,7 +29,7 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
         self.size_y = cell_size
         self.size_z = cells*cell_size + 4*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
-        self.cellcenters = np.arange((1-cells)*cell_size/2, cells*cell_size/2, cell_size) 
+        self.cellcenters = np.arange((1-cells)*cell_size/2, cells*cell_size/2, cell_size)
 
 
         self.register_locals(locals())          ## Remember the parameters
@@ -131,7 +131,9 @@ if meep.my_rank() == 0:
 
     meep_utils.savetxt(fname=model.simulation_name+".dat", 
             X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)), 
-            header=model.parameterstring, fmt="%.6e")
+            header=model.parameterstring + \
+                    "#column freq\n#column abs(r)\n#column phase(r)\n#column abs(t)\n#column phase(t)\n" +, 
+            fmt="%.6e")
 
     with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
 
