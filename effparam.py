@@ -31,7 +31,7 @@ N_init_sign     =   1
 autocorrect_signs = True
 Z_init_sign     =   -1
 check_hilbert   =   0       ## Verifies if Kramers-Kronig relations hold for N  ###XXX
-legend_enable   =   0      
+legend_enable   =   1      
 brillouin_boundaries = 1    ## Plots thin lines where the N would exceed the allowed 
                             ## range for 0-th Bloch mode
 autobranch      = 0
@@ -664,9 +664,9 @@ plt.plot(freq, np.real(Z), color="#0044DD", label=u"$Z$'")
 plt.plot(freq, np.imag(Z), color="#4466DD", label=u'$Z$"', ls='--')
 
 plt.plot(freq, np.log(-(np.real(N)/np.imag(N)))/np.log(10), 
-    color="#FF9922", ls=":", label=u"$N^{'}<0$ FOM")
+    color="#FF9922", ls=":", label=u"$N$'$<0$ FOM")
 plt.plot(freq, np.log((np.real(N)/np.imag(N)))/np.log(10), \
-    color="#BB22FF", ls=":", label=u"$N^{'}>0$ FOM")
+    color="#BB22FF", ls=":", label=u"$N$''$>0$ FOM")
 plt.ylabel(u"Value"); 
 plt.ylim((-5., 15.)); 
 plt.xlim((plot_freq_min, plot_freq_max)); 
