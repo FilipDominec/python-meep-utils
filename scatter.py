@@ -29,6 +29,8 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
         self.size_y = cell_size
         self.size_z = cells*cell_size + 4*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
+        self.cellcenters = np.arange((1-cells)*cell_size/2, cells*cell_size/2, cell_size) 
+
 
         self.register_locals(locals())          ## Remember the parameters
 
@@ -50,9 +52,10 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
         self.test_materials()
 
     def where_sphere(self, r):
-        if  in_sphere(r, cx=0, cy=0, cz=0, rad=self.radius):
-            return self.return_value             # (do not change this line)
-        return 0
+        for cellc in self.cellcenters:
+            if  in_sphere(r, cx=0, cy=0, cz=0, rad=self.radius):
+                return self.return_value             # (do not change this line)
+            return 0
     def where_wire(self, r):
         if  in_xcyl(r, cz=0, cy=self.size_y/2, rad=self.wirethick) or \
                 in_xcyl(r, cz=0, cy=-self.size_y/2, rad=self.wirethick):
@@ -95,8 +98,9 @@ monitor2_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.mo
 slices = []
 slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
 slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', min_timestep=1e-12)]
-slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
-slices += [meep_utils.Slice(model=model, field=f, components=(meep.Hx, meep.Hy, meep.Hz), at_t=np.inf, name='SnapshotH')]
+#slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
+#slices += [meep_utils.Slice(model=model, field=f, components=(meep.Hx, meep.Hy, meep.Hz), at_t=np.inf, name='SnapshotH')]
+slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dx, meep.Dy, meep.Dz), at_t=np.inf, name='Poynting')]
 #slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_t=np.inf, 
     #name=('At%.3eHz'%sim_param['frequency']) if sim_param['frequency_domain'] else '', outputpng=True, outputvtk=False)]
 
@@ -127,9 +131,8 @@ if meep.my_rank() == 0:
 
     meep_utils.savetxt(fname=model.simulation_name+".dat", 
             X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)), 
-            header=model.parameterstring, fmt="%.6e") ## TODO add the column description
+            header=model.parameterstring, fmt="%.6e")
 
     with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
-    #import effparam        # process effective parameters for metamaterials
 
 meep.all_wait()         # Wait until all file operations are finished
