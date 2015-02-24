@@ -22,12 +22,12 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
         ## Constant parameters for the simulation
         self.simulation_name = "SphereArray"    
         self.src_freq, self.src_width = 1000e9, 2000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (0e9, 2000e9)    # Which frequencies will be saved to disk
+        self.interesting_frequencies = (100e9, 2000e9)    # Which frequencies will be saved to disk
         self.pml_thickness = 20e-6
 
         self.size_x = cell_size 
         self.size_y = cell_size
-        self.size_z = cells*cell_size + 4*padding + 2*self.pml_thickness
+        self.size_z = cells*cell_size + 2*padding + 4*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
 
         self.register_locals(locals())          ## Remember the parameters
@@ -93,14 +93,13 @@ monitor2_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.mo
 monitor2_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
 
 slices = []
-#slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
-#slices =  [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution')]
+slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
+slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', min_timestep=1e-12)]
 slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_t=np.inf, 
     name=('At%.3eHz'%sim_param['frequency']) if sim_param['frequency_domain'] else '', outputpng=True, outputvtk=False)]
 
 ## Run the FDTD simulation or the frequency-domain solver
 if not sim_param['frequency_domain']:       ## time-domain computation
-    f.step()
     timer = meep_utils.Timer(simtime=model.simtime); meep.quiet(True) # use custom progress messages
     while (f.time()/c < model.simtime):                               # timestepping cycle
         f.step()
