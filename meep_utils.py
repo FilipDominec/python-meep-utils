@@ -5,21 +5,29 @@ Here you can find various functions and classes that facilitate the work with py
 I believe some of these functions ought to be implemented in the meep module.
 Filip Dominec 2012-2015
 
-       SliceAnalysis(Slices=[], TimeDomainFunction=None, FreqDomainFunction=None, plot_timedomain=True, plot_freqdomain=True)
 TODOs optional:
+    * allow simple switching between 3-D and 2-D simulation
+            1) requires to send the field along X direction, not Z
+            2) choosing between 2-D field polarisations needs rotating source/monitor 
+                i.e. (Ez,Hy) for TM, and  (Ey,Hz) for TE
+            3) monitor plane must be *fast*, so it should switch to 1-D averaging at startup
     * try to make meep use true speed of light 
             1) multiply permittivity by epsilon0, and 
             2) introduce (flat) permeability mu0
             3) in forw/back wave separation, use true vacuum impedance
             4) remove all divisions/multiplications by speed of light (hooray!!)
             5) adjust Courant factor
+    * verify that everything works also in the GNU Screen session (without xserver)
+      ...   matplotlib.use('Agg') ## Enable plotting even in the GNU screen session
+    * think over a very generic class of 
+      SliceAnalysis(Slices=[], TimeDomainFunction=None, FreqDomainFunction=None, plot_timedomain=True, plot_freqdomain=True)
+      instead of the MonitorPlane
 """
 import os, os.path, sys, subprocess, time
 import numpy as np
 from scipy.constants import c, epsilon_0, mu_0
 
 import matplotlib
-matplotlib.use('Agg') ## Enable plotting even in the GNU screen session
 import matplotlib.pyplot as plt
 
 import meep_mpi as meep
@@ -659,7 +667,7 @@ def harminv(x, y, d=100, f=30, amplitude_prescaling=1):#{{{
     return {'frequency':np.abs(mf*2), 'decay':md, 'quality':mQ, 'amplitude':mA/amplitude_prescaling, 'phase':mp, 'error':merr}
 #}}}
 
-## Saving and loading data (not using MEEP functions)
+## Saving and loading data (not dependent on MEEP functions, but better if ran by the 1st process only)
 def savetxt(fname, X, header, **kwargs):#{{{ 
     """
     Its use is for older versions of the library that do not accept the `header' parameter
@@ -848,8 +856,6 @@ class Slice(): #{{{
             if not self.outputhdf: 
                 run_bash("cd %s; rm %s.h5" % (self.outputdir, self.name))
     #}}}
-
-
 
 ## Obtain and process the s-parameters of the structure 
 def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
@@ -1109,21 +1115,6 @@ class AmplitudeMonitorPlane():#{{{
         ## TODO this will have to be modified in order to account for oblique incidence
         ## TODO take into account the medium impedance (... divide the Hfield)
 #}}}
-class AmplitudeMonitorPoint(AmplitudeMonitorPlane):#{{{
-    """ Calculates an average of electric field and perpendicular magnetic field.
-    """
-    def __init__(self, Ecomp=None, Hcomp=None, pos=None):
-        self.Ecomp=Ecomp
-        self.Hcomp=Hcomp
-        self.pos = pos          ## where to record the field
-        self.t = []
-        self.Efield = []
-        self.Hfield = []
-
-    def get_amplitude(self, field, component):
-        """ Record field in some point. No averaging here, but (inherited) time recording is pretty useful. """
-        return field.get_field(component, self.pos)
-#}}}
 
 
 ## === Experimental zone ===
@@ -1252,6 +1243,21 @@ def load_rt_old(filename, layer_thickness=None, plot_freq_min=None, plot_freq_ma
     return freq, s11amp, s11phase, s12amp, s12phase, xlim, (d, plot_freq_min, plot_freq_min)
 #}}}
 
+class AmplitudeMonitorPoint(AmplitudeMonitorPlane):#{{{
+    """ Calculates an average of electric field and perpendicular magnetic field.
+    """
+    def __init__(self, Ecomp=None, Hcomp=None, pos=None):
+        self.Ecomp=Ecomp
+        self.Hcomp=Hcomp
+        self.pos = pos          ## where to record the field
+        self.t = []
+        self.Efield = []
+        self.Hfield = []
+
+    def get_amplitude(self, field, component):
+        """ Record field in some point. No averaging here, but (inherited) time recording is pretty useful. """
+        return field.get_field(component, self.pos)
+#}}}
         
 """
         

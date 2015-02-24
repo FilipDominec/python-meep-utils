@@ -125,7 +125,7 @@ if meep.my_rank() == 0:
 
     meep_utils.savetxt(fname=model.simulation_name+".dat", 
             X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)), 
-            header=model.parameterstring, fmt="%.6e")
+            header=model.parameterstring, fmt="%.6e") ## TODO add the column description
 
     with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
     #import effparam        # process effective parameters for metamaterials

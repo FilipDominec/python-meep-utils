@@ -37,9 +37,9 @@ brillouin_boundaries = 1    ## Plots thin lines where the N would exceed the all
 autobranch      = 0
 
 savedat     = 1     ## created directory 'effparam' and saves all params to an ascii file with header
-plot_publi  = 1     ## prepares nice small graphs for publication
-plot_polar  = 1     ## plots results to polar graphs for diagnostics
-plot_bands  = 1     ## plots index of refraction as dispersion curves (k-omega)
+plot_publi  = 0     ## prepares nice small graphs for publication
+plot_polar  = 0     ## plots results to polar graphs for diagnostics
+plot_bands  = 0     ## plots index of refraction as dispersion curves (k-omega)
 plot_expe   = 1     ## if 'r.dat', 't.dat', 'N.dat', 'Z.dat', 'eps.dat' or 'mu.dat' available, overlay them
 find_plasma_frequency = 0 ## find frequencies where epsilon crosses zero
 
