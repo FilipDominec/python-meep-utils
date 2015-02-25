@@ -16,7 +16,7 @@ import meep_mpi as meep
 
 class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cells=1, cell_size=50e-6, padding=20e-6, Kx=0, Ky=0, 
-            radius=13e-6, wirethick=2e-6):
+            radius=13e-6, wirethick=0):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
         
         ## Constant parameters for the simulation
@@ -31,13 +31,13 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
         self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
         self.cellcenters = np.arange((1-cells)*cell_size/2, cells*cell_size/2, cell_size)
 
-
         self.register_locals(locals())          ## Remember the parameters
 
         ## Define materials
         self.materials = []  
 
-        tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
+        #tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
+        tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=92) 
         self.fix_material_stability(tio2, f_c=2e13, verbose=0) ## rm all osc above THz, to optimize for speed 
         self.materials.append(tio2)
 
@@ -53,13 +53,14 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
 
     def where_sphere(self, r):
         for cellc in self.cellcenters:
-            if  in_sphere(r, cx=0, cy=0, cz=0, rad=self.radius):
+            if  in_sphere(r, cx=0, cy=0, cz=cellc, rad=self.radius):
                 return self.return_value             # (do not change this line)
-            return 0
+        return 0
     def where_wire(self, r):
-        if  in_xcyl(r, cz=0, cy=self.size_y/2, rad=self.wirethick) or \
-                in_xcyl(r, cz=0, cy=-self.size_y/2, rad=self.wirethick):
-            return self.return_value             # (do not change this line)
+        for cellc in self.cellcenters:
+            if  in_xcyl(r, cy=self.size_y/2, cz=cellc, rad=self.wirethick) or \
+                    in_xcyl(r, cy= -self.size_y/2, cz=cellc, rad=self.wirethick):
+                return self.return_value             # (do not change this line)
         return 0
 #}}}
 
@@ -106,8 +107,8 @@ slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dx, meep.Dy, 
 
 ## Run the FDTD simulation or the frequency-domain solver
 if not sim_param['frequency_domain']:       ## time-domain computation
-    timer = meep_utils.Timer(simtime=model.simtime); meep.quiet(True) # use custom progress messages
-    while (f.time()/c < model.simtime):                               # timestepping cycle
+    f.step(); timer = meep_utils.Timer(simtime=model.simtime); meep.quiet(True) # use custom progress messages
+    while (f.time()/c < model.simtime):     # timestepping cycle
         f.step()
         timer.print_progress(f.time()/c)
         #print f.get_field(meep.Ex, meep.vec(0,0,0))
@@ -129,11 +130,10 @@ if meep.my_rank() == 0:
             intf=getattr(model, 'interesting_frequencies', [0, model.src_freq+model.src_width]),
             pad_zeros=1.0, Kx=model.Kx, Ky=model.Ky)
 
-    meep_utils.savetxt(fname=model.simulation_name+".dat", 
+    meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",
             X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)), 
             header=model.parameterstring + \
-                    "#column freq\n#column abs(r)\n#column phase(r)\n#column abs(t)\n#column phase(t)\n" +, 
-            fmt="%.6e")
+                    "#x-column freq\n#column abs(r)\n#column phase(r)\n#column abs(t)\n#column phase(t)\n")
 
     with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
 
