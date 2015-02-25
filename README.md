@@ -18,16 +18,20 @@ February 2015
 ## File overview
 #### General modules and other files
  * `meep_utils.py`       - the main module with routines useful for python-meep simulations
- * `meep_materials.py`   - module containing definition of materials used. The material definition in 
-                           in python-meep is a bit complicated, this attempts to simplify it.
+ * `meep_materials.py`   - module containing realistic definition of materials used 
  * `README.md`		     - this file
- * `LICENSE`			- GPLv2
- * `plot_scan_as_contours.py`
- * `effparam.py`
+ * `LICENSE`			 - GPLv2
+ * `plot_scan_as_contours.py` - if multiple simulations are run as a parametric scan, this allows to present the results in a single contour plot
+ * `effparam.py`		 - retrieves the metamaterial effective parameters from the complex reflection and transmission (e.g. from `scatter.py`)
+
 #### Simulation scripts
  * `scatter.py`
  * `spdc.py`
+
 #### Examples using the simulation scripts
+ * [ ]  `example_metamaterial_s_parameters/` - computes effective parameters of a metamaterial of dielectric spheres, using `scatter.py` and `effparam.py`
+	TODO: fix multiple cells
+ * [ ]  `example_frequency_domain_solver/` - runs `scatter.py` multiple times in frequency-domain, and then compares the results to the classical Fourier-transformed time-domain simulation
  * [ ]  `example_surface_plasmons/`
 	TODO add support for metal/diel substrate
  * [ ]  `example_aperture_near-field_microscope/` 
@@ -37,10 +41,6 @@ February 2015
 	TODO
  * [ ]  `example_dielectric_slab_oblique_incidence/`
 	TODO , c.f. transfer-matrix
- * [ ]  `example_frequency_domain_solver/`
-	TODO
- * [ ]  `example_metamaterial_s_parameters/`
-	TODO
  * [ ]  `example_refraction_on_MM_wedge_2D/`
 	TODO implement 2-D support
  * [ ]  `example_nonlinear_Kerr_focusing/`
