@@ -8,7 +8,7 @@ for scientific computing. Starting with MEEP was not easy, though, mostly due to
 years I wrote multiple utility functions that in my opinion greatly facilitate the simulations, and I publish 
 them under open license, with the hope they might be useful to the scientific community.
 
-I will be glad if these scripts help you with your thesis, paper or just any project. In such a case, you can 
+I will be happy if these scripts help you with your thesis, paper or just any project. In such a case, you can 
 made a reference to my website or send me a message; perhaps I can even help you with some useful tips.
 
 Filip Dominec, filip.dominec@gmail.com,
@@ -23,13 +23,15 @@ February 2015
  * `LICENSE`			 - GPLv2
  * `plot_scan_as_contours.py` - if multiple simulations are run as a parametric scan, this allows to present the results in a single contour plot
  * `effparam.py`		 - retrieves the metamaterial effective parameters from the complex reflection and transmission (e.g. from `scatter.py`)
+ * `plot_cdh.py`,`plot_cdh_new.py` - plots data for current-driven homogenization, TODO fix 
 
 #### Simulation scripts
- * `scatter.py`
- * `spdc.py`
+ * `scatter.py`			 - defines a metamaterial cell containing a dielectric sphere, and optionally metallic wires parallel to electric field
+ * `cdh.py` - TODO
+ * `spdc.py` - TODO
 
 #### Examples using the simulation scripts
- * [ ]  `example_metamaterial_s_parameters/` - computes effective parameters of a metamaterial of dielectric spheres, using `scatter.py` and `effparam.py`
+ * [ ]  `example_metamaterial_s_parameters/` - computes effective parameters of a metamaterial (using `scatter.py` and `effparam.py`); shows how the negative index of refraction is achieved by adding wires, and how it retains/changes when more metamaterial cells are computed
 	TODO: fix multiple cells
  * [ ]  `example_frequency_domain_solver/` - runs `scatter.py` multiple times in frequency-domain, and then compares the results to the classical Fourier-transformed time-domain simulation
  * [ ]  `example_surface_plasmons/`
