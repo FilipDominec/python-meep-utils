@@ -28,6 +28,7 @@ import numpy as np
 from scipy.constants import c, epsilon_0, mu_0
 
 import matplotlib
+matplotlib.use('Agg') # may help against the "tkinter.TclError: bad screen distance" error
 import matplotlib.pyplot as plt
 
 import meep_mpi as meep
