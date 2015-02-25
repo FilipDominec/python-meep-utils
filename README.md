@@ -19,8 +19,40 @@ February 2015
  * `meep_utils.py`       - the main module with routines useful for python-meep simulations
  * `meep_materials.py`   - module containing definition of materials used. The material definition in 
                            in python-meep is a bit complicated, this attempts to simplify it.
- * `README.txt`		     - this file
+ * `README.md`		     - this file
+ * `LICENSE`			- GPLv2
 
+ * `effparam.py`
+ * `scatter.py`
+ * `spdc.py`
+
+ * [ ]  [ ] `example_surface_plasmons/`
+	TODO add support for metal/diel substrate
+ * [ ]  `example_aperture_near-field_microscope/` 
+    TODO
+ * [ ]  `example_cylindrical_cavity_modes/` - (uses hollowcyl_sim.py)
+ * [ ]  `example_dielectric_bars_width_scan/ `
+	TODO
+ * [ ]  `example_dielectric_slab_oblique_incidence/`
+	TODO , c.f. transfer-matrix
+ * [ ]  `example_frequency_domain_solver/`
+	TODO
+ * [ ]  `example_metamaterial_s_parameters/`
+	TODO
+ * [ ]  `example_refraction_on_MM_wedge_2D/`
+	TODO implement 2-D support
+ * [ ]  `example_nonlinear_Kerr_focusing/`
+	TODO implement
+ * [ ]  `example_SPDC/`
+	TODO
+ * `plot_scan_as_contours.py`
+ * `140902_OlegMitrofanov-sphere_aperture/`
+ * `140903_OlegMitrofanov_SphereXY/`
+ * `141022_Current-Driven_Homogenisation_2D/`
+ * `141023_OlegMitrofanov_SphereLosses/`
+ * `141103_Current-Driven_Homogenisation_3D/`
+ * `150120_test_material/`
+ * `150126_SteveRussel_resonator/`
 
 ## Related resources
  * Official website of MEEP: http://ab-initio.mit.edu/wiki/index.php/Meep     
