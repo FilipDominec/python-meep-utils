@@ -4,7 +4,6 @@
 illustrating the use of the convenient functions provided by meep_utils.py 
 (c) 2014 Filip Dominec, see http://f.dominec.eu/meep for more information """
 
-
 import time, sys, os
 import numpy as np
 from scipy.constants import c, epsilon_0, mu_0
@@ -18,7 +17,7 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cells=1, cell_size=50e-6, padding=20e-6, Kx=0, Ky=0, 
             radius=13e-6, wirethick=0):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
-        
+
         ## Constant parameters for the simulation
         self.simulation_name = "SphereArray"    
         self.src_freq, self.src_width = 1000e9, 2000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
@@ -36,8 +35,10 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
         ## Define materials
         self.materials = []  
 
-        #tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
-        tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=92) 
+        if 'LossLess' in comment:
+            tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=92) 
+        else:
+            tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
         self.fix_material_stability(tio2, f_c=2e13, verbose=0) ## rm all osc above THz, to optimize for speed 
         self.materials.append(tio2)
 

@@ -31,9 +31,8 @@ February 2015
  * `spdc.py` - TODO
 
 #### Examples using the simulation scripts
- * [ ]  `example_metamaterial_s_parameters/` - computes effective parameters of a metamaterial (using `scatter.py` and `effparam.py`); shows how the negative index of refraction is achieved by adding wires, and how it retains/changes when more metamaterial cells are computed
-	TODO: fix multiple cells
- * [ ]  `example_frequency_domain_solver/` - runs `scatter.py` multiple times in frequency-domain, and then compares the results to the classical Fourier-transformed time-domain simulation
+ * [x]  `example_metamaterial_s_parameters/` - computes effective parameters of a metamaterial (using `scatter.py` and `effparam.py`); shows how the negative index of refraction is achieved by adding wires, and how it retains/changes when more metamaterial cells are computed (which however can suffer from wrong branch switch)
+ * [x]  `example_frequency_domain_solver/` - runs `scatter.py` multiple times in frequency-domain, and then compares the results to the classical Fourier-transformed time-domain simulation
  * [ ]  `example_surface_plasmons/`
 	TODO add support for metal/diel substrate
  * [ ]  `example_aperture_near-field_microscope/` 

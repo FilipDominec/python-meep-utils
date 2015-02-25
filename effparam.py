@@ -100,6 +100,7 @@ def load_rt(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=No
             if line[0:1] in "0123456789": break         # end of file header
             value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
             if ("cell_size" in line) and (layer_thickness == None): cell_size = float(value)
+            if ("cells" in line) and (layer_thickness == None): cells = float(value)
             if ("plot_freq_min" in line) and (plot_freq_min == None): plot_freq_min = float(value)
             if ("plot_freq_max" in line) and (plot_freq_max == None): plot_freq_max = float(value)
             if ("param padding" in line) and (padding == None): padding = float(value)
@@ -113,7 +114,7 @@ def load_rt(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=No
         (d0,d1) = np.interp((plot_freq_min, plot_freq_max), freq, range(len(freq)))
         (freq, s11amp, s11phase, s12amp, s12phase) = \
                 map(lambda a: a[int(d0):int(d1)], (freq, s11amp, s11phase, s12amp, s12phase))
-    return freq, s11amp, s11phase, s12amp, s12phase, cell_size, plot_freq_min, plot_freq_max, padding
+    return freq, s11amp, s11phase, s12amp, s12phase, cell_size, plot_freq_min, plot_freq_max, padding, cells
 #}}}
 def shiftmp(freq, s11, shiftplanes):#{{{
     """ Adjusts the reflection phase like if the monitor planes were not centered.
@@ -379,8 +380,10 @@ def eval_point(p0):#{{{
 ## --- Calculation -------------------------------------------- 
 ## Get reflection and transmission data
 last_simulation_name = get_simulation_name()
-freq, s11amp, s11phase, s12amp, s12phase, d, plot_freq_min, plot_freq_max, padding = \
+freq, s11amp, s11phase, s12amp, s12phase, cell_size, plot_freq_min, plot_freq_max, padding, cells = \
         load_rt(last_simulation_name, plot_freq_min=plot_freq_min, plot_freq_max=plot_freq_max, truncate=False, padding=padding)
+
+d = cell_size * cells
 
 ## Convert to complex numbers and compensate for the additional padding of the monitor planes
 s11 = shiftmp(freq, polar2complex(s11amp, s11phase), padding*np.ones_like(freq))
