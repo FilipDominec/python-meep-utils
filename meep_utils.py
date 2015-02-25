@@ -498,9 +498,10 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
     frequency = 10**np.arange(np.log10(freq_range[0]), np.log10(freq_range[1]), .01)
 
     plt.figure(figsize=(7,6))
-    colors = ['#000000', '#004400', '#003366', '#000088', '#440077', 
-              '#661100', '#AA8800', '#00AA00', '#0099DD', '#dd2200', 
-              '#0044dd','#888888']
+    #colors = ['#000000', '#004400', '#003366', '#000088', '#440077', '#661100', 
+              #'#aa8800', '#00aa00', '#0099dd', '#0000EE', '#2200DD', '#aa0000']
+    colors = ['#000000', '#004400', '#003366', '#000088', '#440077', '#661100', 
+              '#aa8800', '#0044dd', '#00bb00', '#aaaa00', '#bb6600', '#dd0000']
 
     subplotnumber = 2 if plot_conductivity else 1
 
@@ -560,13 +561,14 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
 
     ## Annotate frequencies and finish the graph 
     plt.subplot(subplotnumber,1,1)
+    plt.legend() 
     plt.xlabel(u"frequency $f$ [Hz]") 
     plt.ylabel(u"relative permittivity $\\varepsilon_r$")
     plt.xscale('log'); plt.grid(True)
     ylim = (-1e7, 1e6); plt.ylim(ylim); plt.yscale('symlog')
     annotate_frequency_axis(mark_freq, log_y=True, arrow_length=50) # TODO , print_freq=True
     if draw_instability_area:
-        plt.gca().add_patch(plt.Rectangle((draw_instability_area[0], ylim[0]), 1e20, draw_instability_area[1]-ylim[0], color='#ffddaa'))
+        plt.gca().add_patch(plt.Rectangle((draw_instability_area[0], ylim[0]), 1e20, draw_instability_area[1]-ylim[0], color='#dddddd'))
 
     if plot_conductivity:
         plt.subplot(subplotnumber,1,2)
