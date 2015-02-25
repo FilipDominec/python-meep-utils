@@ -16,17 +16,19 @@ February 2015
 
 
 ## File overview
+#### General modules and other files
  * `meep_utils.py`       - the main module with routines useful for python-meep simulations
  * `meep_materials.py`   - module containing definition of materials used. The material definition in 
                            in python-meep is a bit complicated, this attempts to simplify it.
  * `README.md`		     - this file
  * `LICENSE`			- GPLv2
-
+ * `plot_scan_as_contours.py`
  * `effparam.py`
+#### Simulation scripts
  * `scatter.py`
  * `spdc.py`
-
- * [ ]  [ ] `example_surface_plasmons/`
+#### Examples using the simulation scripts
+ * [ ]  `example_surface_plasmons/`
 	TODO add support for metal/diel substrate
  * [ ]  `example_aperture_near-field_microscope/` 
     TODO
@@ -45,14 +47,6 @@ February 2015
 	TODO implement
  * [ ]  `example_SPDC/`
 	TODO
- * `plot_scan_as_contours.py`
- * `140902_OlegMitrofanov-sphere_aperture/`
- * `140903_OlegMitrofanov_SphereXY/`
- * `141022_Current-Driven_Homogenisation_2D/`
- * `141023_OlegMitrofanov_SphereLosses/`
- * `141103_Current-Driven_Homogenisation_3D/`
- * `150120_test_material/`
- * `150126_SteveRussel_resonator/`
 
 ## Related resources
  * Official website of MEEP: http://ab-initio.mit.edu/wiki/index.php/Meep     
