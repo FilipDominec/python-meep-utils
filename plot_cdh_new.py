@@ -25,10 +25,17 @@ plot_FFT = True
 interp_anisotropy = 2e-5        # value lower than 1. interpolates rather vertically; optimize if plot desintegrates
 FFTcutoff = 0.8    
 
-plot_FDM = False #True
+plot_FDM = True
 FDMtrunc = (.1, .5) 
 
 plot_NRef = True
+
+if   '-phase' in sys.argv[1:]: 
+    filesuffix = 'phase'
+elif '-epsilon' in sys.argv[1:]: 
+    filesuffix = 'epsilon'
+else:
+    filesuffix = 'ampli'
 
 
 ## Operate over multiple files
@@ -55,24 +62,22 @@ for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(file
 
     if plot_FDM:
         #if True or '200' in filename:
-            print filename
-            import harminv_wrapper ## TODO harminv_wrapper has moved into meep_utils FIXME
-            tscale = 3e9
-            t1 = t[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]*tscale
-            t1 -= np.min(t1)
-            E1 = E[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]
-            print np.max(t1)
-            try:
-                hi = harminv_wrapper.harminv(t1, E1, d=.1, f=15)
-                hi['frequency'] *= tscale /frequnit
-                hi['amplitude'] /= np.max(hi['amplitude'])
-                hi['error'] /= np.max(hi['amplitude'])
-                FDM_freqs = np.append(FDM_freqs,  hi['frequency'])
-                FDM_amplis= np.append(FDM_amplis,  hi['amplitude'])
-                FDM_phases= np.append(FDM_phases,  hi['phase'])
-                FDM_Kzs   = np.append(FDM_Kzs,    Kz*np.ones_like(hi['frequency'])) 
-            except: 
-                print "Error: Harminv did not find any oscillator in %s" % filename
+        import harminv_wrapper_old ## TODO harminv_wrapper has moved into meep_utils FIXME
+        tscale = 3e9
+        t1 = t[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]*tscale
+        t1 -= np.min(t1)
+        E1 = E[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]
+        try:
+            hi = harminv_wrapper_old.harminv(t1, E1, d=.1, f=15)
+            hi['frequency'] *= tscale /frequnit
+            hi['amplitude'] /= np.max(hi['amplitude'])
+            hi['error'] /= np.max(hi['amplitude'])
+            FDM_freqs = np.append(FDM_freqs,  hi['frequency'])
+            FDM_amplis= np.append(FDM_amplis,  hi['amplitude'])
+            FDM_phases= np.append(FDM_phases,  hi['phase'])
+            FDM_Kzs   = np.append(FDM_Kzs,    Kz*np.ones_like(hi['frequency'])) 
+        except: 
+            print "Error: Harminv did not find any oscillator in %s" % filename
 
 
     if plot_FFT:
@@ -88,7 +93,7 @@ for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(file
         pulsedelay  = 9.2e-12
         Y      = np.fft.fftshift(Ef) / np.exp(-1j*pulsedelay*freq) * 100
 
-        c = 2.998e8
+        ## TODO: implement retrieval of the effective spatial-dispersive permittivity ε(ω,K)
         # if [sqrt(mu_r eps) c k / omega] - 1 = Y
         #Ef = ((freq*2*np.pi) / (Kz * c))**2 * (Y + 1)**2
         Ef = Y
@@ -117,38 +122,31 @@ if plot_FFT:
     ki = np.linspace(0, np.max(Kzs), 200)
 
     ## Plot contours for gridded data
-    if '-phase' in sys.argv[1:]:
-        filesuffix = 'phase'
 
+    if filesuffix == 'phase':
         z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.angle(Efs), ki*interp_anisotropy, fi, interp='nn')
-        print Y
         contours = plt.contourf(ki, fi, z, levels=np.linspace(-np.pi,np.pi,50), cmap=matplotlib.cm.hsv, extend='both') 
         plt.colorbar()
-    else:
-        filesuffix = 'ampli'
-
-        #z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.abs(Efs), ki*interp_anisotropy, fi, interp='nn')
-        #log_min, log_max = np.log10(np.min(z)), np.log10(np.max(z))
+    elif filesuffix == 'ampli':
+        z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.abs(Efs), ki*interp_anisotropy, fi, interp='nn')
+        log_min, log_max = np.log10(np.min(z)), np.log10(np.max(z))
         #log_min, log_max = -5, .5
-        #levels = 10**(np.arange(         log_min,          log_max,  .2))       ## where the contours are drawn
-        #ticks  = 10**(np.arange(np.floor(log_min), np.ceil(log_max),  1))       ## where a number is printed
-        #contours = plt.contourf(ki, fi, z, levels=levels, cmap=plt.cm.gist_earth, norm = matplotlib.colors.LogNorm())
-        #plt.colorbar(ticks=0ticks).set_ticklabels(['$10^{%d}$' % int(np.log10(t)) for t in ticks])
-
+        levels = 10**(np.arange(         log_min,          log_max,  .2))       ## where the contours are drawn
+        ticks  = 10**(np.arange(np.floor(log_min), np.ceil(log_max),  1))       ## where a number is printed
+        contours = plt.contourf(ki, fi, z, levels=levels, cmap=plt.cm.gist_earth, norm = matplotlib.colors.LogNorm())
+        plt.colorbar(ticks=ticks).set_ticklabels(['$10^{%d}$' % int(np.log10(t)) for t in ticks])
+    elif filesuffix == 'epsilon':
+        ## TODO: non-logarithmic plotting of the effective spatial-dispersive permittivity ε(ω,K)
         Y = griddata(Kzs*interp_anisotropy, freqs/frequnit, Efs, ki*interp_anisotropy, fi, interp='nn') 
         g_min, g_max = 0, 10.05
         levels = np.linspace(g_min,  g_max,  100)       ## where the contours are drawn
         ticks  = np.linspace(g_min, g_max, 10)       ## where a number is printed
-
         contours = plt.contourf(ki, fi, np.abs(Y), levels=levels, cmap=plt.cm.gist_earth)
         plt.colorbar(ticks=ticks).set_ticklabels(['$%.1f$' % t for t in ticks])
-
         #contours = plt.contourf(ki, fi, np.real(Y), levels=levels, cmap=plt.cm.Blues)    # plot full complex function
         #plt.colorbar(ticks=ticks).set_ticklabels(['$%.1f$' % t for t in ticks])
         #contours = plt.contourf(ki, fi, np.imag(Y), levels=levels, cmap=plt.cm.Reds, alpha=.3)
         #plt.colorbar(ticks=ticks).set_ticklabels(['$%.1f$' % t for t in ticks])
-
-
 
     for contour in contours.collections: contour.set_antialiased(False)     ## optional: avoid white aliasing (for matplotlib 1.0.1 and older) 
 
@@ -176,7 +174,7 @@ plt.xlabel(u"Wave vector [m$^{-1}$]");
 plt.ylabel(u"Frequency [THz]"); 
 plt.grid()
 plt.legend(prop={'size':10}, loc='upper right')
-plt.savefig("cdh_FDM_epsilon_%s.png" % filesuffix, bbox_inches='tight')
+plt.savefig("cdh_FDM_%s.png" % filesuffix, bbox_inches='tight')
 
     #plt.plot(freq, np.log10(np.abs(zf)+1e-10), color=color, label=u"$y'$", ls='-')      # (optional) plot amplitude
     #plt.plot(freq, np.unwrap(np.angle(zf)), color="#FF8800", label=u"$y'$", ls='--')   # (optional) plot phase
