@@ -717,10 +717,12 @@ if check_hilbert and len(freq)>1:
     plt.plot(freq, np.real(mu_KK)-np.real(mu), color="#0099FF", label=u"$mu^{'}_{KK}$", alpha=.5)
     plt.plot(freq, np.imag(mu_KK)-np.imag(mu), color="#4499FF", label=u'$mu^{''}_{KK}$', ls='--', alpha=.5)
 plt.plot(freq, np.real(eps), color="#AA0088", label=u"$\\varepsilon_{eff}$'")
-plt.plot(freq, np.imag(eps), color="#AA66DD", label=u'$\\varepsilon_{eff}$"', ls='--')
-plt.plot(freq, np.real(mu),  color="#AA8800", label=u"$\\mu_{eff}$'")
-plt.plot(freq, np.imag(mu),  color="#AA8844", label=u'$\\mu_{eff}$"', ls='--')
-plt.ylabel(u"Value"); plt.ylim((-1000.,1000.)); plt.yscale('symlog', linthreshy=10.); plt.xlim((plot_freq_min, plot_freq_max))
+plt.plot(freq, np.imag(eps), color="#FF22DD", label=u'$\\varepsilon_{eff}$"', ls='--')
+plt.plot(freq, np.real(mu),  color="#BB8800", label=u"$\\mu_{eff}$'")
+plt.plot(freq, np.imag(mu),  color="#DDAA00", label=u'$\\mu_{eff}$"', ls='--')
+plt.ylabel(u"Value"); plt.ylim((-10.,10.)); 
+plt.yscale('symlog', linthreshy=10.); 
+plt.xlim((plot_freq_min, plot_freq_max))
 #plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(True)
 if legend_enable: plt.legend(); 
 

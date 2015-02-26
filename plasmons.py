@@ -40,7 +40,7 @@ class PlasmonFilm_model(meep_utils.AbstractMeepModel): #{{{
 
         self.materials   = [meep_materials.material_Au(where=self.where_metal)]  
         #self.materials   = [meep_materials.material_DrudeMetal(lfconductivity=1e8, f_c=.2*f_c, where = self.where_metal)]  
-        self.materials   += [meep_materials.material_dielectric(where=self.where_diel, eps=2.)]  
+        #self.materials   += [meep_materials.material_dielectric(where=self.where_diel, eps=2.)]  
         #self.TestMaterials()
         #self.materials   += [meep_materials.material_Au(where=None)]  
         meep_utils.plot_eps(self.materials, mark_freq=[f_c])

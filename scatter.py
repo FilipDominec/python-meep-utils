@@ -65,7 +65,6 @@ class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
-
 # Model selection
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
 model = SphereArray_model(**model_param)

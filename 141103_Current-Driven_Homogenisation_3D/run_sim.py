@@ -95,7 +95,9 @@ class FishnetCDH_model(meep_utils.AbstractMeepModel): #{{{
         ## Define materials
         #self.materials = [meep_materials.material_dielectric(where = self.where_TiO2, eps=eps2)]  
         self.materials = [meep_materials.material_Metal_THz(where = self.where_metal)]  
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.TestMaterials()
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
         #f_c = c / np.pi/self.resolution/meep_utils.meep.use_Courant()
         #meep_utils.plot_eps(self.materials, mark_freq=[f_c])
@@ -108,6 +110,7 @@ class FishnetCDH_model(meep_utils.AbstractMeepModel): #{{{
                  (in_yslab(r, cy=0, d=self.radius*2*self.thin) and in_xslab(r, cx=0, d=self.radius*2 ))):
             return self.return_value             # (do not change this line)
 #}}}
+
 
 # Model selection
 #model = SphereCDH_model(**model_param)
@@ -173,6 +176,7 @@ if not sim_param['frequency_domain']:       ## time-domain computation
     while (f.time()/c < model.simtime):                               # timestepping cycle
         f.step()
         timer.print_progress(f.time()/c)
+        meep.master_printf("%e" % abs(f.get_field(meep.Ex, meep.vec(model.size_x/4, model.size_y/4, model.size_z/4))))
         for monitor in (monitor1_Ex,): monitor.record(field=f)
         for slice_maker in slice_makers: slice_maker.poll(f.time()/c)
     for slice_maker in slice_makers: slice_maker.finalize()

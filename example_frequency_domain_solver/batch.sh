@@ -14,7 +14,7 @@ cat all.dat  |  sed -e '/#/d'  |  cut -d' ' -f'1,4'  |  sort -g  >  t.dat
 
 ## Gather the frequency-domain E_x shapes
 mkdir png
-mv SphereArray_/*png png/
+mv    SphereArray*frequency*/*png png/
 
 ## Clean up
 rm    SphereArray*frequency*.dat
