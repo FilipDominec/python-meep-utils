@@ -13,7 +13,60 @@ import meep_mpi as meep
 #import meep
 c = 2.997e8
 
-sim_param, model_param = meep_utils.process_param(sys.argv[1:])
+class AmplitudeMonitorVolume():#{{{
+    """ Calculates an average of electric field and perpendicular magnetic field.
+
+    I asked for a similar field-averaging function built in MEEP, but it seems not to be implemented yet.
+    http://www.mail-archive.com/meep-discuss@ab-initio.mit.edu/msg04447.html
+
+    Note this implementation requires the planes are in vacuum (where impedance = 1.0)
+    """
+    def __init__(self, comp=None, size_x=None, size_y=None, size_z=None, Kx=0, Ky=0, Kz=0):
+        self.comp=comp
+        self.size_x = size_x
+        self.size_y = size_y
+        self.size_z = size_z
+        self.Kx = Kx
+        self.Ky = Ky
+        self.Kz = Kz
+
+        self.t = []
+        self.waveform = []
+
+    def average_field(self, field):
+        """ Average field component in whole simulation volume, return average amplitude of the field
+        """
+        xcount, ycount, zcount = (1, 5, 3)
+        field_sum = 0 
+
+        for x in [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]:
+            for y in [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]:
+                for z in [z0*self.size_z/zcount+(self.size_z/2/zcount)-self.size_z/2 for z0 in range(zcount)]:
+                    field_sum += (field.get_field(self.comp, meep.vec(x, y, z)) / np.exp(-1j*(self.Kx*x + self.Ky*y + self.Kz*z)) )
+        return field_sum/(xcount*ycount*zcount)
+        return sum_/(xcount*ycount)
+    
+    def record(self, field=None):
+        self.t.append(field.time()/c)
+        self.waveform.append(self.average_field(field))
+
+    def get_waveforms(self):
+        """ Return the recorded waveform (in time domain) """
+        if len(self.t) <= 1:
+            t, result_wform = np.array(self.t), np.array(self.waveform)
+        else:
+            t = np.array(self.t[:-1])
+            ## The FDTD calculation introduces half-step time shift between Ex and Hy. Compensated by averaging the Hy field
+            ## with its value in a next timestep. The error is reduced from O1 to O2.
+            ## See http://ab-initio.mit.edu/wiki/index.php/Synchronizing_the_magnetic_and_electric_fields
+            if meep.is_magnetic(self.comp) or meep.is_B(self.comp):
+                result_wform = np.array(self.waveform[:-1])/2. + np.array(self.waveform[1:])/2.
+            else: 
+                result_wform = np.array(self.waveform[:-1])
+            
+        return t, result_wform 
+#}}}
+
 class SphereCDH_model(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=100e-12, resolution=6e-6, radius=30e-6, eps2=12., spacing=100e-6, wlth=20e-6, wtth=20e-6, Kx=0, Ky=0, Kz=0):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
@@ -24,7 +77,7 @@ class SphereCDH_model(meep_utils.AbstractMeepModel): #{{{
         ## Constants for the simulation
         self.pml_thickness = 20e-6
         self.simtime = simtime      # [s]
-        self.srcFreq, self.srcWidth = 2000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/srcWidth)
+        self.src_freq, self.src_width = 2000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
 
         self.size_x, self.size_y, self.size_z  = spacing, spacing, spacing
@@ -32,7 +85,7 @@ class SphereCDH_model(meep_utils.AbstractMeepModel): #{{{
         ## Define materials
         #self.materials = [meep_materials.material_dielectric(where = self.where_TiO2, eps=eps2)]  
         self.materials = [meep_materials.material_Metal_THz(where = self.where_TiO2)]  
-        self.TestMaterials()
+        self.test_materials()
 
         f_c = c / np.pi/self.resolution/meep_utils.meep.use_Courant()
         #meep_utils.plot_eps(self.materials, mark_freq=[f_c])
@@ -57,7 +110,7 @@ class RodCDH_model(meep_utils.AbstractMeepModel): #{{{
         ## Constants for the simulation
         self.pml_thickness = 20e-6
         self.simtime = simtime      # [s]
-        self.srcFreq, self.srcWidth = 2000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/srcWidth)
+        self.src_freq, self.src_width = 2000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
 
         self.size_x, self.size_y, self.size_z  = self.resolution*2, spacing, spacing
@@ -65,7 +118,7 @@ class RodCDH_model(meep_utils.AbstractMeepModel): #{{{
         ## Define materials
         #self.materials = [meep_materials.material_dielectric(where = self.where_TiO2, eps=eps2)]  
         self.materials = [meep_materials.material_dielectric(where = self.where_TiO2, eps=eps2)]  
-        self.TestMaterials()
+        self.test_materials()
 
         #f_c = c / np.pi/self.resolution/meep_utils.meep.use_Courant()
         #meep_utils.plot_eps(self.materials, mark_freq=[f_c])
@@ -87,7 +140,7 @@ class FishnetCDH_model(meep_utils.AbstractMeepModel): #{{{
         ## Constants for the simulation
         self.pml_thickness = 20e-6
         self.simtime = simtime      # [s]
-        self.srcFreq, self.srcWidth = 2000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/srcWidth)
+        self.src_freq, self.src_width = 2000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
 
         self.size_x, self.size_y, self.size_z  = spacing, spacing, zsize
@@ -95,7 +148,7 @@ class FishnetCDH_model(meep_utils.AbstractMeepModel): #{{{
         ## Define materials
         #self.materials = [meep_materials.material_dielectric(where = self.where_TiO2, eps=eps2)]  
         self.materials = [meep_materials.material_Metal_THz(where = self.where_metal)]  
-        self.TestMaterials()
+        self.test_materials()
 
         #f_c = c / np.pi/self.resolution/meep_utils.meep.use_Courant()
         #meep_utils.plot_eps(self.materials, mark_freq=[f_c])
@@ -110,6 +163,7 @@ class FishnetCDH_model(meep_utils.AbstractMeepModel): #{{{
 #}}}
 
 # Model selection
+sim_param, model_param = meep_utils.process_param(sys.argv[1:])
 #model = SphereCDH_model(**model_param)
 #model = RodCDH_model(**model_param)
 model = FishnetCDH_model(**model_param)
@@ -129,8 +183,8 @@ f.use_bloch(meep.Z, -model.Kz/(2*np.pi))
 
 # Add the field source (see meep_utils for an example of how an arbitrary source waveform is defined)
 if not sim_param['frequency_domain']:           ## Select the source dependence on time
-    src_time_type = meep.band_src_time(model.srcFreq/c, model.srcWidth/c, model.simtime*c/10)
-    #src_time_type = meep.gaussian_src_time(model.srcFreq/c, model.srcWidth/c)
+    src_time_type = meep.band_src_time(model.src_freq/c, model.src_width/c, model.simtime*c/10)
+    #src_time_type = meep.gaussian_src_time(model.src_freq/c, model.src_width/c)
 else:
     src_time_type = meep.continuous_src_time(sim_param['frequency']/c)
 srcvolume = meep.volume( 
@@ -149,15 +203,9 @@ af = AmplitudeFactor(Kx=model.Kx, Ky=model.Ky, Kz=model.Kz)
 meep.set_AMPL_Callback(af.__disown__())
 f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
 
-
-## Define monitors planes
-#monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'Kx':model.Kx, 'Ky':model.Ky}
-#monitor1_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.monitor_z1, **monitor_options)
-#monitor1_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.monitor_z1, **monitor_options)
-
-## Define volume monitors for CDH
+## Define the volume monitor for CDH
 monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'size_z':model.size_z, 'Kx':model.Kx, 'Ky':model.Ky, 'Kz':model.Kz}
-monitor1_Ex = meep_utils.AmplitudeMonitorVolume(comp=meep.Ex, **monitor_options)
+monitor1_Ex = AmplitudeMonitorVolume(comp=meep.Ex, **monitor_options) ## TODO try out how it differs with comp=meep.Dx - this should work, too
 
 slice_makers = [] # [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
 #slice_makers += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, min_timestep=.05e-12, outputhdf=True, outputpng=True)]
@@ -173,6 +221,7 @@ if not sim_param['frequency_domain']:       ## time-domain computation
     while (f.time()/c < model.simtime):                               # timestepping cycle
         f.step()
         timer.print_progress(f.time()/c)
+        #meep.master_printf("%e" % abs(f.get_field(meep.Ex, meep.vec(model.size_x/4, model.size_y/4, model.size_z/4))))
         for monitor in (monitor1_Ex,): monitor.record(field=f)
         for slice_maker in slice_makers: slice_maker.poll(f.time()/c)
     for slice_maker in slice_makers: slice_maker.finalize()
@@ -197,7 +246,7 @@ if meep.my_rank() == 0:
 
     #freq, s11, s12 = meep_utils.get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, 
             #frequency_domain=sim_param['frequency_domain'], frequency=sim_param['frequency'], 
-            #maxf=model.srcFreq+model.srcWidth, pad_zeros=1.0, Kx=model.Kx, Ky=model.Ky)
+            #maxf=model.src_freq+model.src_width, pad_zeros=1.0, Kx=model.Kx, Ky=model.Ky)
     #meep_utils.savetxt(freq=freq, s11=s11, s12=s12, model=model)
     with open("./last_simulation_name.txt", "w") as outfile: outfile.write(model.simulation_name) 
     #import effparam        # process effective parameters for metamaterials
