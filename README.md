@@ -68,7 +68,11 @@ materials, data postprocessing etc. is elaborated there.
 
 
 ## TODO
-- [ ] from scipy.misc import imsave; imsave('../docs/static/tutorial-epsilon.png', -N.rot90(epsilon))
+- [ ] scatter.py, cdh and others should output sim_param in the header (moreover CDH has weird header!!)
+- [ ] move Kx, Ky out of the model parameters
+- [ ] put the models into separate module
+- [ ] sync harminv from its module with meep_utils, and remove from the latter
+- [ ] from scipy.misc import imsave; imsave('../docs/static/tutorial-epsilon.png', -N.rot90(epsilon)) ? 
 - [ ] Use average_field_function instead of my own averaging!
 - [ ] use synchronize_fields() instead of shifting H(t) ? - benchmark
 - [ ] test averaging on SRR
