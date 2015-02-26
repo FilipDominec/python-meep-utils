@@ -637,7 +637,8 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
 
 
 ## === Results post-processing and export ===
-## Call filter-diagonalisation method to analyze time-domain data  (not using MEEP functions)
+## Call filter-diagonalisation method to analyze time-domain data  
+## (TODO not using MEEP functions --> shall be synced against harminv_wrapper.py and removed from here)
 def run_bash(cmd, anyprocess=False): #{{{
     if meep.my_rank() == 0 or anyprocess:
         meep.master_printf("CMD: "  + cmd+ "\n")  # (diagnostics)

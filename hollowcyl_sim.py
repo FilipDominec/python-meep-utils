@@ -138,6 +138,7 @@ if meep.my_rank() == 0 and  not sim_param['frequency_domain']:
 
 
     ## Harminv
+    ## TODO switch to harminv_wrapper.py instead
     hi = meep_utils.harminv(x, y, amplitude_prescaling=1e6)
     oscillator_count = len(hi['frequency'])
     #if oscillator_count > 0:
