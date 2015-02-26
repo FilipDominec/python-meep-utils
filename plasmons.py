@@ -46,6 +46,7 @@ class PlasmonFilm_model(meep_utils.AbstractMeepModel): #{{{
         meep_utils.plot_eps(self.materials, mark_freq=[f_c])
 
         ## Test the validity of the model
+        for material in self.materials: self.fix_material_stability(material, f_c=2e15, verbose=1)
         meep_utils.plot_eps(self.materials, plot_conductivity=True, 
                 draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
         self.test_materials()
@@ -60,7 +61,6 @@ class PlasmonFilm_model(meep_utils.AbstractMeepModel): #{{{
         if r.z() < 0:
             return self.return_value             # (do not change this line)
         return 0
- # TODO |r|   r phase
 #}}}
 
 # Model selection
