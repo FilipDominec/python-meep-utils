@@ -705,18 +705,18 @@ class Slice(): #{{{
     If you specify time as a number, using the parameter `at_t', it takes a full 3D snapshot of the 
     field at that time. If the number exceeds the length of the simulation, the snapshot is taken at the end anyway.
     If you specify some the X, Y or Z coordinate using e.g. `at_x', it exports a time evolution in 
-    the specified plane. More than one coordinate can be given, then the exported field has two 
-    or one dimensions only.
+    the specified plane. More than one coordinate can be given, in which case the exported field has
+    less dimensions, accordingly.
 
-    The at_x, at_y, at_z, at_t can also be a tuple of values, which delimit an interval 
-    the volume or time and do not affect the dimension of the output.
+    The `at_x', `at_y', `at_z', `at_t' can also be of the <list> type with two elements, in which case 
+    they delimit an interval in the volume or time and do not affect the dimension of the output.
 
-    Some simulations can provide excessively long series at the time axis. You may wish to set the min_timestep
-    to avoid exporting a data file in each time step.
+    Some simulations can provide excessively long series at the time axis. You may set `min_timestep'
+    to avoid exporting a data file in each time step, but in the defined.
     TODO: make it automatic, limiting the GIF by default to 5 seconds ~ 125 frames
 
     Output format can be changed by setting True one or more of these parameters:
-        outputpng: directory of PNG images  (XXXXXXXXXXXX if not time sliced !!!)
+        outputpng: directory of PNG images  (can produce too many files if `min_timestep' not properly set!)
             ## TODO: if more field components specified, export each of them separately, do not forget to add `.ex' to the name
         outputgif: one animated GIF
             ## TODO: if more field components specified, --dtto--
@@ -737,7 +737,6 @@ class Slice(): #{{{
     >>> meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ey), at_z=0, min_timestep=.1e-12, outputhdf=True, name="ZPLANE")]
     >>> # Export a final snapshot of the field, but restrict to one half of the simulation only
     >>> meep_utils.Slice(model=model, field=f, components=meep.Ex, at_t=model.simtime-.1e-12, at_x=[-np.inf, 10e-6], outputhdf=True, name="SNAP")
-
     """
 
     def isrange(self,tup): 
@@ -894,7 +893,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         plt.figure(figsize=(7,6))
         plt.plot(t, abs(Ex1), label="Ex1")
         plt.plot(t, abs(Hy1), label="Hy1")
-        plt.plot(t, abs(Ex2), label="Ex2", lw=3)
+        plt.plot(t, abs(Ex2), label="Ex2", lw=1.5)
         plt.plot(t, abs(Hy2), label="Hy2")
 
         plt.gca().set_ylim(ymin=1e-10)
@@ -953,9 +952,9 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     ## Separate the forward and backward wave in frequency domain 
     ##    (Efield+Hfield)/2 ->    forward wave amplitude, 
     ##    (Efield-Hfield)/2 ->    backward wave amplitude
-    #beta0 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c))
     in1, out1 =  (Ex1f+Hy1f)/2, (Ex1f-Hy1f)/2 ## old: works only for perp. incidence beta0=0
     in2, out2 =  (Ex2f-Hy2f)/2, (Ex2f+Hy2f)/2
+    #beta0 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c))
     #in1, out1 =  (Ex1f+Hy1f/np.cos(beta0))/2, (Ex1f-Hy1f/np.cos(beta0))/2 ## old: works only for monitors placed in vacuum
     #in2, out2 =  (Ex2f-Hy2f/np.cos(beta0))/2, (Ex2f+Hy2f/np.cos(beta0))/2
 
