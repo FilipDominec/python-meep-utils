@@ -24,7 +24,7 @@ class PlasmonFilm_model(meep_utils.AbstractMeepModel): #{{{
 
         ## Constant parameters for the simulation
         self.simulation_name = "PlasmonsFilm"    
-        self.srcFreq, self.srcWidth = 400e12, 800e12     # [Hz] (note: gaussian source ends at t=10/srcWidth)
+        self.src_freq, self.src_width = 400e12, 800e12     # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
         self.pml_thickness = 1e-6
 
@@ -65,25 +65,19 @@ class PlasmonFilm_model(meep_utils.AbstractMeepModel): #{{{
 
 # Model selection
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
-model = plasmonyp_model(**model_param)
+model = PlasmonFilm_model(**model_param)
 if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
 
-## Initialize volume and structure according to the model
+## Initialize volume, structure and the fields according to the model
 vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
 vol.center_origin()
-#s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes=meep.Z)
 s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes="All")
 
 ## Create fields with Bloch-periodic boundaries 
 f = meep.fields(s)
 
-## Add a source of the plane wave (see meep_utils for definition of arbitrary source shape)
-if not sim_param['frequency_domain']:           ## Select the source dependence on time
-    #src_time_type = meep.band_src_time(model.srcFreq/c, model.srcWidth/c, model.simtime*c/1.1)
-    #src_time_type = meep.gaussian_src_time(model.srcFreq/c, model.srcWidth/c)
-    src_time_type = meep.continuous_src_time(model.srcFreq/c)
-else:
-    src_time_type = meep.continuous_src_time(sim_param['frequency']/c)
+# Add the field source (see meep_utils for an example of how an arbitrary source waveform is defined)
+src_time_type = meep.continuous_src_time(model.src_freq/c)
 srcvolume = meep.volume( 
         meep.vec(-model.size_x/2, -model.size_y/2, -model.size_z/2+model.pml_thickness),
         meep.vec(+model.size_x/2, +model.size_y/2, -model.size_z/2+model.pml_thickness))
@@ -97,16 +91,13 @@ slices += [meep_utils.Slice(model=model, field=f, components=meep.Ez, at_z=model
 slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_t=100e-15)]
 
 if not sim_param['frequency_domain']:       ## time-domain computation
-    f.step()
-    dt = (f.time()/c)
-    meep_utils.lorentzian_unstable_check_new(model, dt)
-    timer = meep_utils.Timer(simtime=model.simtime); meep.quiet(True) # use custom progress messages
-    while (f.time()/c < model.simtime):                               # timestepping cycle
+    f.step(); timer = meep_utils.Timer(simtime=model.simtime); meep.quiet(True) # use custom progress messages
+    while (f.time()/c < model.simtime):     # timestepping cycle
         f.step()
         timer.print_progress(f.time()/c)
-        meep.master_printf("%e" % abs(f.get_field(meep.Ex, meep.vec(model.size_x/4, model.size_y/4, model.size_z/4))))
-        for slice_maker in slices: slice_maker.poll(f.time()/c)
-    for slice_maker in slices: slice_maker.finalize()
+        #meep.master_printf("%e" % abs(f.get_field(meep.Ex, meep.vec(model.size_x/4, model.size_y/4, model.size_z/4))))
+        for slice_ in slices: slice_.poll(f.time()/c)
+    for slice_ in slices: slice_.finalize()
     meep_utils.notify(model.simulation_name, run_time=timer.get_time())
 else:                                       ## frequency-domain computation
     f.step()
@@ -114,5 +105,7 @@ else:                                       ## frequency-domain computation
     for slice_maker in slices: slice_maker.finalize()
     meep_utils.notify(model.simulation_name)
 
-with open("./last_simulation_name.txt", "w") as outfile: outfile.write(model.simulation_name) 
+
+if meep.my_rank() == 0:
+    with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
 meep.all_wait()         # Wait until all file operations are finished

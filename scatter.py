@@ -99,12 +99,10 @@ monitor2_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.mo
 
 slices = []
 slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
-slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', min_timestep=1e-12)]
-#slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
-#slices += [meep_utils.Slice(model=model, field=f, components=(meep.Hx, meep.Hy, meep.Hz), at_t=np.inf, name='SnapshotH')]
-slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dx, meep.Dy, meep.Dz), at_t=np.inf, name='Poynting')]
-#slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_t=np.inf, 
-    #name=('At%.3eHz'%sim_param['frequency']) if sim_param['frequency_domain'] else '', outputpng=True, outputvtk=False)]
+#slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', min_timestep=1e-12)]
+slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
+slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_t=np.inf, 
+    name=('At%.3eHz'%sim_param['frequency']) if sim_param['frequency_domain'] else '', outputpng=True, outputvtk=False)]
 
 ## Run the FDTD simulation or the frequency-domain solver
 if not sim_param['frequency_domain']:       ## time-domain computation
@@ -133,8 +131,7 @@ if meep.my_rank() == 0:
 
     meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",
             X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)), 
-            header=model.parameterstring + \
-                    "#x-column freq\n#column abs(r)\n#column phase(r)\n#column abs(t)\n#column phase(t)\n")
+            header=model.parameterstring + "#x-column freq\n#column |r|\n#column r phase\n#column |t|\n#column t phase\n")
 
     with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
 
