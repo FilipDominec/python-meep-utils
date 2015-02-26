@@ -672,6 +672,12 @@ def harminv(x, y, d=100, f=30, amplitude_prescaling=1):#{{{
 #}}}
 
 ## Saving and loading data (not dependent on MEEP functions, but better if ran by the 1st process only)
+def sim_param_string(sim_param):
+    if sim_param['frequency_domain']:
+        return "#param frequency_domain,False\n"
+    else:
+        return "#param frequency_domain,True\n#param SolverTol,%d\n#param SolverMaxIter,%d\n#param SolverBiCGStab,%d\n" % \
+                (sim_param['MaxTol'], sim_param['MaxIter'], sim_param['BiCGStab'])
 def savetxt(fname, X, header, **kwargs):#{{{ 
     """
     Its use is for older versions of the library that do not accept the `header' parameter
@@ -1001,7 +1007,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     s12 = out2 / in1
 
     ## Return the S-parameters (i. e. complex reflection and transmission)
-    return freq, s11, s12
+    return freq, s11, s12, "#x-column freq\n#column |r|\n#column r phase\n#column |t|\n#column t phase\n"
 #}}}
 def get_phase(complex_data):#{{{
     """ Unwraps and shifts the phase from Fourier transformation """
