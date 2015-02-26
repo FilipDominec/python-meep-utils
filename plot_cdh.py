@@ -7,10 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.constants import c, hbar, pi
 
-""" If a too-simplistic physical theory is forced to predict or explain data that are not within its scope,
-it can often do so, but without giving any physical insight. Such a result is not a proof of the theory to be
-applicable to the problem, nor even to make any sense whatsoever."""
-
 ## Use LaTeX
 matplotlib.rc('text', usetex=True)
 matplotlib.rc('font', size=13)
@@ -22,11 +18,12 @@ maxfreq = 4e12
 frequnit = 1e12
 
 plot_FFT = True
-interp_anisotropy = 2e-5        # value lower than 1. interpolates rather vertically; optimize if plot desintegrates
-FFTcutoff = 0.8    
+interp_anisotropy = 2e-5    # value lower than 1. interpolates rather vertically; optimize if plot desintegrates
+FFTcutoff = 0.8             # Hann-like window to suppress spectral leakage in FFT (mostly for aesthetical purposes)
 
 plot_FDM = True
-FDMtrunc = (.1, .5) 
+FDMtrunc = (.1, .5)         # Harminv (also known as FDM) may work better when it is supplied a shorter time record
+                            # and it requires clipping the initial timespan when the source is operating
 
 plot_NRef = True
 
@@ -42,7 +39,7 @@ else:
 import sys
 filenames = [x for x in sys.argv[1:] if ('-' not in x[0:1])]
 Efs = []
-Kzs = []
+Kzs = []        ## TODO allow also scanning over Kx, Ky (which allows for plotting dispersion curves also along "Γ-M" and other directions in K-space)
 freqs = []
 zfs = []
 
@@ -61,14 +58,13 @@ for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(file
     (t, E) = np.loadtxt(filename, usecols=list(range(2)), unpack=True)
 
     if plot_FDM:
-        #if True or '200' in filename:
-        import harminv_wrapper_old ## TODO harminv_wrapper has moved into meep_utils FIXME
+        import harminv_wrapper
         tscale = 3e9
         t1 = t[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]*tscale
         t1 -= np.min(t1)
         E1 = E[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]
         try:
-            hi = harminv_wrapper_old.harminv(t1, E1, d=.1, f=15)
+            hi = harminv_wrapper.harminv(t1, E1, d=.1, f=15)
             hi['frequency'] *= tscale /frequnit
             hi['amplitude'] /= np.max(hi['amplitude'])
             hi['error'] /= np.max(hi['amplitude'])
@@ -154,8 +150,8 @@ if plot_FFT:
 if plot_NRef:
     try:
         f, Nre = np.loadtxt('NRef.dat', usecols=(0,5), unpack=True)
-        plt.plot(Nre*2*np.pi*f/2.998e8, f/frequnit, color='w', lw=2.5)
-        plt.plot(-Nre*2*np.pi*f/2.998e8, f/frequnit, color='w', ls='--', lw=2.5)
+        plt.plot( Nre*2*np.pi*f/c, f/frequnit, color='w', lw=2.5)               # positive-direction branches
+        plt.plot(-Nre*2*np.pi*f/c, f/frequnit, color='w', ls='--', lw=2.5)      # negative-direction branches
     except IOError:
         print "File NRef.dat was not found - not plotting the curve for comparison"
 
