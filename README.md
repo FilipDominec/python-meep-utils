@@ -72,6 +72,8 @@ materials, data postprocessing etc. is elaborated there.
 - [ ] move Kx, Ky out of the model parameters
 - [ ] put the models into separate module
 - [ ] sync harminv from its module with meep_utils, and remove from the latter
+- [ ] why I do not see interference of sym/asym plasmons in the example? wrong metal model?
+
 - [ ] from scipy.misc import imsave; imsave('../docs/static/tutorial-epsilon.png', -N.rot90(epsilon)) ? 
 - [ ] Use average_field_function instead of my own averaging!
 - [ ] use synchronize_fields() instead of shifting H(t) ? - benchmark
