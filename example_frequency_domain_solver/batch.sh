@@ -1,6 +1,6 @@
 #!/bin/bash
 
-COMMAND='mpirun -np 1   python ../scatter.py resolution=4u simtime=100p padding=0u wirethick=10u'
+COMMAND='mpirun -np 1   python ../scatter.py resolution=4u simtime=100p wirethick=10u'
 
 ## Generate frequency-domain results
 for ff in `seq 1000 10 1300`; do  
