@@ -1,3 +1,3 @@
 #!/bin/bash
 
-../hollowcyl_sim.py
+../cylindrical_cavity.py

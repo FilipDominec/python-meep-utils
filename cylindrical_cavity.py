@@ -22,7 +22,7 @@ class HollowCyl_model(meep_utils.AbstractMeepModel): #{{{
         ## Obligatory parameters (used in the simulation)
         self.pml_thickness = padding/2
         self.simtime = simtime      # [s]HollowCyl_simtime=3.000e-08_height=3.000e-02
-        self.srcFreq, self.srcWidth = 3e9, 10e9     # [Hz] (note: gaussian source ends at t=10/srcWidth)
+        self.src_freq, self.src_width = 3e9, 10e9     # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (.1e9, 8e9)     # Which frequencies will be saved to disk
         self.size_x = 2*radius+padding*2
         self.size_y = 2*radius+padding*2
@@ -43,7 +43,7 @@ class HollowCyl_model(meep_utils.AbstractMeepModel): #{{{
         #lim_tmp = meep.use_Courant()**2 * 3
         #print "analytic eps(f_c) = ", eps_fc, (" [the limit is %f]" % lim_tmp), "******* UNSTABLE ******* " if (eps_fc.real< lim_tmp) else ""
 
-        self.TestMaterials()
+        self.test_materials()
 
     def where_metal(self, r):
         if not (in_zcyl(r, cx=0, cy=0, rad=self.radius) and in_zslab(r, cz=0, d=self.height)):  # 
@@ -70,8 +70,8 @@ field = meep.fields(s)
 
 # Add the field source (see meep_utils for an example of how an arbitrary source waveform is defined)
 if not sim_param['frequency_domain']:           ## Select the source dependence on time
-    #src_time_type = meep.band_src_time(-model.srcFreq/c, model.srcWidth/c, model.simtime*c/1.1)
-    src_time_type = meep.gaussian_src_time(-model.srcFreq/c, model.srcWidth/c)  ## negative frequency supplied -> e^(+i omega t) convention
+    #src_time_type = meep.band_src_time(-model.src_freq/c, model.src_width/c, model.simtime*c/1.1)
+    src_time_type = meep.gaussian_src_time(-model.src_freq/c, model.src_width/c)  ## negative frequency supplied -> e^(+i omega t) convention
 else:
     src_time_type = meep.continuous_src_time(-sim_param['frequency']/c) ## TODO check in freq domain that negative frequency is OK, and is it needed?
 srcvolume = meep.volume( 
@@ -98,7 +98,7 @@ if not sim_param['frequency_domain']:       ## time-domain computation
     while (field.time()/c < model.simtime):                               # timestepping cycle
         field.step()
         timer.print_progress(field.time()/c)
-        if field.time()/c > 30/model.srcWidth:
+        if field.time()/c > 30/model.src_width:
             x.append(field.time()/c); 
             y.append(field.get_field(meep.Ex, monitor_point)+field.get_field(meep.Ey, monitor_point)+field.get_field(meep.Ez, monitor_point))
         for slice_maker in slice_makers: slice_maker.poll(field.time()/c)
@@ -134,7 +134,7 @@ if meep.my_rank() == 0 and  not sim_param['frequency_domain']:
 
     ## Convert to polar notation and save
     meep_utils.savetxt(fname=model.simulation_name+".dat", X=zip(freq, abs(yf), meep_utils.get_phase(yf)), fmt="%.8e",
-            header=model.parameterstring+"#x-column Frequency [Hz]\n#column ampli\n#column phase\n")
+            header=model.parameterstring+"#x-column _frequency [Hz]\n#column ampli\n#column phase\n")
 
 
     ## Harminv
