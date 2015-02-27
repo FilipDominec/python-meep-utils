@@ -8,10 +8,10 @@ import numpy as np
 from scipy.constants import c, hbar, pi
 
 ## Use LaTeX
-matplotlib.rc('text', usetex=True)
-matplotlib.rc('font', size=13)
-matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, ')
-plt.figure(figsize=(7,10))
+#matplotlib.rc('text', usetex=True)
+#matplotlib.rc('font', size=13)
+#matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, ')
+#plt.figure(figsize=(7,10))
 
 # -- settings --
 maxfreq = 4e12
@@ -170,7 +170,7 @@ plt.xlabel(u"Wave vector [m$^{-1}$]");
 plt.ylabel(u"Frequency [THz]"); 
 plt.grid()
 plt.legend(prop={'size':10}, loc='upper right')
-plt.savefig("cdh_FDM_%s.png" % filesuffix, bbox_inches='tight')
+plt.savefig("cdh_%s.png" % filesuffix, bbox_inches='tight')
 
     #plt.plot(freq, np.log10(np.abs(zf)+1e-10), color=color, label=u"$y'$", ls='-')      # (optional) plot amplitude
     #plt.plot(freq, np.unwrap(np.angle(zf)), color="#FF8800", label=u"$y'$", ls='--')   # (optional) plot phase
