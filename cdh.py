@@ -68,9 +68,9 @@ class AmplitudeMonitorVolume():#{{{
 #}}}
 
 class SphereCDH_model(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=100e-12, resolution=6e-6, radius=30e-6, eps2=12., spacing=100e-6, wlth=20e-6, wtth=20e-6, Kx=0, Ky=0, Kz=0):
+    def __init__(self, comment="", simtime=30e-12, resolution=6e-6, radius=30e-6, eps2=12., spacing=100e-6, wlth=20e-6, wtth=20e-6):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
-        self.simulation_name = "srrstripe"
+        self.simulation_name = "Sphere"
 
         self.register_locals(locals())          ## Remember the parameters
 
@@ -164,9 +164,9 @@ class FishnetCDH_model(meep_utils.AbstractMeepModel): #{{{
 
 # Model selection
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
-#model = SphereCDH_model(**model_param)
+model = SphereCDH_model(**model_param)
 #model = RodCDH_model(**model_param)
-model = FishnetCDH_model(**model_param)
+#model = FishnetCDH_model(**model_param)
 if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
 for k in ('Kx','Ky','Kz'):
     if k in sim_param.keys(): model.simulation_name += ("_%s=%.4e" % (k, sim_param[k]))
@@ -201,13 +201,13 @@ class AmplitudeFactor(meep.Callback):
     def complex_vec(self, vec):   ## Note: the 'vec' coordinates are _relative_ to the source center
         ## Current-driven homogenisation source forces the K-vector in whole unit cell
         return np.exp(-1j*(self.Kx*vec.x() + self.Ky*vec.y() + self.Kz*vec.z())) 
-af = AmplitudeFactor(Kx=sim_param.get('Kx',.0), Ky=sim_param.get('Ky',.0)model.Ky, Kz=sim_param.get('Kz',.0))
+af = AmplitudeFactor(Kx=sim_param.get('Kx',.0), Ky=sim_param.get('Ky',.0), Kz=sim_param.get('Kz',.0))
 meep.set_AMPL_Callback(af.__disown__())
 f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
 
 ## Define the volume monitor for CDH
 monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'size_z':model.size_z, 
-        Kx:sim_param.get('Kx',.0), Ky:sim_param.get('Ky',.0)model.Ky, Kz:sim_param.get('Kz',.0)) 
+        'Kx':sim_param.get('Kx',.0), 'Ky':sim_param.get('Ky',.0), 'Kz':sim_param.get('Kz',.0)}
 #'Kx':model.Kx, 'Ky':model.Ky, 'Kz':model.Kz}
 monitor1_Ex = AmplitudeMonitorVolume(comp=meep.Ex, **monitor_options) ## TODO try out how it differs with comp=meep.Dx - this should work, too
 
@@ -239,22 +239,10 @@ else:                                       ## frequency-domain computation
 
 ## Get the reflection and transmission of the structure
 if meep.my_rank() == 0:
-    if  not os.path.exists('cdh'): os.mkdir('cdh')
-    with open('cdh/output_Kz=%.3e.dat' % model.Kz, 'w') as outfile:  ## TODO simname
-        #outfile.write("#Parameters Parameters\n")
-        #outfile.write("#param Kz,%.3e\n" % model.Kz)
-        #outfile.write("#param simulation_orig_name,%s\n" % model.simulation_name)
-        #outfile.write(
-        headerstring = "#x-column Frequency [Hz]\n#Column Ex real\n#Column Ex imag\n"
-        outfile.write(model.parameterstring + meep_utils.sim_param_string(sim_param) + headerstring)
-        t,E = monitor1_Ex.get_waveforms()
-        np.savetxt(outfile, zip(t, E.real, E.imag), fmt="%.8e")
-
-    #freq, s11, s12 = meep_utils.get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, 
-            #frequency_domain=sim_param['frequency_domain'], frequency=sim_param['frequency'], 
-            #maxf=model.src_freq+model.src_width, pad_zeros=1.0, Kx=model.Kx, Ky=model.Ky)
-    #meep_utils.savetxt(freq=freq, s11=s11, s12=s12, model=model)
+    headerstring = "#x-column Frequency [Hz]\n#Column Ex real\n#Column Ex imag\n"
+    t, E = monitor1_Ex.get_waveforms()
+    meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e", X=zip(t, E.real, E.imag), 
+            header=model.parameterstring + meep_utils.sim_param_string(sim_param) + headerstring)
     with open("./last_simulation_name.txt", "w") as outfile: outfile.write(model.simulation_name) 
-    #import effparam        # process effective parameters for metamaterials
 
 meep.all_wait()         # Wait until all file operations are finished

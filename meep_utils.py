@@ -675,7 +675,7 @@ def harminv(x, y, d=100, f=30, amplitude_prescaling=1):#{{{
 #}}}
 
 ## Saving and loading data (not dependent on MEEP functions, but better if ran by the 1st process only)
-def sim_param_string(sim_param):
+def sim_param_string(sim_param):#{{{
     if sim_param['frequency_domain']:
         output = "#param frequency_domain,True\n#param SolverTol,%d\n#param SolverMaxIter,%d\n#param SolverBiCGStab,%d\n" % \
                 (sim_param['MaxTol'], sim_param['MaxIter'], sim_param['BiCGStab'])
@@ -685,6 +685,7 @@ def sim_param_string(sim_param):
     if sim_param.get('Ky') != None: output += "#param Ky,%.3f\n" % sim_param.get('Ky')
     if sim_param.get('Kz') != None: output += "#param Kz,%.3f\n" % sim_param.get('Kz')
     return output
+#}}}
 def savetxt(fname, X, header, **kwargs):#{{{ 
     """
     Its use is for older versions of the library that do not accept the `header' parameter

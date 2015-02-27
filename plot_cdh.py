@@ -55,7 +55,7 @@ for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(file
             value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
             if not Kz and ("Kz" in line): 
                 Kz = float(value)
-    (t, E) = np.loadtxt(filename, usecols=list(range(2)), unpack=True)
+    (t, E) = np.loadtxt(filename, usecols=list(range(2)), unpack=True, )
 
     if plot_FDM:
         import harminv_wrapper
