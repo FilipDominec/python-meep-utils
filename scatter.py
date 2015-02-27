@@ -14,7 +14,7 @@ import meep_mpi as meep
 #import meep
 
 class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cells=1, cell_size=50e-6, padding=20e-6, Kx=0, Ky=0, 
+    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cells=1, cell_size=50e-6, padding=20e-6, 
             radius=13e-6, wirethick=0):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
@@ -75,8 +75,8 @@ vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
 vol.center_origin()
 s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes=meep.Z)
 f = meep.fields(s)
-f.use_bloch(meep.X, -model.Kx/(2*np.pi)) # (any transversal component of k-vector is allowed)
-f.use_bloch(meep.Y, -model.Ky/(2*np.pi))
+f.use_bloch(meep.X, -sim_param.get('Kx', 0) / (2*np.pi)) # (any transversal component of k-vector is allowed)
+f.use_bloch(meep.Y, -sim_param.get('Ky',.0) / (2*np.pi))
 
 # Add the field source (see meep_utils for an example of how an arbitrary source waveform is defined)
 if not sim_param['frequency_domain']:       ## (temporal source shape)
@@ -90,7 +90,7 @@ srcvolume = meep.volume(                    ## (spatial source shape)
 f.add_volume_source(meep.Ex, src_time_type, srcvolume)
 
 ## Define monitors planes and visualisation output
-monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'Kx':model.Kx, 'Ky':model.Ky}
+monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'Kx':sim_param.get('Kx', 0), 'Ky':sim_param.get('Ky', 0)}
 monitor1_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.monitor_z1, **monitor_options)
 monitor1_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.monitor_z1, **monitor_options)
 monitor2_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.monitor_z2, **monitor_options)
@@ -126,8 +126,11 @@ if meep.my_rank() == 0:
     freq, s11, s12, headerstring = meep_utils.get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, 
             frequency_domain=sim_param['frequency_domain'], frequency=sim_param['frequency'], 
             intf=getattr(model, 'interesting_frequencies', [0, model.src_freq+model.src_width]),
-            pad_zeros=1.0, Kx=model.Kx, Ky=model.Ky)
+            pad_zeros=1.0, Kx=sim_param.get('Ky', 0), Ky=sim_param.get('Ky', 0))
 
+    print model.parameterstring
+    print meep_utils.sim_param_string(sim_param)
+    print headerstring
     meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",
             X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)), 
             header=model.parameterstring + meep_utils.sim_param_string(sim_param) + headerstring)

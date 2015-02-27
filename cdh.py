@@ -168,6 +168,8 @@ sim_param, model_param = meep_utils.process_param(sys.argv[1:])
 #model = RodCDH_model(**model_param)
 model = FishnetCDH_model(**model_param)
 if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
+for k in ('Kx','Ky','Kz'):
+    if k in sim_param.keys(): model.simulation_name += ("_%s=%.4e" % (k, sim_param[k]))
 
 ## Initialize volume and structure according to the model
 vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
@@ -177,9 +179,9 @@ s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_
 ## Create the fields object
 f = meep.fields(s)
 # Define the Bloch-periodic boundaries (any transversal component of k-vector is allowed)
-f.use_bloch(meep.X, -model.Kx/(2*np.pi))
-f.use_bloch(meep.Y, -model.Ky/(2*np.pi))
-f.use_bloch(meep.Z, -model.Kz/(2*np.pi))
+f.use_bloch(meep.X, -sim_param.get('Kx',.0) / (2*np.pi))
+f.use_bloch(meep.Y, -sim_param.get('Ky',.0) / (2*np.pi))
+f.use_bloch(meep.Z, -sim_param.get('Kz',.0) / (2*np.pi))
 
 # Add the field source (see meep_utils for an example of how an arbitrary source waveform is defined)
 if not sim_param['frequency_domain']:           ## Select the source dependence on time
@@ -199,12 +201,14 @@ class AmplitudeFactor(meep.Callback):
     def complex_vec(self, vec):   ## Note: the 'vec' coordinates are _relative_ to the source center
         ## Current-driven homogenisation source forces the K-vector in whole unit cell
         return np.exp(-1j*(self.Kx*vec.x() + self.Ky*vec.y() + self.Kz*vec.z())) 
-af = AmplitudeFactor(Kx=model.Kx, Ky=model.Ky, Kz=model.Kz)
+af = AmplitudeFactor(Kx=sim_param.get('Kx',.0), Ky=sim_param.get('Ky',.0)model.Ky, Kz=sim_param.get('Kz',.0))
 meep.set_AMPL_Callback(af.__disown__())
 f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
 
 ## Define the volume monitor for CDH
-monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'size_z':model.size_z, 'Kx':model.Kx, 'Ky':model.Ky, 'Kz':model.Kz}
+monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'size_z':model.size_z, 
+        Kx:sim_param.get('Kx',.0), Ky:sim_param.get('Ky',.0)model.Ky, Kz:sim_param.get('Kz',.0)) 
+#'Kx':model.Kx, 'Ky':model.Ky, 'Kz':model.Kz}
 monitor1_Ex = AmplitudeMonitorVolume(comp=meep.Ex, **monitor_options) ## TODO try out how it differs with comp=meep.Dx - this should work, too
 
 slice_makers = [] # [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
@@ -236,11 +240,13 @@ else:                                       ## frequency-domain computation
 ## Get the reflection and transmission of the structure
 if meep.my_rank() == 0:
     if  not os.path.exists('cdh'): os.mkdir('cdh')
-    with open('cdh/output_Kz=%.3e.dat' % model.Kz, 'w') as outfile: 
-        outfile.write("#Parameters Parameters\n")
-        outfile.write("#param Kz,%.3e\n" % model.Kz)
-        outfile.write("#param simulation_orig_name,%s\n" % model.simulation_name)
-        outfile.write("#x-column Frequency [Hz]\n#Column Ex real\n#Column Ex imag\n")
+    with open('cdh/output_Kz=%.3e.dat' % model.Kz, 'w') as outfile:  ## TODO simname
+        #outfile.write("#Parameters Parameters\n")
+        #outfile.write("#param Kz,%.3e\n" % model.Kz)
+        #outfile.write("#param simulation_orig_name,%s\n" % model.simulation_name)
+        #outfile.write(
+        headerstring = "#x-column Frequency [Hz]\n#Column Ex real\n#Column Ex imag\n"
+        outfile.write(model.parameterstring + meep_utils.sim_param_string(sim_param) + headerstring)
         t,E = monitor1_Ex.get_waveforms()
         np.savetxt(outfile, zip(t, E.real, E.imag), fmt="%.8e")
 

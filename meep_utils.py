@@ -47,7 +47,7 @@ def process_param(args):#{{{
                     'MaxTol':          1e-2,
                     'BiCGStab':        8 }      ## BiCGStab order of 8 proved to have best performance
     model_param = {}
-    for namevalue in args:
+    for namevalue in args: ## first filter out those parameters that are specific for the simulation, rather than the model
         name, value = namevalue.split("=")
         if name == "frequency": 
             sim_param['frequency']          = phys_to_float(value)
@@ -55,6 +55,9 @@ def process_param(args):#{{{
         elif name == "maxtol":      sim_param['MaxTol']     = phys_to_float(value)
         elif name == "maxiter":     sim_param['MaxIter']    = int(value)
         elif name == "bicgstab":    sim_param['BiCGStab']   = int(value)
+        elif name == "Kx":          sim_param['Kx']         = phys_to_float(value)
+        elif name == "Ky":          sim_param['Ky']         = phys_to_float(value)
+        elif name == "Kz":          sim_param['Kz']         = phys_to_float(value)
         else:           ## all other parameters will be passed to the model:
             model_param[name] = phys_to_float(value)
             if type(model_param[name]) == str:
@@ -674,10 +677,14 @@ def harminv(x, y, d=100, f=30, amplitude_prescaling=1):#{{{
 ## Saving and loading data (not dependent on MEEP functions, but better if ran by the 1st process only)
 def sim_param_string(sim_param):
     if sim_param['frequency_domain']:
-        return "#param frequency_domain,False\n"
-    else:
-        return "#param frequency_domain,True\n#param SolverTol,%d\n#param SolverMaxIter,%d\n#param SolverBiCGStab,%d\n" % \
+        output = "#param frequency_domain,True\n#param SolverTol,%d\n#param SolverMaxIter,%d\n#param SolverBiCGStab,%d\n" % \
                 (sim_param['MaxTol'], sim_param['MaxIter'], sim_param['BiCGStab'])
+    else:
+        output = "#param frequency_domain,False\n"
+    if sim_param.get('Kx') != None: output += "#param Kx,%.3f\n" % sim_param.get('Kx')
+    if sim_param.get('Ky') != None: output += "#param Ky,%.3f\n" % sim_param.get('Ky')
+    if sim_param.get('Kz') != None: output += "#param Kz,%.3f\n" % sim_param.get('Kz')
+    return output
 def savetxt(fname, X, header, **kwargs):#{{{ 
     """
     Its use is for older versions of the library that do not accept the `header' parameter
