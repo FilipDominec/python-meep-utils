@@ -8,66 +8,14 @@ import time, sys, os
 import numpy as np
 from scipy.constants import c, epsilon_0, mu_0
 
-import meep_utils, meep_materials
+import meep_utils, meep_materials, metamaterial_models
 from meep_utils import in_sphere, in_xcyl, in_ycyl, in_zcyl, in_xslab, in_yslab, in_zslab, in_ellipsoid
 import meep_mpi as meep
 #import meep
 
-class SphereArray_model(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cells=1, cell_size=50e-6, padding=20e-6, 
-            radius=13e-6, wirethick=0):
-        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
-
-        ## Constant parameters for the simulation
-        self.simulation_name = "SphereArray"    
-        self.src_freq, self.src_width = 1000e9, 2000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (100e9, 2000e9)    # Which frequencies will be saved to disk
-        self.pml_thickness = 20e-6
-
-        self.size_x = cell_size 
-        self.size_y = cell_size
-        self.size_z = cells*cell_size + 4*padding + 2*self.pml_thickness
-        self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
-        self.cellcenters = np.arange((1-cells)*cell_size/2, cells*cell_size/2, cell_size)
-
-        self.register_locals(locals())          ## Remember the parameters
-
-        ## Define materials
-        self.materials = []  
-
-        if 'LossLess' in comment:
-            tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=92) 
-        else:
-            tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
-        self.fix_material_stability(tio2, f_c=2e13, verbose=0) ## rm all osc above THz, to optimize for speed 
-        self.materials.append(tio2)
-
-        if wirethick > 0:
-            au = meep_materials.material_Au(where=self.where_wire)
-            self.fix_material_stability(au, verbose=0)
-            self.materials.append(au)
-
-        ## Test the validity of the model
-        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
-                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
-        self.test_materials()
-
-    def where_sphere(self, r):
-        for cellc in self.cellcenters:
-            if  in_sphere(r, cx=0, cy=0, cz=cellc, rad=self.radius):
-                return self.return_value             # (do not change this line)
-        return 0
-    def where_wire(self, r):
-        for cellc in self.cellcenters:
-            if  in_xcyl(r, cy=self.size_y/2, cz=cellc, rad=self.wirethick) or \
-                    in_xcyl(r, cy= -self.size_y/2, cz=cellc, rad=self.wirethick):
-                return self.return_value             # (do not change this line)
-        return 0
-#}}}
-
 # Model selection
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
-model = SphereArray_model(**model_param)
+model = metamaterial_models.SphereArray(**model_param)
 if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
 
 ## Initialize volume, structure and the fields according to the model
@@ -75,8 +23,8 @@ vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
 vol.center_origin()
 s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes=meep.Z)
 f = meep.fields(s)
-f.use_bloch(meep.X, -sim_param.get('Kx', 0) / (2*np.pi)) # (any transversal component of k-vector is allowed)
-f.use_bloch(meep.Y, -sim_param.get('Ky',.0) / (2*np.pi))
+f.use_bloch(meep.X, sim_param.get('Kx', 0) / (-2*np.pi)) # (any transversal component of k-vector is allowed)
+f.use_bloch(meep.Y, sim_param.get('Ky',.0) / (-2*np.pi))
 
 # Add the field source (see meep_utils for an example of how an arbitrary source waveform is defined)
 if not sim_param['frequency_domain']:       ## (temporal source shape)
@@ -128,9 +76,6 @@ if meep.my_rank() == 0:
             intf=getattr(model, 'interesting_frequencies', [0, model.src_freq+model.src_width]),
             pad_zeros=1.0, Kx=sim_param.get('Ky', 0), Ky=sim_param.get('Ky', 0))
 
-    print model.parameterstring
-    print meep_utils.sim_param_string(sim_param)
-    print headerstring
     meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",
             X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)), 
             header=model.parameterstring + meep_utils.sim_param_string(sim_param) + headerstring)
