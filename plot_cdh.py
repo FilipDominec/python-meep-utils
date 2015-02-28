@@ -38,6 +38,7 @@ else:
 ## Operate over multiple files
 import sys
 filenames = [x for x in sys.argv[1:] if ('-' not in x[0:1])]
+if len(filenames) == 0: print "Error: no data file to be plotted was provided as argument" ; quit()
 Efs = []
 Kzs = []        ## TODO allow also scanning over Kx, Ky (which allows for plotting dispersion curves also along "Γ-M" and other directions in K-space)
 freqs = []
