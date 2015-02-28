@@ -882,25 +882,22 @@ if plot_publi:
 
 ## --- Save data to effparam.dat (to ./effparam/*dat) ------------------------------------------#{{{
 if savedat:
-    if not os.path.exists("effparam"): os.mkdir("effparam")
     splitpath = os.path.split(last_simulation_name)
+    if not os.path.exists("effparam"): os.mkdir("effparam") ## FIXME - fails if processing file outside pwd?
     savedatfile = os.path.join(splitpath[0], "effparam", splitpath[1]+"_effparam.dat")
 
+    ## Copy parameters - load header 
     header = ""
-    ## Copy parameters
     with open(last_simulation_name+".dat") as datafile:
         for line in datafile:
             if (line[:1]=="#") and (not "olumn" in line): header+=line
     with open(savedatfile, "w") as outfile:
-        ## Post-fixing the older files from rtsim to PKGraph
-        if not "itle" in header: outfile.write("#title Simulation %s\n" % last_simulation_name.split("_")[0])
-        if not "arameters" in header: outfile.write("#Parameters Parameters\n")
-        header = re.sub("Parameter", "param", header)
-        ## Write column headers
+        ## Copy parameters - write header 
         outfile.write(header)
-        outfile.write("#x-column Frequency [Hz]\n#Column |r|\n#Column r phase\n#Column |t|\n#Column t phase\n" + \
-                    "#Column real N\n#Column imag N\n#Column real Z\n#Column imag Z\n" + \
-                    "#Column real eps\n#Column imag eps\n#Column real mu\n#Column imag mu\n")
+        ## Write column headers
+        outfile.write("#x-column freq\n#column |r|\n#column r phase\n#column |t|\n#column t phase\n" + \
+                    "#column real N\n#column imag N\n#column real Z\n#column imag Z\n" + \
+                    "#column real eps\n#column imag eps\n#column real mu\n#column imag mu\n")
         ## Write column data
         np.savetxt(outfile, zip(freq, s11amp, s11phase, s12amp, s12phase, 
                     N.real, N.imag, Z.real, Z.imag, eps.real, eps.imag, mu.real, mu.imag), fmt="%.8e")
