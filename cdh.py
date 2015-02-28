@@ -14,13 +14,6 @@ import meep_mpi as meep
 #import meep
 
 class AmplitudeMonitorVolume():#{{{
-    """ Calculates an average of electric field and perpendicular magnetic field.
-
-    I asked for a similar field-averaging function built in MEEP, but it seems not to be implemented yet.
-    http://www.mail-archive.com/meep-discuss@ab-initio.mit.edu/msg04447.html
-
-    Note this implementation requires the planes are in vacuum (where impedance = 1.0)
-    """
     def __init__(self, comp=None, size_x=None, size_y=None, size_z=None, Kx=0, Ky=0, Kz=0):
         self.comp=comp
         self.size_x = size_x
@@ -34,11 +27,10 @@ class AmplitudeMonitorVolume():#{{{
         self.waveform = []
 
     def average_field(self, field):
-        """ Average field component in whole simulation volume, return average amplitude of the field
+        """ Average field component in whole simulation volume
         """
         xcount, ycount, zcount = (1, 5, 3)
         field_sum = 0 
-
         for x in [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]:
             for y in [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]:
                 for z in [z0*self.size_z/zcount+(self.size_z/2/zcount)-self.size_z/2 for z0 in range(zcount)]:
@@ -56,14 +48,10 @@ class AmplitudeMonitorVolume():#{{{
             t, result_wform = np.array(self.t), np.array(self.waveform)
         else:
             t = np.array(self.t[:-1])
-            ## The FDTD calculation introduces half-step time shift between Ex and Hy. Compensated by averaging the Hy field
-            ## with its value in a next timestep. The error is reduced from O1 to O2.
-            ## See http://ab-initio.mit.edu/wiki/index.php/Synchronizing_the_magnetic_and_electric_fields
             if meep.is_magnetic(self.comp) or meep.is_B(self.comp):
                 result_wform = np.array(self.waveform[:-1])/2. + np.array(self.waveform[1:])/2.
             else: 
                 result_wform = np.array(self.waveform[:-1])
-            
         return t, result_wform 
 #}}}
 
@@ -117,12 +105,6 @@ monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'size_z':model.
 #'Kx':model.Kx, 'Ky':model.Ky, 'Kz':model.Kz}
 monitor1_Ex = AmplitudeMonitorVolume(comp=meep.Ex, **monitor_options) ## TODO try out how it differs with comp=meep.Dx - this should work, too
 
-slice_makers = [] # [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
-#slice_makers += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, min_timestep=.05e-12, outputhdf=True, outputpng=True)]
-#slice_makers += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_t=3.6e-12, at_z=model.radius+model.resolution*2, min_timestep=.05e-12, outputhdf=True, outputpng=True)]
-#slice_makers += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_y=0, min_timestep=.03e-12, outputhdf=True, outputpng=True)]
-#slice_makers += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_t=2.5e-12)]
-
 if not sim_param['frequency_domain']:       ## time-domain computation
     f.step()
     dt = (f.time()/c)
@@ -133,21 +115,20 @@ if not sim_param['frequency_domain']:       ## time-domain computation
         timer.print_progress(f.time()/c)
         #meep.master_printf("%e" % abs(f.get_field(meep.Ex, meep.vec(model.size_x/4, model.size_y/4, model.size_z/4))))
         for monitor in (monitor1_Ex,): monitor.record(field=f)
-        for slice_maker in slice_makers: slice_maker.poll(f.time()/c)
-    for slice_maker in slice_makers: slice_maker.finalize()
     meep_utils.notify(model.simulation_name, run_time=timer.get_time())
 else:                                       ## frequency-domain computation
     f.step()
     f.solve_cw(sim_param['MaxTol'], sim_param['MaxIter'], sim_param['BiCGStab']) 
     for monitor in (monitor1_Ex,): monitor.record(field=f)
-    for slice_maker in slice_makers: slice_maker.finalize()
     meep_utils.notify(model.simulation_name)
 
 ## Get the reflection and transmission of the structure
 if meep.my_rank() == 0:
     headerstring = "#x-column Frequency [Hz]\n#Column Ex real\n#Column Ex imag\n"
     t, E = monitor1_Ex.get_waveforms()
-    meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e", X=zip(t, E.real, E.imag), 
+    if not os.path.exists("cdh"): os.mkdir("cdh")
+    meep_utils.savetxt(fname=os.path.join('cdh',model.simulation_name+".dat"), fmt="%.6e", 
+            X=zip(t, E.real, E.imag), 
             header=model.parameterstring + meep_utils.sim_param_string(sim_param) + headerstring)
     with open("./last_simulation_name.txt", "w") as outfile: outfile.write(model.simulation_name) 
 
