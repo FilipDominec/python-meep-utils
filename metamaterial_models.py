@@ -32,11 +32,12 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
         ## Define materials
         self.materials = []  
 
-        if 'LossLess' in comment:
-            tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=92) 
-        else:
-            tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
-        self.fix_material_stability(tio2, f_c=2e13, verbose=0) ## rm all osc above THz, to optimize for speed 
+        tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
+        if 'LoLoss' in comment:           
+            tio2.pol[0]['gamma'] /= 10.   ## optionally edit the first TiO2 optical phonon to have lower damping
+        elif 'LossLess' in comment:
+            tio2.pol[0]['gamma'] = 0.     ## (or remove damping completely)
+        self.fix_material_stability(tio2, f_c=2e13, verbose=0) ## rm all osc above the first one, to optimize for speed 
         self.materials.append(tio2)
 
         if wirethick > 0:

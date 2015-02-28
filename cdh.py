@@ -58,15 +58,21 @@ class AmplitudeMonitorVolume():#{{{
 
 # Model selection
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
-model = metamaterial_models.SphereCDH_model(**model_param)
+#model = metamaterial_models.SphereCDH_model(**model_param)
+model = metamaterial_models.SphereArray(**model_param)
 #model = metamaterial_models.RodCDH_model(**model_param)
 #model = metamaterial_models.FishnetCDH_model(**model_param)
 if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
 for k in ('Kx','Ky','Kz'):
     if k in sim_param.keys(): model.simulation_name += ("_%s=%.4e" % (k, sim_param[k]))
 
+## Note: in CDH, we do not need any PML, padding nor multiple cells; cell_size thus overrides the dimensions given in model
+model.size_x, model.size_y, model.size_z = model.cell_size, model.cell_size, model.cell_size
+
 ## Initialize volume and structure according to the model
 vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
+
+
 vol.center_origin()
 s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes="None")
 

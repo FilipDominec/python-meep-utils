@@ -11,7 +11,6 @@ from scipy.constants import c, hbar, pi
 #matplotlib.rc('text', usetex=True)
 #matplotlib.rc('font', size=13)
 #matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, ')
-#plt.figure(figsize=(7,10))
 
 # -- settings --
 maxfreq = 4e12
@@ -35,8 +34,7 @@ else:
     filesuffix = 'ampli'
 
 
-## Operate over multiple files
-import sys
+## Load and prepare data (from multiple files)
 filenames = [x for x in sys.argv[1:] if ('-' not in x[0:1])]
 if len(filenames) == 0: print "Error: no data file to be plotted was provided as argument" ; quit()
 Efs = []
@@ -48,6 +46,7 @@ FDM_freqs = []
 FDM_amplis = []
 FDM_phases = []
 FDM_Kzs = []
+
 for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(filenames)))): 
     Kz = None
     with open(filename) as datafile:
@@ -112,6 +111,8 @@ for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(file
 
 
 
+## Plotting
+plt.figure(figsize=(7,10))
 if plot_FFT:
     ## Interpolate 2D grid from scattered data
     from matplotlib.mlab import griddata
