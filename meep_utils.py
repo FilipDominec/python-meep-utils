@@ -564,7 +564,7 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
 
     ## Annotate frequencies and finish the graph 
     plt.subplot(subplotnumber,1,1)
-    plt.legend() 
+    plt.legend(prop={'size':10}) 
     plt.xlabel(u"frequency $f$ [Hz]") 
     plt.ylabel(u"relative permittivity $\\varepsilon_r$")
     plt.xscale('log'); plt.grid(True)
