@@ -1,10 +1,12 @@
 #!/bin/bash
 
-for Kz in `seq 0    5000 60000`; do ../cdh.py Kz=$Kz simtime=30p; done
+PARAM='comment=LoLoss wirethick=4u simtime=100p'
+
+for Kz in `seq 0  5000 60000`; do ../cdh.py Kz=$Kz $PARAM; done
 ../plot_cdh.py cdh/*dat ## preview
 
 
-../scatter.py comment=LossLess
+../scatter.py $PARAM
 ../effparam.py
 mv effparam/*dat NRef.dat
 
