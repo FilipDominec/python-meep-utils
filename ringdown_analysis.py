@@ -35,8 +35,11 @@ test_kramers_kronig = 0
 add_delta_function =  0
 
 # Knowing the oscillator parametres, we can compare to the analytic solution
-analytic_lorentzian = 1
+analytic_lorentzian = 0
 
+harmonic_inversion  = 1
+
+maxplotf = 5.
 
 
 
@@ -45,7 +48,7 @@ matplotlib.rc('text', usetex=True)
 matplotlib.rc('font', size=12)
 matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, \usepackage{lmodern},')
 #matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
-plt.figure(figsize=(10,4))
+plt.figure(figsize=(20,10))
 plt.subplot(121)
 
 
@@ -59,7 +62,6 @@ if add_delta_function:
     elif convention == 'omega':
         print "Delta function unsure how to be implemented in omega convention"
         y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for omega-convention 
-#y = (np.sign(x+.5)/2+.5) * (np.sign(.5-x)/2+.5)        ## square impulse
 plt.plot(x,y, c='#aa0088', label="Real part")
 plt.grid()
 plt.ylim((-10,10)); plt.yscale('linear')
@@ -85,12 +87,12 @@ if convention == 'f':
     yf2     = np.fft.fft(y, axis=0) / len(x) * (2*pi)**2     # calculate the FFT values (maintaining Plancherel theorem)
     freq    = np.fft.fftshift(freq)                         # ensures the frequency axis is a growing function
     yf2     = np.fft.fftshift(yf2) / np.exp(1j*2*pi*freq * x[0])   # dtto, and corrects the phase for the case when x[0] != 0
-    truncated = np.logical_and(freq>0, freq<np.inf)         # (optional) get the frequency range
+    truncated = np.logical_and(freq>0, freq<maxplotf)         # (optional) get the frequency range
     (yf2, freq) = map(lambda x: x[truncated], (yf2, freq))    # (optional) truncate the data points
     print 'Plancherel theorem test: Energy in freqdomain f (by Scipy) :', np.trapz(y=np.abs(yf2)**2, x=freq)
 
     ## Own implementation of slow Fourier transform - in f
-    f = np.linspace(-5, 5, 1000)
+    f = np.linspace(-maxplotf, maxplotf, 1000)
     yf = np.sum(y * np.exp(-1j*2*pi*np.outer(f,x)), axis=1) * (x[1]-x[0])
     plt.plot(f, np.real(yf), c='g', label='FT in $f$-convention')
     plt.plot(f, np.imag(yf), ls='--', c='g')
@@ -103,6 +105,26 @@ if convention == 'f':
         plt.plot(new_f, conv.real, ls='-', c='k', alpha=1, lw=.5, label='KKR in $f$') 
         plt.plot(new_f, conv.imag, ls='--', c='k', alpha=1, lw=.5) 
 
+
+    if harmonic_inversion:
+        import harminv_wrapper
+        amplitude_prescaling = None
+        hi = harminv_wrapper.harminv(x, y, amplitude_prescaling=amplitude_prescaling)
+        #hi = harminv_wrapper.harminv(x[0:int(len(x)*.6)], y[0:int(len(x)*.6)], amplitude_prescaling=3.)
+        if type(hi['frequency']) == np.float64:
+            hi['frequency'], hi['decay'], hi['amplitude'] = np.array([hi['frequency']]), np.array([hi['decay']]), np.array([hi['amplitude']])
+        print hi['frequency'], hi['decay'], hi['amplitude']
+        oscillator_count = len(hi['frequency'])
+        freq_fine = np.linspace(-maxplotf, maxplotf, 1000)
+        sumosc = np.zeros_like(freq_fine)*1j
+        for osc in range(oscillator_count):
+            osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc]/4)
+            plt.plot(freq_fine, np.abs(osc_y), color="#0088FF", label=u"", ls='-', alpha=.3)      # (optional) plot amplitude
+            sumosc += osc_y 
+        #plt.plot(freq_fine, np.abs(sumosc), color="#0088FF", label=u"$\\Sigma$ osc", ls='-')      # (optional) plot amplitude
+        plt.plot(freq_fine, sumosc.real, color="#0088FF", label=u"$\\Sigma$ osc", ls='-')      # (optional) plot amplitude
+        plt.plot(freq_fine, sumosc.imag, color="#00aaFF", label=u"", ls='--')      # (optional) plot amplitude
+
     if analytic_lorentzian:
         lor = lorentz(omega=f*2*pi, omega0=omega0, gamma=gamma, ampli=ampli)
         plt.plot(f, lor.real, ls='-',  c='r', alpha=1, lw=.5,  label='Osc in $f$') 
@@ -110,7 +132,7 @@ if convention == 'f':
 
 elif convention == 'omega':
     # Own implementation of slow Fourier transform - in omega XXX
-    omega = np.linspace(-15, 15, 3000)  # (note: if only positive frequencies are used, the energy will be half of that in time-domain)
+    omega = np.linspace(-maxplotf*2*pi, maxplotf*2*pi, 3000)  # (note: if only positive frequencies are used, the energy will be half of that in time-domain)
     yomega = np.sum(y * np.exp(-1j*        np.outer(omega,x)), axis=1) * (x[1]-x[0])  / np.sqrt(2*pi)
     plt.plot(omega, np.real(yomega), c='#440088', label='Real part') # , label='FT in $\\omega$-convention'
     plt.plot(omega, np.imag(yomega), c='#0088aa', lw=.8, ls='--', label='Imaginary part')
@@ -129,7 +151,7 @@ elif convention == 'omega':
         plt.plot(omega, lor.imag, ls='--', c='r', alpha=1, lw=.5) 
 
 ## Finish the frequency-domain plot + save 
-plt.xlim(left=0)
+#plt.xlim(left=0)
 plt.xscale('linear')
 plt.ylim((-16,16)); plt.yscale('linear')
 if convention == 'f':

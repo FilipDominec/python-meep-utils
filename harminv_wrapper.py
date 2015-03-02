@@ -3,12 +3,15 @@
 
 import numpy as np
 ## Harminv
-def harminv(x, y, d=100, f=30, amplitude_prescaling=1):
+def harminv(x, y, d=100, f=30, amplitude_prescaling=None):
     """
     suggested visualisation:
     hi = harminv(x,y)
     c = plt.scatter(hi['frequency'], hi['amplitude'], c=hi['phase'], s=np.abs(hi['quality'])/20 + 2, cmap=plt.cm.hsv, alpha=.3)
     """
+
+    if amplitude_prescaling == None:
+        amplitude_prescaling = 1000./np.max(np.abs(y))
 
     with open('/tmp/hitest.dat', 'w') as outfile: 
         outfile.write("#t[s]\t E(t)\n")
@@ -23,4 +26,7 @@ def harminv(x, y, d=100, f=30, amplitude_prescaling=1):
         print "\nWARNING: Harminv detected no resonances.\n\n"
         (mf, md, mQ, mA, mp, merr) = [np.array([]) for _ in range(6)]
 
-    return {'frequency':mf*2, 'decay':md, 'quality':mQ, 'amplitude':mA, 'phase':mp, 'error':merr}
+    if type(mf) == np.float64:
+        (mf, md, mQ, mA, mp, merr) = [np.array([val]) for val in (mf, md, mQ, mA, mp, merr)]
+
+    return {'frequency':mf*2, 'decay':md, 'quality':mQ, 'amplitude':mA / amplitude_prescaling, 'phase':mp, 'error':merr}
