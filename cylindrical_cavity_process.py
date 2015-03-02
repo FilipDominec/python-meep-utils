@@ -18,12 +18,24 @@ elif os.path.exists(os.path.join(cwd, 'last_simulation_name.dat')):
     print "Loading from", os.path.join(cwd, 'last_simulation_name.dat')
     last_simulation_name = os.path.join(cwd, open(os.path.join(cwd, 'last_simulation_name.dat'),'r').read().strip())
 
- ## TODO generate time-domain damped oscillators & test
- ## TODO decimate the freq axis, and test 
+## TODO generate time-domain damped oscillators & test
+## TODO decimate the freq axis, and test 
 
 ## Load time, real field and imaginary field
-#x, Eabs, Ephase = np.loadtxt(last_simulation_name+'_timedomain.dat', usecols=list(range(3)), unpack=True)
-#y = Eabs * np.exp(1j*Ephase)
+x, Eabs, Ephase = np.loadtxt(last_simulation_name+'_timedomain.dat', usecols=list(range(3)), unpack=True)
+#y = Eabs * np.exp(1j*Ephase) * np.exp(-x/1e-9)
+
+
+omega0, gamma, ampli = 3e9*2*np.pi, 1e9, 1e6
+y = (np.sign(x)/2+.5) * np.sin(x*omega0)*ampli * np.exp(-x*gamma/2)  ## damped oscillator
+
+#y = np.sin(2*np.pi*x*3e9) * np.exp(-x*3e8) * 1e6
+## if oscillator's time constant is 1/100 times angular frequency, its quality is 100pi
+def lorentz(omega, omega0, gamma, ampli):
+    return 1/(2*np.pi) * ampli * omega0**2 / (omega0**2 - omega**2 + 1j*omega*gamma) 
+
+
+
 
 ## Convert to polar notation and save the spectrum
 #meep_utils.loadtxt(fname=model.simulation_name+"_freqdomain.dat", X=zip(freq, np.abs(yf), meep_utils.get_phase(yf)), fmt="%.6e",
@@ -46,7 +58,7 @@ freq    = np.fft.fftshift(freq)                         # ensures the frequency 
 yf      = np.fft.fftshift(yf) / np.exp(1j*2*np.pi*freq * x[0])   # dtto, and corrects the phase for the case when x[0] != 0
 truncated = np.logical_and(freq>0, freq<maxftmp)         # (optional) get the frequency range
 (yf, freq) = map(lambda array: array[truncated], (yf, freq))    # (optional) truncate the data points
-plt.plot(freq, np.abs(yf), color="#FF8800", label=u"$y$", ls='-')                  # (optional) plot amplitude
+plt.plot(freq, np.abs(yf), color="#FF8800", label=u"FFT", ls='-')                  # (optional) plot amplitude
 
 ## Convert to polar notation and save the spectrum
 #meep_utils.savetxt(fname=model.simulation_name+"_freqdomain.dat", X=zip(freq, np.abs(yf), meep_utils.get_phase(yf)), fmt="%.6e",
@@ -58,33 +70,32 @@ plt.plot(freq, np.abs(yf), color="#FF8800", label=u"$y$", ls='-')               
 #hi = meep_utils.harminv(x, y, amplitude_prescaling=1e6)
 #oscillator_count = len(hi['frequency'])
 import harminv_wrapper
-hi = harminv_wrapper.harminv(x, y, amplitude_prescaling=1e16)
+hi = harminv_wrapper.harminv(x, y, amplitude_prescaling=1e0)
+
+if type(hi['frequency']) == np.float64:
+    hi['frequency'], hi['decay'], hi['amplitude'] = np.array([hi['frequency']]), np.array([hi['decay']]), np.array([hi['amplitude']])
 oscillator_count = len(hi['frequency'])
-#if oscillator_count > 0:
-    #print np.abs(hi['frequency'])
-    #plt.scatter(np.abs(hi['frequency']), hi['amplitude'], c=hi['phase'], s=np.abs(hi['quality'])/50 + 2, cmap=plt.cm.hsv, alpha=.2)
+if oscillator_count > 0:
+    plt.scatter(np.abs(hi['frequency']), hi['amplitude'], c=hi['phase'], s=np.abs(hi['quality'])/50 + 2, cmap=plt.cm.hsv, alpha=.2)
+    #for osc in zip(np.abs(hi['frequency']), hi['amplitude'], np.abs(hi['quality'])):
+        #print 'f=%g A=%g q=%g' % osc
 
-def lorentz(x, f, d, q, A, p, err):
-    return A*abs(q)/(1 + abs(q*np.pi*2)*(x-abs(f))**2) / (np.pi*2)
-    #return A*abs(q)/(1 + abs(q*np.pi*2)*(x-abs(f))**2) / (np.pi*2) * 1e16 # XXX
+freq_fine = np.linspace(0, np.max(freq)*1, 10000)
 
-freq_fine = np.linspace(0, np.max(freq)*1, 1000)
-sumosc = np.zeros_like(freq_fine)
-print "Harminv frequencies", np.abs(hi['frequency'])
+plt.plot(freq_fine, 
+        np.abs(lorentz(freq_fine*2*np.pi, omega0, gamma, ampli)), 
+        color="#88FF00", label=u"Aosc", ls='-')      # (optional) plot amplitude
+
+sumosc = np.zeros_like(freq_fine)*1j
+print "Harminv frequencies", hi['frequency']
 for osc in range(oscillator_count):
-    osc_y = lorentz(freq_fine,   hi['frequency'][osc], hi['decay'][osc], hi['quality'][osc], hi['amplitude'][osc], hi['phase'][osc], hi['error'][osc])
-    plt.plot(freq_fine, osc_y, color="#0088FF", label=u"", ls='-', alpha=.3)      # (optional) plot amplitude
+    osc_y = lorentz(freq_fine,   hi['frequency'][osc], hi['decay'][osc], hi['amplitude'][osc])
+    plt.plot(freq_fine, np.abs(osc_y), color="#0088FF", label=u"", ls='-', alpha=.3)      # (optional) plot amplitude
     sumosc += osc_y 
-plt.plot(freq_fine, sumosc, color="#0088FF", label=u"$\\Sigma$ osc", ls='-')      # (optional) plot amplitude
+plt.plot(freq_fine, np.abs(sumosc), color="#0088FF", label=u"$\\Sigma$ osc", ls='-')      # (optional) plot amplitude
 
 analytic_modes = {}
 from scipy.special import jnyn_zeros
-# For a long-enough cavity, the lines group as such: [Pozar: microwave engineering],  B'01 = 3.832
-# TE111-TE112      TM010-TM011-TM012     TE211-TE212     TM110-TM111+TE011-TM112
-# so TE for p=0 (TExx0) is not allowed
-#    TM for m=0 (TMx0x) is not allowed
-# In the plot of mine, they grou as such:
-# TE101-TE102-TE103    TM000-TM002-TM003        TE201-TE202-TE203       TM101-
 
 #radius=33.774e-3
 #height=122.36e-3
@@ -104,7 +115,7 @@ from scipy.special import jnyn_zeros
 plt.xlabel(u"frequency [Hz]")
 plt.ylabel(u"amplitude excited by a pulse") 
 plt.xlim((0, maxftmp))
-#plt.ylim((1e-3, 1e4))
+#plt.ylim((1e1, 1e9))
 plt.yscale('log')
 plt.grid()
 plt.legend(prop={'size':10}, loc='upper right').draw_frame(False)
@@ -116,3 +127,16 @@ plt.savefig("OUT.png", bbox_inches='tight')
 #import effparam        # process effective parameters for metamaterials
 
 meep.all_wait()         # Wait until all file operations are finished
+
+
+
+
+
+
+
+
+#def lorentz(x, f, d, q, A, p, err):
+    #return A*abs(q)/((f/(2*np.pi))**2 + abs(q/2)*(x-f)**2) / (np.pi*2)          * 100
+    #return A/(d + (x-f)**2) 
+    #return A*abs(q)/(1 + abs(q*np.pi*2)*(x-abs(f))**2) / (np.pi*2) * 1e16 # XXX
+
