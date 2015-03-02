@@ -12,7 +12,7 @@ I will be happy if these scripts help you with your thesis, paper or just any pr
 made a reference to my website or send me a message; perhaps I can even help you with some useful tips.
 
 Filip Dominec, filip.dominec@gmail.com,
-February 2015
+2012 - 2015
 
 
 ## File overview
@@ -31,21 +31,23 @@ February 2015
  * `spdc.py` - TODO
 
 #### Examples using the simulation scripts
+Usually, everything you need to run an example is to change to its directory, and launch `./batch.sh`. In a multiprocessing environment, it is recommended to launch it like `mpirun -np 4 ./batch.sh`. 
+
  * [x]  `example_metamaterial_s_parameters/` - computes effective parameters of a metamaterial (using `scatter.py` and `effparam.py`); shows how the negative index of refraction is achieved by adding wires, and how it retains/changes when more metamaterial cells are computed (which however can suffer from wrong branch switch)
  * [x]  `example_frequency_domain_solver/` - runs `scatter.py` multiple times in frequency-domain, and then compares the results to the classical Fourier-transformed time-domain simulation
+ * [x]  `example_cylindrical_cavity_modes/` - defines a metallic cavity
  * [ ]  `example_surface_plasmons/`
 	TODO add support for metal/diel substrate, and try to show the sym-asym interference
  * [ ]  `example_aperture_near-field_microscope/` 
     TODO
- * [ ]  `example_cylindrical_cavity_modes/` - (uses hollowcyl_sim.py)
- * [ ]  `example_dielectric_bars_width_scan/ `
+ * [ ]  `example_dielectric_bars_width_scan/`
 	TODO
  * [ ]  `example_dielectric_slab_oblique_incidence/`
 	TODO , c.f. transfer-matrix
- * [ ]  `example_refraction_on_MM_wedge_2D/`
-	TODO implement 2-D support
- * [ ]  `example_nonlinear_Kerr_focusing/`
-	TODO implement
+ * [ ]  `example_refraction_on_MM_wedge_2D/` - defines a wedge of a 2-D rod array (studied earlier both as a photonic crystal and a metamaterial), and by the means of spatial Fourier transform, analyzes how a beam is refracted depending on its frequency. Compares the result with the s-parameter retrieval method.
+	TODO implement seamless 2-D support
+ * [ ]  `example_nonlinear_Kerr_focusing/` - demonstrates a source with custom spatial shape, which launches a focused Gaussian beam. Different amplitudes are scanned to show how the nonlinear medium changes the beam and eventually allows filament formation.
+	TODO implement nonlinearity, test out
  * [ ]  `example_SPDC/`
 	TODO
 
@@ -68,9 +70,9 @@ materials, data postprocessing etc. is elaborated there.
 
 
 ## TODO
-- [ ] scatter.py, cdh and others should output sim_param in the header (moreover CDH has weird header!!)
-- [ ] move Kx, Ky out of the model parameters
-- [ ] put the models into separate module
+- [x] scatter.py, cdh and others should output sim_param in the header (moreover CDH has weird header!!)
+- [x] move Kx, Ky out of the model parameters
+- [x] put the models into separate module
 - [ ] sync harminv from its module with meep_utils, and remove from the latter
 - [ ] why I do not see interference of sym/asym plasmons in the example? wrong metal model?
 
