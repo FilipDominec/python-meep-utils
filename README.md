@@ -73,6 +73,7 @@ materials, data postprocessing etc. is elaborated there.
 - [x] move Kx, Ky out of the model parameters
 - [x] put the models into separate module
 - [ ] sync harminv from its module with meep_utils, and remove from the latter
+- [ ] effparam.py does not cope with "plot_freq_max=None" anymore? -- fix
 - [ ] why I do not see interference of sym/asym plasmons in the example? wrong metal model?
 - [ ] plot_contour to read any column from direct sim output / effparam
 - [ ] fix 'ValueError: width and height must each be below 32768'

@@ -1289,4 +1289,5 @@ class AmplitudeMonitorPoint(AmplitudeMonitorPlane):#{{{
 mpirun has exited due to process rank * with PID **** on *
     ---> this is harmless
 
+AttributeError: 'unicode' object has no attribute 'shrink' --> try avoiding latex in matplotlib?
 """

@@ -137,5 +137,5 @@ else:                                       ## frequency-domain computation
     #meep_utils.savetxt(freq=freq, s11=s11, s12=s12, model=model)
     #import effparam        # process effective parameters for metamaterials
 
-with open("./last_simulation_name.txt", "w") as outfile: outfile.write(model.simulation_name) 
+with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
 meep.all_wait()         # Wait until all file operations are finished

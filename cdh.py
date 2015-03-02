@@ -136,6 +136,6 @@ if meep.my_rank() == 0:
     meep_utils.savetxt(fname=os.path.join('cdh',model.simulation_name+".dat"), fmt="%.6e", 
             X=zip(t, E.real, E.imag), 
             header=model.parameterstring + meep_utils.sim_param_string(sim_param) + headerstring)
-    with open("./last_simulation_name.txt", "w") as outfile: outfile.write(model.simulation_name) 
+    with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
 
 meep.all_wait()         # Wait until all file operations are finished
