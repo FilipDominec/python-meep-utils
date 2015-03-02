@@ -116,6 +116,10 @@ if meep.my_rank() == 0 and  not sim_param['frequency_domain']:
     plt.legend(prop={'size':10}, loc='upper right').draw_frame(False)
     plt.savefig("td.png", bbox_inches='tight')
 
+    ## Convert to polar notation and save the time-domain record
+    meep_utils.savetxt(fname=model.simulation_name+"_timedomain.dat", X=zip(x, np.abs(y), meep_utils.get_phase(y)), fmt="%.6e",
+            header=model.parameterstring + meep_utils.sim_param_string(sim_param) + "#x-column time [s]\n#column ampli\n#column phase\n")
+
     ## 1D FFT with cropping for useful frequencies
     plt.figure(figsize=(15,10))
     freq    = np.fft.fftfreq(len(x), d=(x[1]-x[0]))         # calculate the frequency axis with proper spacing
@@ -126,10 +130,9 @@ if meep.my_rank() == 0 and  not sim_param['frequency_domain']:
     (yf, freq) = map(lambda array: array[truncated], (yf, freq))    # (optional) truncate the data points
     plt.plot(freq, np.abs(yf), color="#FF8800", label=u"$y'$", ls='-')                  # (optional) plot amplitude
 
-
-    ## Convert to polar notation and save
-    meep_utils.savetxt(fname=model.simulation_name+".dat", X=zip(freq, abs(yf), meep_utils.get_phase(yf)), fmt="%.8e",
-            header=model.parameterstring+"#x-column _frequency [Hz]\n#column ampli\n#column phase\n")
+    ## Convert to polar notation and save the spectrum
+    meep_utils.savetxt(fname=model.simulation_name+"_freqdomain.dat", X=zip(freq, np.abs(yf), meep_utils.get_phase(yf)), fmt="%.6e",
+            header=model.parameterstring + meep_utils.sim_param_string(sim_param) + "#x-column _frequency [Hz]\n#column ampli\n#column phase\n")
 
 
     ## Harminv
@@ -160,7 +163,7 @@ if meep.my_rank() == 0 and  not sim_param['frequency_domain']:
     # In the plot of mine, they grou as such:
     # TE101-TE102-TE103    TM000-TM002-TM003        TE201-TE202-TE203       TM101-
     
-    freq_correction = (1. - 150e6/3.2e9)
+    freq_correction =  1       # (1. - 150e6/3.2e9)   ## optionally compensate for the few percent error in frequency (introduced by discretisation in FDTD) 
     for p in [0,1,2]:
         for n in range(4):
             S = " "*p
@@ -173,9 +176,9 @@ if meep.my_rank() == 0 and  not sim_param['frequency_domain']:
     meep_utils.annotate_frequency_axis(analytic_modes, label_position_y=1, arrow_length=10, log_y=True)
 
     ## Finish the plot + save 
-    plt.xlim(model.interesting_frequencies); 
-    plt.xlabel(u"frequency [Hz]"); 
-    plt.ylabel(u"amplitude excited by a pulse"); 
+    plt.xlim(model.interesting_frequencies)
+    plt.xlabel(u"frequency [Hz]")
+    plt.ylabel(u"amplitude excited by a pulse") 
     plt.ylim((1e-3, 1e4))
     plt.yscale('log')
     plt.grid()
