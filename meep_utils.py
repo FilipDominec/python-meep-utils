@@ -998,17 +998,20 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     ## Todo optimize cos(arcsin x ) = sqrt(1-x**2)
 
     ## Diagnostics: Plot spectral profile
-    plt.figure(figsize=(7,6))
-    plt.plot(freq, abs(in1), label="in1")
-    plt.plot(freq, abs(out1), label="out1")
-    plt.plot(freq, abs(in2), label="in2")
-    plt.plot(freq, abs(out2), label="out2")
-    plt.xlim(0, np.max(freq))
-    plt.legend(prop={'size':10}, loc='lower left')
-    plt.xlabel('Frequency'); plt.ylabel('Transmitted amplitude')
-    #plt.title('Frequency-domain wave amplitudes')
-    plt.yscale("log")
-    plt.savefig("amplitudes_spectra.png", bbox_inches='tight')
+    try:
+        plt.figure(figsize=(7,6))
+        plt.plot(freq, abs(in1), label="in1")
+        plt.plot(freq, abs(out1), label="out1")
+        plt.plot(freq, abs(in2), label="in2")
+        plt.plot(freq, abs(out2), label="out2")
+        plt.xlim(0, np.max(freq))
+        plt.legend(prop={'size':10}, loc='lower left')
+        plt.xlabel('Frequency'); plt.ylabel('Transmitted amplitude')
+        #plt.title('Frequency-domain wave amplitudes')
+        plt.yscale("log")
+        plt.savefig("amplitudes_spectra.png", bbox_inches='tight')
+    except:
+        print "Wave amplitude freq-domain plot failed", sys.exc_info()[0]
 
     ## Get the s-parameters 
     s11 = out1 / in1
