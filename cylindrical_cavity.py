@@ -2,14 +2,14 @@
 #-*- coding: utf-8 -*-
 """ (c) 2014 Filip Dominec, see http://fzu.cz/~dominecf/meep/ for more information """
 
-
-import numpy as np
 import time, sys, os
+import numpy as np
+from scipy.constants import c, epsilon_0, mu_0
+
 import meep_utils, meep_materials
 from meep_utils import in_sphere, in_xcyl, in_ycyl, in_zcyl, in_xslab, in_yslab, in_zslab, in_ellipsoid
 import meep_mpi as meep
 #import meep
-c = 2.997e8
 
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
 class HollowCyl_model(meep_utils.AbstractMeepModel): #{{{
@@ -47,7 +47,6 @@ class HollowCyl_model(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
-
 # Model selection
 model = HollowCyl_model(**model_param)
 if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
@@ -56,7 +55,6 @@ if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % 
 vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
 vol.center_origin()
 s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes="All") ## XXX   meep.XY
-
 
 ## Create the fields object, and define the Bloch-periodic boundaries (any transversal component of k-vector is allowed)
 field = meep.fields(s)
@@ -74,9 +72,6 @@ srcvolume = meep.volume(
         meep.vec(model.radius*.15, -model.radius*.25, -model.height*.15))
 field.add_volume_source(meep.Ez, src_time_type, srcvolume) ## source of oblique polarization - excites both TE and TM modes
 field.add_volume_source(meep.Ex, src_time_type, srcvolume)
-
-#monitor_options = {'size_x':model.size_x/4, 'size_y':model.size_y/4, 'Kx':model.Kx, 'Ky':model.Ky}
-#monitor1_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.size_z/8, **monitor_options)
 
 slice_makers =  []
 #slice_makers += [meep_utils.Slice(model=model, field=field, components=(meep.Ex, meep.Ey, meep.Ez), at_t=3, name="ElectricAtEnd")]
@@ -172,8 +167,7 @@ if meep.my_rank() == 0 and  not sim_param['frequency_domain']:
             for m,B in enumerate(jnyn_zeros(n, 5)[1]):
                 if p>0: ## TExx0 modes can not exist [Pozar]
                     analytic_modes[freq_correction * c/(2*np.pi) * np.sqrt((B/(model.radius))**2 + (p*np.pi/model.height)**2) ] = ("   %s$TE_{%d%d%d}$%s   " % (S,n,m+1,p,S))
-    print analytic_modes
-    meep_utils.annotate_frequency_axis(analytic_modes, label_position_y=1, arrow_length=10, log_y=True)
+    #meep_utils.annotate_frequency_axis(analytic_modes, label_position_y=1, arrow_length=10, log_y=True)
 
     ## Finish the plot + save 
     plt.xlim(model.interesting_frequencies)
