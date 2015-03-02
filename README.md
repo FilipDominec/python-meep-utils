@@ -20,36 +20,37 @@ Filip Dominec, filip.dominec@gmail.com,
  * `meep_utils.py`       - the main module with routines useful for python-meep simulations
  * `meep_materials.py`   - module containing realistic definition of materials used 
  * `README.md`		     - this file
- * `LICENSE`			 - GPLv2
- * `plot_scan_as_contours.py` - if multiple simulations are run as a parametric scan, this allows to present the results in a single contour plot
- * `effparam.py`		 - retrieves the metamaterial effective parameters from the complex reflection and transmission (e.g. from `scatter.py`)
- * `plot_cdh.py`,`plot_cdh_new.py` - plots data for current-driven homogenization, TODO fix 
+ * `LICENSE`			 - General Public License
+ * `metamaterial_models.py` - different metamaterial models (that can be shared by other scripts)
 
-#### Simulation scripts
- * `scatter.py`			 - defines a metamaterial cell containing a dielectric sphere, and optionally metallic wires parallel to electric field
- * `cdh.py` - TODO
- * `spdc.py` - TODO
+
+ *  - computes and plots data for current-driven homogenization
+ * `plot_scan_as_contours.py` - if multiple simulations are run as a parametric scan, this allows to present the results in a single contour plot
 
 #### Examples using the simulation scripts
 Usually, everything you need to run an example is to change to its directory, and launch `./batch.sh`. In a multiprocessing environment, it is recommended to launch it like `mpirun -np 4 ./batch.sh`. 
 
- * [x]  `example_metamaterial_s_parameters/` - computes effective parameters of a metamaterial (using `scatter.py` and `effparam.py`); shows how the negative index of refraction is achieved by adding wires, and how it retains/changes when more metamaterial cells are computed (which however can suffer from wrong branch switch)
+ * [x]  `example_metamaterial_s_parameters/`, `scatter.py`, `effparam.py` - retrieves the effective parameters of a metamaterial using the s-parameters method; shows how the negative index of refraction is achieved by adding wires to a dielectric sphere. Finally plots how the parameters retain/change when more metamaterial cells are stacked.
  * [x]  `example_frequency_domain_solver/` - runs `scatter.py` multiple times in frequency-domain, and then compares the results to the classical Fourier-transformed time-domain simulation
- * [x]  `example_cylindrical_cavity_modes/` - defines a metallic cavity
- * [ ]  `example_surface_plasmons/`
-	TODO add support for metal/diel substrate, and try to show the sym-asym interference
- * [ ]  `example_aperture_near-field_microscope/` 
-    TODO
+ * [x]  `example_current_driven_homogenisation/`, `cdh.py`, `plot_cdh.py` - computes and plots data for current-driven homogenization; compares them with those obtained from s-parameters
+ * [x]  `example_cylindrical_cavity_modes/` - defines a metallic cylindrical cavity, excites the field by a short pulsed source, and analyzes the ringdown to search for all modes. A comparison of Fourier transform, filter-diagonalisation method and the textbook analytic solution is plotted. 
+   * [ ]	TODO Subsequently, the shapes of the lowest modes are found by frequency-domain solver.
+   * [ ]	fix `../harminv_wrapper.py`, rm harminv from `meep_utils.py`
+ * [x]  `example_surface_plasmons/`, `plasmons.py` - an aperture in a thin metal sheet couples incident light to surface plasmons. If the film is surrounded by two media with similar index of refraction, circular interference pattern can be observed between the symmetric and antisymmetric plasmon modes.  A different (hyperbolic) interference pattern can be obtained when the plasmons are coupled by two holes.
+   * [ ]	TODO add support for metal/diel substrate, 
+   * [ ] and try to show the sym-asym interference
  * [ ]  `example_dielectric_bars_width_scan/`
-	TODO
+   * [ ]	TODO
  * [ ]  `example_dielectric_slab_oblique_incidence/`
-	TODO , c.f. transfer-matrix
+   * [ ]	TODO , c.f. transfer-matrix
  * [ ]  `example_refraction_on_MM_wedge_2D/` - defines a wedge of a 2-D rod array (studied earlier both as a photonic crystal and a metamaterial), and by the means of spatial Fourier transform, analyzes how a beam is refracted depending on its frequency. Compares the result with the s-parameter retrieval method.
-	TODO implement seamless 2-D support
+   * [ ]	TODO implement seamless 2-D support
  * [ ]  `example_nonlinear_Kerr_focusing/` - demonstrates a source with custom spatial shape, which launches a focused Gaussian beam. Different amplitudes are scanned to show how the nonlinear medium changes the beam and eventually allows filament formation.
-	TODO implement nonlinearity, test out
- * [ ]  `example_SPDC/`
-	TODO
+   * [ ]	TODO implement nonlinearity, test out
+ * [ ]  `example_SPDC/`, `spdc.py` - TODO
+   * [ ]	TODO
+ * [ ]  `example_aperture_near-field_microscope/` 
+   * [ ] TODO
 
 ## Related resources
  * Official website of MEEP: http://ab-initio.mit.edu/wiki/index.php/Meep     
