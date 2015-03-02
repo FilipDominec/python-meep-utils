@@ -19,13 +19,11 @@ Filip Dominec, filip.dominec@gmail.com,
 #### General modules and other files
  * `meep_utils.py`       - the main module with routines useful for python-meep simulations
  * `meep_materials.py`   - module containing realistic definition of materials used 
- * `README.md`		     - this file
- * `LICENSE`			 - General Public License
+ * `README.md`		 - this file
+ * `LICENSE`		 - General Public License
  * `metamaterial_models.py` - different metamaterial models (that can be shared by other scripts)
-
-
- *  - computes and plots data for current-driven homogenization
- * `plot_scan_as_contours.py` - if multiple simulations are run as a parametric scan, this allows to present the results in a single contour plot
+ * `plot_scan_as_contours.py` - if multiple simulations are run as a parametric scan, this allows to present all results in a single contour plot
+ * `harminv_wrapper.py` - allows to simply use filter diagonalisation method from Python 
 
 #### Examples using the simulation scripts
 Usually, everything you need to run an example is to change to its directory, and launch `./batch.sh`. In a multiprocessing environment, it is recommended to launch it like `mpirun -np 4 ./batch.sh`. 
@@ -76,6 +74,9 @@ materials, data postprocessing etc. is elaborated there.
 - [x] put the models into separate module
 - [ ] sync harminv from its module with meep_utils, and remove from the latter
 - [ ] why I do not see interference of sym/asym plasmons in the example? wrong metal model?
+- [ ] plot_contour to read any column from direct sim output / effparam
+- [ ] fix 'ValueError: width and height must each be below 32768'
+- [ ] stability of metals - try to increase 'gamma' until it goes unstable; map the parameters
 
 - [ ] from scipy.misc import imsave; imsave('../docs/static/tutorial-epsilon.png', -N.rot90(epsilon)) ? 
 - [ ] Use average_field_function instead of my own averaging!
@@ -88,17 +89,16 @@ materials, data postprocessing etc. is elaborated there.
 - [ ] mode separation on the user-defined ports
 - [x] add examples (tests / case study?):
    * waveguide-splitter
-   * metamaterial parameters of dielectric rods (CASE STUDY)
-   * metamaterial parameters of dielectric sphere in wire mesh (CASE STUDY)
+   * metamaterial parameters of dielectric sphere in wire mesh 
    * a split-ring resonator and current-driven homogenisation
    * surface-plasmons
-   * surface-plasmons on thin-metal (CASE STUDY) 
+   * surface-plasmons on thin-metal 
    * thin-gold-film-transmission
    * plasmonic resonance in gold nanoparticles
    * resistive-metal strips
    * extraordinary transmission
    * Kerr nonlinearity and self-focusing
-   * scattering SNOM microscope (CASE STUDY)
+   * scattering SNOM microscope 
    * oblique-wave fabry-pérot resonances, comparison with analytic solution
    * resonances in cylinder cavity, application of harminv and comparison with analytic
    * modeling spontaneous parametric down-conversion

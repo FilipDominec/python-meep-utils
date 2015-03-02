@@ -129,7 +129,6 @@ if meep.my_rank() == 0 and  not sim_param['frequency_domain']:
     meep_utils.savetxt(fname=model.simulation_name+"_freqdomain.dat", X=zip(freq, np.abs(yf), meep_utils.get_phase(yf)), fmt="%.6e",
             header=model.parameterstring + meep_utils.sim_param_string(sim_param) + "#x-column _frequency [Hz]\n#column ampli\n#column phase\n")
 
-
     ## Harminv
     ## TODO switch to harminv_wrapper.py instead
     hi = meep_utils.harminv(x, y, amplitude_prescaling=1e6)
@@ -145,12 +144,10 @@ if meep.my_rank() == 0 and  not sim_param['frequency_domain']:
     print "Harminv frequencies", np.abs(hi['frequency'])
     for osc in range(oscillator_count):
         osc_y = lorentz(freq_fine,   hi['frequency'][osc], hi['decay'][osc], hi['quality'][osc], hi['amplitude'][osc], hi['phase'][osc], hi['error'][osc])
-        plt.plot(freq_fine, osc_y, color="#0088FF", label=u"", ls='-', alpha=.3)      # (optional) plot amplitude
+        plt.plot(freq_fine, osc_y, color="#0088FF", label=u"", ls='-', alpha=.3) 
         sumosc += osc_y 
-    plt.plot(freq_fine, sumosc, color="#0088FF", label=u"$\\Sigma$ osc", ls='-')      # (optional) plot amplitude
+    plt.plot(freq_fine, sumosc, color="#0088FF", label=u"$\\Sigma$ osc", ls='-')
 
-    analytic_modes = {}
-    from scipy.special import jnyn_zeros
     # For a long-enough cavity, the lines group as such: [Pozar: microwave engineering],  B'01 = 3.832
     # TE111-TE112      TM010-TM011-TM012     TE211-TE212     TM110-TM111+TE011-TM112
     # so TE for p=0 (TExx0) is not allowed
@@ -158,7 +155,9 @@ if meep.my_rank() == 0 and  not sim_param['frequency_domain']:
     # In the plot of mine, they grou as such:
     # TE101-TE102-TE103    TM000-TM002-TM003        TE201-TE202-TE203       TM101-
     
-    freq_correction =  1       # (1. - 150e6/3.2e9)   ## optionally compensate for the few percent error in frequency (introduced by discretisation in FDTD) 
+    analytic_modes = {}
+    from scipy.special import jnyn_zeros
+    freq_correction =  1 # .95  ## optionally compensate the small error in frequency (coming from discretisation) 
     for p in [0,1,2]:
         for n in range(4):
             S = " "*p
@@ -178,7 +177,6 @@ if meep.my_rank() == 0 and  not sim_param['frequency_domain']:
     plt.grid()
     plt.legend(prop={'size':10}, loc='upper right').draw_frame(False)
     plt.savefig("%s.png" % model.simulation_name, bbox_inches='tight')
-
 
     #meep_utils.savetxt(freq=freq, s11=s11, s12=s12, model=model)
     #with open("./last_simulation_name.txt", "w") as outfile: outfile.write(model.simulation_name) 
