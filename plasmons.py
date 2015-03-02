@@ -24,8 +24,8 @@ class PlasmonFilm_model(meep_utils.AbstractMeepModel): #{{{
 
         ## Constant parameters for the simulation
         self.simulation_name = "PlasmonsFilm"    
-        self.src_freq, self.src_width = 400e12, 800e12     # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
+        self.src_freq = 400e12     # [Hz] (note: srcwidth irrelevant for continuous_source)
+        #self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk (irrelevant here) XXX
         self.pml_thickness = 1e-6
 
         self.size_x = size_x 
@@ -38,8 +38,11 @@ class PlasmonFilm_model(meep_utils.AbstractMeepModel): #{{{
         ## Define materials
         f_c = c / np.pi/self.resolution/meep_utils.meep.use_Courant()
 
-        #self.materials   = [meep_materials.material_Au(where=self.where_metal)]  
-        self.materials   = [meep_materials.material_DrudeMetal(lfconductivity=1e8, f_c=.2*f_c, where = self.where_metal)]  
+        self.materials   = [meep_materials.material_Au(where=self.where_metal)]  
+        self.materials[0].pol[0]['sigma'] /= 2. ## effective thin layer TODO test+tune+comment
+        self.materials[0].pol[1:] = []      ## rm other osc
+
+        #self.materials   = [meep_materials.material_DrudeMetal(lfconductivity=1e8, f_c=.2*f_c, where = self.where_metal)]  
         #self.materials   += [meep_materials.material_dielectric(where=self.where_diel, eps=2.)]  
         #self.TestMaterials()
         #self.materials   += [meep_materials.material_Au(where=None)]  
