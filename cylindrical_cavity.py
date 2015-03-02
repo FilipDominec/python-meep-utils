@@ -31,18 +31,13 @@ class HollowCyl_model(meep_utils.AbstractMeepModel): #{{{
         ## Define materials
         f_c = c / np.pi/self.resolution/meep_utils.meep.use_Courant() 
         self.materials = []  
-        self.materials += [meep_materials.material_DrudeMetal(lfconductivity=1e4, f_c=f_c, gamma_factor=.5, epsplus=0, where=self.where_metal)]  
-        #self.materials += [meep_materials.material_dielectric(eps=.5**.5, where = None)]  
-        #self.materials += [meep_materials.material_SiO2_stability_test(where = self.where_TiO2)]  
+        au = meep_materials.material_Au(where=self.where_metal)
+        self.fix_material_stability(au, verbose=0)
+        self.materials.append(au)
+        #self.materials += [meep_materials.material_DrudeMetal(lfconductivity=1e4, f_c=f_c, gamma_factor=.5, epsplus=0, where=self.where_metal)]  
 
-        #meep.use_Courant(3**-.5 - 0.001); print "COURANT =", meep.use_Courant()
-        print "model thinks f_c = ", f_c
-
-        meep_utils.plot_eps(self.materials, mark_freq={f_c:'$f_c$'}, plot_conductivity=True) #10e12:' $\\frac{\\gamma}{2\\pi}$ ' , .7e15:'$\\frac{\\omega_p}{2\\pi}$ '
-        #eps_fc = meep_utils.analytic_eps(self.materials[0], f_c)
-        #lim_tmp = meep.use_Courant()**2 * 3
-        #print "analytic eps(f_c) = ", eps_fc, (" [the limit is %f]" % lim_tmp), "******* UNSTABLE ******* " if (eps_fc.real< lim_tmp) else ""
-
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
         self.test_materials()
 
     def where_metal(self, r):
