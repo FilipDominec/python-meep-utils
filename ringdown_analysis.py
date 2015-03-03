@@ -11,7 +11,7 @@ are obviously different: when the _angular_ frequency `omega' is used, its axis 
 accordingly, the values have to be divided by sqrt(2pi) (NB this is due to the Fourier-Plancherel theorem, 
 which is tested below)
 
-The frequency `f' approach is used by numpy.fft, and it can be shown that it gives nearly identical data to the manually computed FT.
+The frequency `f' approach is used by numpy.fft, and it can be shown that it gives data nearly identical to the manually computed FT.
 
 Public domain, 2014 F. Dominec
 """
@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.constants import c, hbar, pi
 
-## User settings 
+## == User settings ==
 
 convention = 'f'            
 #convention = 'omega'
@@ -34,11 +34,13 @@ test_kramers_kronig = 0
 # (note: Plancherel theorem is not valid for delta function in numerical computation)
 add_delta_function =  0
 
-# Knowing the oscillator parametres, we can compare to the analytic solution
-analytic_lorentzian = 0
-
 harmonic_inversion  = 1
 
+# Knowing the oscillator parametres, we can compare to the analytic solution
+analytic_lorentzian = 1
+
+
+## == /User settings ==
 
 
 
@@ -54,17 +56,18 @@ plt.subplot(121)
 ## Generate time-domain data
 
 
-#x, omega0, gamma, ampli = np.linspace(-3e-3, 55e-3, 6000), 2*np.pi*1e3, 2*np.pi*.1*1e3, 1.
-x, omega0, gamma, ampli = np.linspace(-3, 25, 3000), 2*np.pi, 2*np.pi*.1, 1.
+x, omega0, gamma, ampli = np.linspace(-0e-3, 10e-3, 1500), 2*np.pi*1e3*2, 2*np.pi*.2*1e3, 1.
+#x, omega0, gamma, ampli = np.linspace(-.3, 2.5, 3000), 20*np.pi, 20*np.pi*.1, 1.
+#x, omega0, gamma, ampli = np.linspace(-3, 25, 3000), 2*np.pi*3, 2*np.pi*.3, 1.
 
 maxplotf = 200 / np.max(x)
-y = ampli * (np.sign(x)/2+.5) * np.sin(x*omega0)*2*pi * np.exp(-x*gamma/2)  ## damped oscillator
-y +=ampli * (np.sign(x)/2+.5) * np.sin(x*omega0*3)*2*pi * np.exp(-x*gamma/2)  ## damped oscillator
+y = ampli * (np.sign(x)/2+.5) * np.sin(x*omega0) * np.exp(-x*gamma/2)  ## damped oscillator
+#y +=ampli * (np.sign(x)/2+.5) * np.sin(x*omega0*3)*2*pi * np.exp(-x*gamma/2)  ## damped oscillator
 if add_delta_function:
     if convention == 'f':
         y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for f-convention 
     elif convention == 'omega':
-        print "Delta function unsure how to be implemented in omega convention"
+        print "Warning: Delta function unclear how to be implemented in omega convention"
         y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for omega-convention 
 plt.plot(x,y, c='#aa0088', label="Real part")
 plt.grid()
@@ -94,16 +97,16 @@ if convention == 'f':
     yf2     = np.fft.fftshift(yf2) / np.exp(1j*2*pi*freq * x[0])    # dtto, and corrects the phase for the case when x[0] != 0
     truncated = np.logical_and(freq>-maxplotf, freq<maxplotf)         # (optional) get the frequency range
     (yf2, freq) = map(lambda x: x[truncated], (yf2, freq))    # (optional) truncate the data points
-    plt.plot(freq, yf2.real, c='r', label='ScipyFT in $f$', lw=2)
-    plt.plot(freq, yf2.imag, c='r', ls='--', lw=2)
-    print 'Plancherel theorem test: Energy in freqdomain f (by Scipy) :', np.trapz(y=np.abs(yf2)**2, x=freq)
+    plt.plot(freq, yf2.real, c='m', label='ScipyFT in $f$', lw=2)
+    plt.plot(freq, yf2.imag, c='m', ls='--', lw=2)
+    Ws = np.trapz(y=np.abs(yf2)**2, x=freq); print 'Plancherel theorem test: Energy in freqdomain f (by Scipy) :', Ws 
 
     ## Own implementation of slow Fourier transform - in f
     f = np.linspace(-maxplotf, maxplotf, 1000)
     yf = np.sum(y * np.exp(-1j*2*pi*np.outer(f,x)), axis=1) * (x[1]-x[0])
     plt.plot(f, yf.real, c='g', label='ManFT in $f$')
     plt.plot(f, yf.imag, c='g', ls='--')
-    print 'Plancherel theorem test: Energy in freqdomain f (manual)   :', np.trapz(y=np.abs(yf)**2, x=f)
+    Wm = np.trapz(y=np.abs(yf)**2, x=f); print 'Plancherel theorem test: Energy in freqdomain f (manual)   :', Wm
 
     if test_kramers_kronig:
         ## Test the Kramers-Kronig relations - in f
@@ -112,9 +115,15 @@ if convention == 'f':
         plt.plot(new_f, conv.real, ls='-', c='k', alpha=1, lw=.5, label='KKR in $f$') 
         plt.plot(new_f, conv.imag, ls='--', c='k', alpha=1, lw=.5) 
 
+    if analytic_lorentzian:
+        lor = lorentz(omega=f*2*pi, omega0=omega0, gamma=gamma, ampli=ampli*omega0)
+        plt.plot(f, lor.real, ls='-',  c='r', alpha=.5, lw=1.5,  label='Osc in $f$') 
+        plt.plot(f, lor.imag, ls='--', c='r', alpha=.5, lw=1.5) 
+        Wa = np.trapz(y=np.abs(lor)**2, x=f); print 'Plancherel theorem test: Energy in analytic osc (f)        :', Wa 
+
     if harmonic_inversion:
         import harminv_wrapper
-        amplitude_prescaling = None
+        amplitude_prescaling = 1e5
         hi = harminv_wrapper.harminv(x, y, amplitude_prescaling=amplitude_prescaling)
         #hi = harminv_wrapper.harminv(x[0:int(len(x)*.6)], y[0:int(len(x)*.6)], amplitude_prescaling=3.)
         if type(hi['frequency']) == np.float64:
@@ -125,16 +134,12 @@ if convention == 'f':
         sumosc = np.zeros_like(freq_fine)*1j
         for osc in range(oscillator_count):
             #osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc]*pi**2)
-            print (x[1]-x[0])
-            osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc]/4 * (x[1]-x[0]) / 9.66827804634e-03)
+            osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc] * np.abs(hi['frequency'][osc]) / .00866**.5) 
             sumosc += osc_y 
         plt.plot(freq_fine, sumosc.real, color="#0088FF", label=u"$\\Sigma$ osc", ls='-')      # (optional) plot amplitude
         plt.plot(freq_fine, sumosc.imag, color="#00aaFF", label=u"", ls='--')      # (optional) plot amplitude
-
-    if analytic_lorentzian:
-        lor = lorentz(omega=f*2*pi, omega0=omega0, gamma=gamma, ampli=ampli)
-        plt.plot(f, lor.real, ls='-',  c='r', alpha=1, lw=.5,  label='Osc in $f$') 
-        plt.plot(f, lor.imag, ls='--', c='r', alpha=1, lw=.5) 
+        Wh = np.trapz(y=np.abs(sumosc)**2, x=freq_fine); print 'Plancherel theorem test: Energy in Harminv f   :', Wh 
+        print "Wh/Ws", Wh/Ws
 
 elif convention == 'omega':
     # Own implementation of slow Fourier transform - in omega XXX
