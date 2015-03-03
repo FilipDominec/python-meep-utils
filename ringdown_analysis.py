@@ -39,7 +39,6 @@ analytic_lorentzian = 0
 
 harmonic_inversion  = 1
 
-maxplotf = 5.
 
 
 
@@ -53,8 +52,12 @@ plt.subplot(121)
 
 
 ## Generate time-domain data
-x = np.linspace(-3, 25, 3000)
-omega0, gamma, ampli = 2*np.pi, 2*np.pi*.1, 1.
+
+
+#x, omega0, gamma, ampli = np.linspace(-3e-3, 25e-3, 3000), 2*np.pi*1e3, 2*np.pi*.1*1e3, 1.
+x, omega0, gamma, ampli = np.linspace(-3, 25, 3000), 2*np.pi, 2*np.pi*.1, 1.
+
+maxplotf = 100 / np.max(x)
 y = ampli * (np.sign(x)/2+.5) * np.sin(x*omega0)*2*pi * np.exp(-x*gamma/2)  ## damped oscillator
 if add_delta_function:
     if convention == 'f':
@@ -64,7 +67,7 @@ if add_delta_function:
         y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for omega-convention 
 plt.plot(x,y, c='#aa0088', label="Real part")
 plt.grid()
-plt.ylim((-10,10)); plt.yscale('linear')
+plt.yscale('linear')
 
 ## Prepare the analytic solution
 def lorentz(omega, omega0, gamma, ampli):
@@ -84,18 +87,21 @@ plt.subplot(122)
 if convention == 'f':
     ## Scipy's  implementation of Fast Fourier transform
     freq    = np.fft.fftfreq(len(x), d=(x[1]-x[0]))         # calculate the frequency axis with proper spacing
+    print np.max(freq), maxplotf
     yf2     = np.fft.fft(y, axis=0) / len(x) * (2*pi)**2     # calculate the FFT values (maintaining Plancherel theorem)
     freq    = np.fft.fftshift(freq)                         # ensures the frequency axis is a growing function
     yf2     = np.fft.fftshift(yf2) / np.exp(1j*2*pi*freq * x[0])   # dtto, and corrects the phase for the case when x[0] != 0
     truncated = np.logical_and(freq>0, freq<maxplotf)         # (optional) get the frequency range
     (yf2, freq) = map(lambda x: x[truncated], (yf2, freq))    # (optional) truncate the data points
+    plt.plot(freq, yf2.real, c='r', label='ScipyFT in $f$')
+    plt.plot(freq, yf2.imag, c='r', ls='--')
     print 'Plancherel theorem test: Energy in freqdomain f (by Scipy) :', np.trapz(y=np.abs(yf2)**2, x=freq)
 
     ## Own implementation of slow Fourier transform - in f
     f = np.linspace(-maxplotf, maxplotf, 1000)
     yf = np.sum(y * np.exp(-1j*2*pi*np.outer(f,x)), axis=1) * (x[1]-x[0])
-    plt.plot(f, np.real(yf), c='g', label='FT in $f$-convention')
-    plt.plot(f, np.imag(yf), ls='--', c='g')
+    plt.plot(f, yf.real, c='g', label='ManFT in $f$')
+    plt.plot(f, yf.imag, c='g', ls='--')
     print 'Plancherel theorem test: Energy in freqdomain f (manual)   :', np.trapz(y=np.abs(yf)**2, x=f)
 
     if test_kramers_kronig:
@@ -153,7 +159,8 @@ elif convention == 'omega':
 ## Finish the frequency-domain plot + save 
 #plt.xlim(left=0)
 plt.xscale('linear')
-plt.ylim((-16,16)); plt.yscale('linear')
+#plt.ylim((-16,16)); 
+plt.yscale('linear')
 if convention == 'f':
     plt.xlabel(u"frequency $f$"); 
 elif convention == 'omega': 
