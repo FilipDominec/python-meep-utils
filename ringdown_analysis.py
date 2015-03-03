@@ -57,7 +57,7 @@ plt.subplot(121)
 #x, omega0, gamma, ampli = np.linspace(-3e-3, 25e-3, 3000), 2*np.pi*1e3, 2*np.pi*.1*1e3, 1.
 x, omega0, gamma, ampli = np.linspace(-3, 25, 3000), 2*np.pi, 2*np.pi*.1, 1.
 
-maxplotf = 100 / np.max(x)
+maxplotf = 200 / np.max(x)
 y = ampli * (np.sign(x)/2+.5) * np.sin(x*omega0)*2*pi * np.exp(-x*gamma/2)  ## damped oscillator
 if add_delta_function:
     if convention == 'f':
@@ -88,7 +88,7 @@ if convention == 'f':
     ## Scipy's  implementation of Fast Fourier transform
     freq    = np.fft.fftfreq(len(x), d=(x[1]-x[0]))         # calculate the frequency axis with proper spacing
     print np.max(freq), maxplotf
-    yf2     = np.fft.fft(y, axis=0) / len(x) * (2*pi)**2     # calculate the FFT values (maintaining Plancherel theorem)
+    yf2     = np.fft.fft(y, axis=0) / len(x) * (2*pi)**2     # calculate FFT values (maintaining the Plancherel theorem)
     freq    = np.fft.fftshift(freq)                         # ensures the frequency axis is a growing function
     yf2     = np.fft.fftshift(yf2) / np.exp(1j*2*pi*freq * x[0])   # dtto, and corrects the phase for the case when x[0] != 0
     truncated = np.logical_and(freq>0, freq<maxplotf)         # (optional) get the frequency range
