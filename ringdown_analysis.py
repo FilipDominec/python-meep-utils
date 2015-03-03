@@ -56,8 +56,8 @@ plt.subplot(121)
 ## Generate time-domain data
 
 
-x, omega0, gamma, ampli = np.linspace(-0e-3, 10e-3, 1500), 2*np.pi*1e3*2, 2*np.pi*.2*1e3, 1.
-#x, omega0, gamma, ampli = np.linspace(-.3, 2.5, 3000), 20*np.pi, 20*np.pi*.1, 1.
+x, omega0, gamma, ampli = np.linspace(-0e-3, 30e-3, 1500), 2*np.pi*1e3*1, 2*np.pi*.1*1e3, 1.
+#x, omega0, gamma, ampli = np.linspace(-0, 2.5, 3000), 20*np.pi, 20*np.pi*.1, 1.
 #x, omega0, gamma, ampli = np.linspace(-3, 25, 3000), 2*np.pi*3, 2*np.pi*.3, 1.
 
 maxplotf = 200 / np.max(x)
@@ -123,18 +123,18 @@ if convention == 'f':
 
     if harmonic_inversion:
         import harminv_wrapper
-        amplitude_prescaling = 1e5
+        amplitude_prescaling = 1e3
         hi = harminv_wrapper.harminv(x, y, amplitude_prescaling=amplitude_prescaling)
         #hi = harminv_wrapper.harminv(x[0:int(len(x)*.6)], y[0:int(len(x)*.6)], amplitude_prescaling=3.)
         if type(hi['frequency']) == np.float64:
             hi['frequency'], hi['decay'], hi['amplitude'] = np.array([hi['frequency']]), np.array([hi['decay']]), np.array([hi['amplitude']])
         print hi['frequency'], hi['decay'], hi['amplitude']
         oscillator_count = len(hi['frequency'])
-        freq_fine = np.linspace(-maxplotf, maxplotf, 1000)
+        freq_fine = np.linspace(-maxplotf, maxplotf, 2000)
         sumosc = np.zeros_like(freq_fine)*1j
         for osc in range(oscillator_count):
             #osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc]*pi**2)
-            osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc] * np.abs(hi['frequency'][osc]) / .00866**.5) 
+            osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc] * np.abs(hi['frequency'][osc]) * (2*np.pi)**.5 * 10) 
             sumosc += osc_y 
         plt.plot(freq_fine, sumosc.real, color="#0088FF", label=u"$\\Sigma$ osc", ls='-')      # (optional) plot amplitude
         plt.plot(freq_fine, sumosc.imag, color="#00aaFF", label=u"", ls='--')      # (optional) plot amplitude
