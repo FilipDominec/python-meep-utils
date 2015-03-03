@@ -43,9 +43,9 @@ harmonic_inversion  = 1
 
 
 ## Use LaTeX
-matplotlib.rc('text', usetex=True)
-matplotlib.rc('font', size=12)
-matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, \usepackage{lmodern},')
+#matplotlib.rc('text', usetex=True)
+#matplotlib.rc('font', size=12)
+#matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, \usepackage{lmodern},')
 #matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
 plt.figure(figsize=(20,10))
 plt.subplot(121)
@@ -54,11 +54,12 @@ plt.subplot(121)
 ## Generate time-domain data
 
 
-#x, omega0, gamma, ampli = np.linspace(-3e-3, 25e-3, 3000), 2*np.pi*1e3, 2*np.pi*.1*1e3, 1.
+#x, omega0, gamma, ampli = np.linspace(-3e-3, 55e-3, 6000), 2*np.pi*1e3, 2*np.pi*.1*1e3, 1.
 x, omega0, gamma, ampli = np.linspace(-3, 25, 3000), 2*np.pi, 2*np.pi*.1, 1.
 
 maxplotf = 200 / np.max(x)
 y = ampli * (np.sign(x)/2+.5) * np.sin(x*omega0)*2*pi * np.exp(-x*gamma/2)  ## damped oscillator
+y +=ampli * (np.sign(x)/2+.5) * np.sin(x*omega0*3)*2*pi * np.exp(-x*gamma/2)  ## damped oscillator
 if add_delta_function:
     if convention == 'f':
         y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for f-convention 
@@ -71,7 +72,8 @@ plt.yscale('linear')
 
 ## Prepare the analytic solution
 def lorentz(omega, omega0, gamma, ampli):
-    return ampli * omega0**2 / (omega0**2 - omega**2 + 1j*omega*gamma) 
+    return ampli / (omega0**2 - omega**2 + 1j*omega*gamma) 
+    #return ampli * omega0**2 / (omega0**2 - omega**2 + 1j*omega*gamma) 
 
 ## Plot time-domain 
 plt.xlabel(u"time $t$") 
@@ -86,15 +88,14 @@ def naive_hilbert_transform(x, y, new_x):
 plt.subplot(122)
 if convention == 'f':
     ## Scipy's  implementation of Fast Fourier transform
-    freq    = np.fft.fftfreq(len(x), d=(x[1]-x[0]))         # calculate the frequency axis with proper spacing
-    print np.max(freq), maxplotf
-    yf2     = np.fft.fft(y, axis=0) / len(x) * (2*pi)**2     # calculate FFT values (maintaining the Plancherel theorem)
-    freq    = np.fft.fftshift(freq)                         # ensures the frequency axis is a growing function
-    yf2     = np.fft.fftshift(yf2) / np.exp(1j*2*pi*freq * x[0])   # dtto, and corrects the phase for the case when x[0] != 0
-    truncated = np.logical_and(freq>0, freq<maxplotf)         # (optional) get the frequency range
+    freq    = np.fft.fftfreq(len(x), d=(x[1]-x[0]))                 # calculate the frequency axis with proper spacing
+    yf2     = np.fft.fft(y, axis=0) * (x[1]-x[0])                   # calculate FFT values (maintaining the Plancherel theorem)
+    freq    = np.fft.fftshift(freq)                                 # reorders data to ensure the frequency axis is a growing function
+    yf2     = np.fft.fftshift(yf2) / np.exp(1j*2*pi*freq * x[0])    # dtto, and corrects the phase for the case when x[0] != 0
+    truncated = np.logical_and(freq>-maxplotf, freq<maxplotf)         # (optional) get the frequency range
     (yf2, freq) = map(lambda x: x[truncated], (yf2, freq))    # (optional) truncate the data points
-    plt.plot(freq, yf2.real, c='r', label='ScipyFT in $f$')
-    plt.plot(freq, yf2.imag, c='r', ls='--')
+    plt.plot(freq, yf2.real, c='r', label='ScipyFT in $f$', lw=2)
+    plt.plot(freq, yf2.imag, c='r', ls='--', lw=2)
     print 'Plancherel theorem test: Energy in freqdomain f (by Scipy) :', np.trapz(y=np.abs(yf2)**2, x=freq)
 
     ## Own implementation of slow Fourier transform - in f
@@ -111,7 +112,6 @@ if convention == 'f':
         plt.plot(new_f, conv.real, ls='-', c='k', alpha=1, lw=.5, label='KKR in $f$') 
         plt.plot(new_f, conv.imag, ls='--', c='k', alpha=1, lw=.5) 
 
-
     if harmonic_inversion:
         import harminv_wrapper
         amplitude_prescaling = None
@@ -124,10 +124,10 @@ if convention == 'f':
         freq_fine = np.linspace(-maxplotf, maxplotf, 1000)
         sumosc = np.zeros_like(freq_fine)*1j
         for osc in range(oscillator_count):
-            osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc]/4)
-            plt.plot(freq_fine, np.abs(osc_y), color="#0088FF", label=u"", ls='-', alpha=.3)      # (optional) plot amplitude
+            #osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc]*pi**2)
+            print (x[1]-x[0])
+            osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc]/4 * (x[1]-x[0]) / 9.66827804634e-03)
             sumosc += osc_y 
-        #plt.plot(freq_fine, np.abs(sumosc), color="#0088FF", label=u"$\\Sigma$ osc", ls='-')      # (optional) plot amplitude
         plt.plot(freq_fine, sumosc.real, color="#0088FF", label=u"$\\Sigma$ osc", ls='-')      # (optional) plot amplitude
         plt.plot(freq_fine, sumosc.imag, color="#00aaFF", label=u"", ls='--')      # (optional) plot amplitude
 
