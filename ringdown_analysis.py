@@ -37,7 +37,7 @@ add_delta_function =  0
 harmonic_inversion  = 1
 
 # Knowing the oscillator parametres, we can compare to the analytic solution
-analytic_lorentzian = 1
+analytic_lorentzian = 0
 
 
 ## == /User settings ==
@@ -56,10 +56,9 @@ plt.subplot(121)
 ## Generate time-domain data
 
 
-x, omega0, gamma, ampli = np.linspace(-0e-3, 30e-3, 1500), 2*np.pi*1e3*1, 2*np.pi*.1*1e3, 1.
+x, omega0, gamma, ampli = np.linspace(-0e-3, 45e-3, 4000), 2*np.pi*1e3*1, 2*np.pi*.03*1e3, 1.
 #x, omega0, gamma, ampli = np.linspace(-0, 2.5, 3000), 20*np.pi, 20*np.pi*.1, 1.
 #x, omega0, gamma, ampli = np.linspace(-3, 25, 3000), 2*np.pi*3, 2*np.pi*.3, 1.
-
 maxplotf = 200 / np.max(x)
 y = ampli * (np.sign(x)/2+.5) * np.sin(x*omega0) * np.exp(-x*gamma/2)  ## damped oscillator
 #y +=ampli * (np.sign(x)/2+.5) * np.sin(x*omega0*3)*2*pi * np.exp(-x*gamma/2)  ## damped oscillator
@@ -69,6 +68,9 @@ if add_delta_function:
     elif convention == 'omega':
         print "Warning: Delta function unclear how to be implemented in omega convention"
         y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for omega-convention 
+
+
+## Plot time-domain
 plt.plot(x,y, c='#aa0088', label="Real part")
 plt.grid()
 plt.yscale('linear')
@@ -134,7 +136,10 @@ if convention == 'f':
         sumosc = np.zeros_like(freq_fine)*1j
         for osc in range(oscillator_count):
             #osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc]*pi**2)
-            osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc] * np.abs(hi['frequency'][osc]) * (2*np.pi)**.5 * 10) 
+            osc_y = lorentz(omega=freq_fine*2*pi,   
+                    omega0=hi['frequency'][osc]*2*pi, 
+                    gamma=hi['decay'][osc]*4, 
+                    ampli=hi['amplitude'][osc] * np.abs(hi['frequency'][osc]) * np.abs(hi['decay'][osc]) / 39.**.5) 
             sumosc += osc_y 
         plt.plot(freq_fine, sumosc.real, color="#0088FF", label=u"$\\Sigma$ osc", ls='-')      # (optional) plot amplitude
         plt.plot(freq_fine, sumosc.imag, color="#00aaFF", label=u"", ls='--')      # (optional) plot amplitude
