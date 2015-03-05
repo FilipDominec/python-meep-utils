@@ -56,18 +56,22 @@ plt.subplot(121)
 ## Generate time-domain data
 
 
-x, omega0, gamma, ampli = np.linspace(-0e-3, 45e-3, 4000), 2*np.pi*1e3*1, 2*np.pi*.03*1e3, 1.
-#x, omega0, gamma, ampli = np.linspace(-0, 2.5, 3000), 20*np.pi, 20*np.pi*.1, 1.
-#x, omega0, gamma, ampli = np.linspace(-3, 25, 3000), 2*np.pi*3, 2*np.pi*.3, 1.
-maxplotf = 200 / np.max(x)
-y = ampli * (np.sign(x)/2+.5) * np.sin(x*omega0) * np.exp(-x*gamma/2)  ## damped oscillator
-#y +=ampli * (np.sign(x)/2+.5) * np.sin(x*omega0*3)*2*pi * np.exp(-x*gamma/2)  ## damped oscillator
-if add_delta_function:
-    if convention == 'f':
-        y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for f-convention 
-    elif convention == 'omega':
-        print "Warning: Delta function unclear how to be implemented in omega convention"
-        y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for omega-convention 
+if analytic_input:
+    x, omega0, gamma, ampli = np.linspace(-0e-3, 45e-3, 4000), 2*np.pi*1e3*1, 2*np.pi*.03*1e3, 1.
+    #x, omega0, gamma, ampli = np.linspace(-0, 2.5, 3000), 20*np.pi, 20*np.pi*.1, 1.
+    #x, omega0, gamma, ampli = np.linspace(-3, 25, 3000), 2*np.pi*3, 2*np.pi*.3, 1.
+    maxplotf = 200 / np.max(x)
+    y = ampli * (np.sign(x)/2+.5) * np.sin(x*omega0) * np.exp(-x*gamma/2)  ## damped oscillator
+    #y +=ampli * (np.sign(x)/2+.5) * np.sin(x*omega0*3)*2*pi * np.exp(-x*gamma/2)  ## damped oscillator
+    if add_delta_function:
+        if convention == 'f':
+            y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for f-convention 
+        elif convention == 'omega':
+            print "Warning: Delta function unclear how to be implemented in omega convention"
+            y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for omega-convention 
+else:
+    x, Eabs, Ephase = np.loadtxt(last_simulation_name+'_timedomain.dat', usecols=list(range(3)), unpack=True)
+    y = Eabs * np.exp(1j*Ephase) * np.exp(-x/1e-9)
 
 
 ## Plot time-domain

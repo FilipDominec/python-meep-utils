@@ -7,14 +7,8 @@ import numpy as np
 from scipy.constants import c, hbar, pi
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
+import matplotlib.cm as cm ## XXX TODO
 import meep_utils 
-
-matplotlib.rc('text', usetex=True)
-matplotlib.rc('font', size=16)
-matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{upgreek}, \usepackage{palatino}')
-matplotlib.rc('font',**{'family':'serif','serif':['palatino, times']})  ## select fonts   , 
-#matplotlib.rc('font',**{'family':'sans-serif', 'sans-serif':['Computer Modern Sans serif']})
 
 
 ## ==== User settings ====
@@ -25,7 +19,7 @@ quantities += ['ampli']
 
 parameter_name = 'height'
 quantity = 'amplitude'
-xlabel = u"Frequency (GHz)"
+xlabel = 'Frequency (GHz)'
 ylabel = 'Cylinder shape $(2a/h)^2$'
 recalculate_to_angle = False
 logarithmic = 0
@@ -38,8 +32,15 @@ interp_anisotropy = 1       # value lower than 1. interpolates rather vertically
 
 def y_function(y):
     return (2*parameters['radius']/y)**2 
+usetex = 0
 ## ==== / User settings ====
 
+if usetex:
+    matplotlib.rc('text', usetex=True)
+    matplotlib.rc('font', size=12)
+    matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{upgreek}, \usepackage{palatino}')
+    matplotlib.rc('font',**{'family':'serif','serif':['palatino, times']})  ## select fonts   , 
+    #matplotlib.rc('font',**{'family':'sans-serif', 'sans-serif':['Computer Modern Sans serif']})
 
 ##Start figure + subplot
 plt.figure(figsize=(15,11))
@@ -95,23 +96,23 @@ contours = plt.contourf(xi,yi,zi, cmap=cmap, levels=levels, extend='both')
 for contour in contours.collections: contour.set_antialiased(False) ## fix aliasing for old Matplotlib
 plt.colorbar().set_ticks(list(range(0, int(np.max(levels)+1))))
 
-## Plot analytic mode frequencies
-from scipy.special import jnyn_zeros
-freq_correction = (1. - 350e6/3.2e9)
-radius, height = parameters['radius'], parameters['height']
-plot_height = np.linspace(120e-3, 1000e-3, 100)
-for p in [0,1,2,3,4]:
-    for n in range(4):
-        S = " "*p
-        for m,B in enumerate(jnyn_zeros(n, 5)[0]):
-            analytic_freq = freq_correction * c/(2*np.pi) * np.sqrt((B/(parameters['radius']))**2 + (p*np.pi/plot_height)**2)
-            #if analytic_freq/frequnit < 10:
-            plt.plot(analytic_freq/frequnit, y_function(plot_height)/yunit, c='b', lw=.8)
-        for m,B in enumerate(jnyn_zeros(n, 5)[1]):
-            if p>0: ## TExx0 modes can not exist [Pozar]
-                analytic_freq = freq_correction * c/(2*np.pi) * np.sqrt((B/(parameters['radius']))**2 + (p*np.pi/plot_height)**2)
-            #if analytic_freq/frequnit < 10:
-            plt.plot(analytic_freq/frequnit, y_function(plot_height)/yunit, c='k', lw=.8)
+## Plot analytic mode frequencies ## XXX for cylindrical resonator only
+#from scipy.special import jnyn_zeros
+#freq_correction = (1. - 350e6/3.2e9)
+#radius, height = parameters['radius'], parameters['height']
+#plot_height = np.linspace(120e-3, 1000e-3, 100)
+#for p in [0,1,2,3,4]:
+    #for n in range(4):
+        #S = " "*p
+        #for m,B in enumerate(jnyn_zeros(n, 5)[0]):
+            #analytic_freq = freq_correction * c/(2*np.pi) * np.sqrt((B/(parameters['radius']))**2 + (p*np.pi/plot_height)**2)
+            ## if analytic_freq/frequnit < 10:
+            #plt.plot(analytic_freq/frequnit, y_function(plot_height)/yunit, c='b', lw=.8)
+        #for m,B in enumerate(jnyn_zeros(n, 5)[1]):
+            #if p>0: ## TExx0 modes can not exist [Pozar]
+                #analytic_freq = freq_correction * c/(2*np.pi) * np.sqrt((B/(parameters['radius']))**2 + (p*np.pi/plot_height)**2)
+            ## if analytic_freq/frequnit < 10:
+            #plt.plot(analytic_freq/frequnit, y_function(plot_height)/yunit, c='k', lw=.8)
 
 plt.xlim(xlim)
 plt.grid()
