@@ -33,6 +33,9 @@ test_kramers_kronig = 0  # Compare data to their Hilbert transform (warning - sh
 convention = 'f'            
 #convention = 'omega'
 
+FDMtrunc = (.1, .39)         # Harminv (also known as FDM) may work better when it is supplied a shorter time record
+                            # and it requires clipping the initial timespan when the source is operating
+
 
 # The following adds a Dirac-delta function at zero time, emulating e.g. the vacuum permittivty
 # (note: Plancherel theorem is not valid for delta function in numerical computation)
@@ -55,7 +58,8 @@ plt.subplot(121)
 
 if analytic_input:
     ## Generate time-domain data
-    x, omega0, gamma, ampli = np.linspace(-0e-3, 45e-3, 4000), 2*np.pi*1e3*1, 2*np.pi*.03*1e3, 1.
+    x, omega0, gamma, ampli = np.linspace(0., 10e-12, 4000), 2*np.pi*3e12, 2*np.pi*3e11, 1.
+    #x, omega0, gamma, ampli = np.linspace(-0e-3, 45e-3, 4000), 2*np.pi*1e3*1, 2*np.pi*.03*1e3, 1.
     #x, omega0, gamma, ampli = np.linspace(-0, 2.5, 3000), 20*np.pi, 20*np.pi*.1, 1.
     #x, omega0, gamma, ampli = np.linspace(-3, 25, 3000), 2*np.pi*3, 2*np.pi*.3, 1.
 
@@ -70,7 +74,7 @@ if analytic_input:
 else:
     ## Load time-domain data
     x, Eabs, Ephase = np.loadtxt(sys.argv[1], usecols=list(range(3)), unpack=True)
-    y = Eabs * np.exp(1j*Ephase) * np.exp(-x/1e-9)
+    y = Eabs * np.exp(1j*Ephase) # TODO harminv fails to find heavily damped oscillators * np.exp(-x/1e-12)
 maxplotf = 300 / np.max(x)
 
 ## Plot time-domain
@@ -131,9 +135,21 @@ if convention == 'f':
 
     if harmonic_inversion:
         import harminv_wrapper
-        amplitude_prescaling = 1e0
-        hi = harminv_wrapper.harminv(x, y, amplitude_prescaling=amplitude_prescaling)
-        print hi['frequency'], hi['decay'], hi['amplitude']
+        amplitude_prescaling = 1e8
+
+        ## XXX
+        tscale = 1
+        x = x[int(len(x)*FDMtrunc[0]):int(len(x)*FDMtrunc[1])]*tscale
+        y = y[int(len(y)*FDMtrunc[0]):int(len(y)*FDMtrunc[1])]
+
+        hi = harminv_wrapper.harminv(x, y)
+
+        hi['frequency'] *= tscale 
+        hi['decay'] *= tscale
+        ## XXX
+
+
+        print np.vstack([hi['frequency'], hi['decay'], hi['amplitude']])
         oscillator_count = len(hi['frequency'])
         freq_fine = np.linspace(-maxplotf, maxplotf, 2000)
         sumosc = np.zeros_like(freq_fine)*1j
@@ -142,7 +158,7 @@ if convention == 'f':
             osc_y = lorentz(omega=freq_fine*2*pi,   
                     omega0=hi['frequency'][osc]*2*pi, 
                     gamma=hi['decay'][osc]*4, 
-                    ampli=hi['amplitude'][osc] * np.abs(hi['frequency'][osc]) * np.abs(hi['decay'][osc]) / 5.444e14**.5) 
+                    ampli=hi['amplitude'][osc] * np.abs(hi['frequency'][osc]) * 16 )   #  * np.abs(hi['decay'][osc])
             sumosc += osc_y 
         plot_complex(freq_fine, sumosc, color="#0088FF", label=u"$\\Sigma$ osc")      # (optional) plot amplitude
         Wh = np.trapz(y=np.abs(sumosc)**2, x=freq_fine); print 'Plancherel theorem test: Energy in Harminv f   :', Wh 
