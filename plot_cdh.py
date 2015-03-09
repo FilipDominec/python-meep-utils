@@ -59,10 +59,8 @@ for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(file
 
     if plot_FDM:
         import harminv_wrapper
-        tscale = 3e9
-        print "XXXXXXXXXXXXXXXXX", len(t), FDMtrunc
+        tscale = 3e9            ## TODO check again that this prescaling is needed
         t1 = t[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]*tscale
-        print "XXXXXXXXXXXXXXXXX", len(t)
         t1 -= np.min(t1)
         E1 = E[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]
         try:
@@ -70,8 +68,6 @@ for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(file
             hi['frequency'] *= tscale /frequnit
             hi['amplitude'] /= np.max(hi['amplitude'])
             hi['error'] /= np.max(hi['amplitude'])
-            if '3.000e+04' in filename:
-                print np.vstack([hi['frequency'], hi['decay'], hi['amplitude']])
             FDM_freqs = np.append(FDM_freqs,  hi['frequency'])
             FDM_amplis= np.append(FDM_amplis,  hi['amplitude'])
             FDM_phases= np.append(FDM_phases,  hi['phase'])

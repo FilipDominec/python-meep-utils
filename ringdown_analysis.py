@@ -23,9 +23,10 @@ import numpy as np
 from scipy.constants import c, hbar, pi
 
 ## == User settings ==
-test_kramers_kronig = 1  # Compare data to their Hilbert transform (warning - short time record makes the KKR data ugly)
+test_kramers_kronig = 0  # Compare data to their Hilbert transform (warning - short time record makes the KKR data ugly)
 harmonic_inversion  = 1
 analytic_lorentzian = 1  # Knowing the oscillator parametres, we can compare to the analytic solution
+annotate            = 1  # Optionally add text labels
 
 plot_absolute_value = 1
 plot_ylog =           1
@@ -34,16 +35,15 @@ convention = 'f'
 #convention = 'omega'
 
 FDMtrunc = (.0, 1.)         # Harminv (also known as FDM) may work better when it is supplied a shorter time record
-                            # and it requires clipping the initial timespan when the source is operating
+                            # and it requires clipping the initial timespan when the broadband source is operating
+                            # Note that if the time record is shorter than resonance lifetimes, FFT energy is less than that from Harminv
 
-frequency_zoom = .05         # higher value = broader scope
+frequency_zoom = .05         # higher value = broader scope; use 1.0 to see all
 frequency_full_axis = 0     # if enabled, does not clip the plotted range
 
 # The following adds a Dirac-delta function at zero time, emulating e.g. the vacuum permittivty
 # (note: Plancherel theorem is not valid for delta function in numerical computation)
 add_delta_function =  0
-
-## == /User settings ==
 
 ## Prepare plot, optionally use LaTeX
 #matplotlib.rc('text', usetex=True)
@@ -110,25 +110,26 @@ freq    = np.fft.fftshift(freq)                                 # reorders data 
 yf2     = np.fft.fftshift(yf2) / np.exp(1j*2*pi*freq * x[0])    # dtto, and corrects the phase for the case when x[0] != 0
 truncated = np.logical_and(freq>-maxplotf, freq<maxplotf)         # (optional) get the frequency range
 (yf2, freq) = map(lambda x: x[truncated], (yf2, freq))    # (optional) truncate the data points
-plot_complex(freq, yf2, c='#eedd00', label='ScipyFFT in $f$', lw=1, alpha=.8)
+plot_complex(freq, yf2, c='#ff4400', label='ScipyFFT in $f$', lw=2, alpha=1)
 Ws = np.trapz(y=np.abs(yf2)**2, x=freq); print 'Plancherel theorem test: Energy in freqdomain f (by Scipy) :', Ws 
 
-## Spectrum 2: Own implementation of slow Fourier transform - in f
+## Spectrum 2: Own implementation of slow Fourier transform
 f = np.linspace(-maxplotf, maxplotf, 1000)
 yf = np.sum(y * np.exp(-1j*2*pi*np.outer(f,x)), axis=1) * (x[1]-x[0])
-plot_complex(f, yf, c='#ff4400', label='Manual FT in $f$', lw=1, alpha=.8)
+plot_complex(f, yf, c='#ffaa00', label='Manual FT in $f$', lw=.5, alpha=1)
 Wm = np.trapz(y=np.abs(yf)**2, x=f); print 'Plancherel theorem test: Energy in freqdomain f (manual)   :', Wm
 
 ## Spectrum 3: Hilbert transform of the Fourier-transformed signal should be close to 1j times the signal
 def naive_hilbert_transform(x, y, new_x): ## or, just a discrete convolution with the 1/t function
     old_x_grid, new_x_grid = np.meshgrid(x, new_x)
-    sharpness = 5000         # with ideally dense-sampled data, this should converge to infinity; reduce it to avoid ringing 
+    sharpness = 5000         # with ideally dense sampled data, this should converge to infinity; reduce it to avoid ringing 
     return -1j * np.sum(y * np.arctan(1/(new_x_grid - old_x_grid)/sharpness)*sharpness, axis=1) / len(x) / (2*pi)
 if test_kramers_kronig:
     ## Test the Kramers-Kronig relations - in f
     new_f = np.linspace(-maxplotf, maxplotf, 1000)
     conv = naive_hilbert_transform(f, yf, new_f)
-    plot_complex(new_f, conv, c='k', alpha=1, lw=.5, label='KKR in $f$') 
+    #conv = naive_hilbert_transform(freq, yf2, new_f) ## FIXME - using these data, the KK amplitude goes wrong
+    plot_complex(new_f, conv, c='b', alpha=.6, lw=.5, label='KKR in $f$') 
 
 ## Spectrum 4: use the Filter-Diagonalisation Method, implemented in Harminv, to find discrete oscillators
 if harmonic_inversion:
@@ -159,6 +160,16 @@ if analytic_input and analytic_lorentzian:
     plot_complex(f, lor, c='b', alpha=.3, lw=5,  label='Exact Lorentzian in $f$') 
     Wa = np.trapz(y=np.abs(lor)**2, x=f); print 'Plancherel theorem test: Energy in analytic osc (f)        :', Wa 
     print 'Analytic    oscillators frequency, decay and amplitude:\n', np.vstack([omega0/2/pi, gamma/2/pi, ampli])
+
+if annotate:
+    try:
+        with open('./annotate.txt') as f:
+            annotations = {}
+            for line in f:      text, freq = line.split('\t', 1); annotations[float(freq)] = text
+            import meep_utils
+            meep_utils.annotate_frequency_axis(annotations, label_position_y=np.sum(np.abs(yf[0:2000]))/len(yf)/3, arrow_length=3, log_y=True)
+    except IOError: 
+        print 'Error: the file ./annotate.txt could not be found'
 
 
 
