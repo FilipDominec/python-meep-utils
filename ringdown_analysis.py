@@ -23,17 +23,17 @@ import numpy as np
 from scipy.constants import c, hbar, pi
 
 ## == User settings ==
-analytic_input =      1
+test_kramers_kronig = 1  # Compare data to their Hilbert transform (warning - short time record makes the KKR data ugly)
 harmonic_inversion  = 1
 analytic_lorentzian = 1  # Knowing the oscillator parametres, we can compare to the analytic solution
+
 plot_absolute_value = 1
 plot_ylog =           1
-test_kramers_kronig = 1  # Compare data to their Hilbert transform (warning - short time record makes the KKR data ugly)
 
 convention = 'f'            
 #convention = 'omega'
 
-FDMtrunc = (.35, 1.)         # Harminv (also known as FDM) may work better when it is supplied a shorter time record
+FDMtrunc = (.0, 1.)         # Harminv (also known as FDM) may work better when it is supplied a shorter time record
                             # and it requires clipping the initial timespan when the source is operating
 
 frequency_zoom = .05         # higher value = broader scope
@@ -58,16 +58,12 @@ plt.subplot(121)
 
 if len(sys.argv) <= 1: 
     ## Generate time-domain data
-    x, omega0, gamma, ampli = np.linspace(0., 10e-12, 4000), 2*np.pi*5e12, 2*np.pi*3e11, 1. ## note: everything should work for any frequency scale
-    #x, omega0, gamma, ampli = np.linspace(0, 25, 3000), 2*np.pi*2, 2*np.pi*.3, 1.
+    x, omega0, gamma, ampli = np.linspace(0., 10e-12, 4000), 2*pi*5e12, 2*pi*3e11, 1. ## note: everything should work for any frequency scale
+    #x, omega0, gamma, ampli = np.linspace(0, 25, 3000), 2*pi*2, 2*pi*.3, 1.
 
     y = ampli * (np.sign(x)/2+.5) * np.sin(x*omega0) * np.exp(-x*gamma/2)           ## damped oscillator
     if add_delta_function:
-        if convention == 'f':
-            y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for f-convention 
-        elif convention == 'omega':
-            print "Warning: Delta function unclear how to be implemented in omega convention"
-            y[int(len(x)*(-x[0]/(x[-1]-x[0])))] +=         1 / (x[1]-x[0])  ## delta function suitable for omega-convention 
+        y[int(len(x)*(-x[0]/(x[-1]-x[0])))] += 1 / (x[1]-x[0])  ## delta function suitable for f-convention only (normalize if omega-convention was used)
     analytic_input = True
 else:
     ## Load time-domain data
@@ -99,10 +95,6 @@ plt.subplot(122)
 def lorentz(omega, omega0, gamma, ampli):
     return ampli / (omega0**2 - omega**2 + 1j*omega*gamma) 
 
-def naive_hilbert_transform(x, y, new_x): ## or, just a discrete convolution with the 1/t function
-    old_x_grid, new_x_grid = np.meshgrid(x, new_x)
-    sharpness = 5000         # with ideally dense-sampled data, this should converge to infinity; reduce it to avoid ringing 
-    return -1j * np.sum(y * np.arctan(1/(new_x_grid - old_x_grid)/sharpness)*sharpness, axis=1) / len(x) / (2*pi)
 
 def plot_complex(x, y, **kwargs):
     if plot_absolute_value:
@@ -111,7 +103,7 @@ def plot_complex(x, y, **kwargs):
         kwargsr = kwargs.copy(); kwargsr['label']+=' (real)'; plt.plot(x, y.real, **kwargsr)
         kwargsi = kwargs.copy(); kwargsi['label']+=' (imag)'; plt.plot(x, y.imag, ls='--', **kwargsi)
 
-## Scipy's  implementation of Fast Fourier transform
+## Spectrum 1: Scipy's  implementation of Fast Fourier transform
 freq    = np.fft.fftfreq(len(x), d=(x[1]-x[0]))                 # calculate the frequency axis with proper spacing
 yf2     = np.fft.fft(y, axis=0) * (x[1]-x[0])                   # calculate FFT values (maintaining the Plancherel theorem)
 freq    = np.fft.fftshift(freq)                                 # reorders data to ensure the frequency axis is a growing function
@@ -121,24 +113,24 @@ truncated = np.logical_and(freq>-maxplotf, freq<maxplotf)         # (optional) g
 plot_complex(freq, yf2, c='#eedd00', label='ScipyFFT in $f$', lw=1, alpha=.8)
 Ws = np.trapz(y=np.abs(yf2)**2, x=freq); print 'Plancherel theorem test: Energy in freqdomain f (by Scipy) :', Ws 
 
-## Own implementation of slow Fourier transform - in f
+## Spectrum 2: Own implementation of slow Fourier transform - in f
 f = np.linspace(-maxplotf, maxplotf, 1000)
 yf = np.sum(y * np.exp(-1j*2*pi*np.outer(f,x)), axis=1) * (x[1]-x[0])
 plot_complex(f, yf, c='#ff4400', label='Manual FT in $f$', lw=1, alpha=.8)
 Wm = np.trapz(y=np.abs(yf)**2, x=f); print 'Plancherel theorem test: Energy in freqdomain f (manual)   :', Wm
 
+## Spectrum 3: Hilbert transform of the Fourier-transformed signal should be close to 1j times the signal
+def naive_hilbert_transform(x, y, new_x): ## or, just a discrete convolution with the 1/t function
+    old_x_grid, new_x_grid = np.meshgrid(x, new_x)
+    sharpness = 5000         # with ideally dense-sampled data, this should converge to infinity; reduce it to avoid ringing 
+    return -1j * np.sum(y * np.arctan(1/(new_x_grid - old_x_grid)/sharpness)*sharpness, axis=1) / len(x) / (2*pi)
 if test_kramers_kronig:
     ## Test the Kramers-Kronig relations - in f
     new_f = np.linspace(-maxplotf, maxplotf, 1000)
     conv = naive_hilbert_transform(f, yf, new_f)
     plot_complex(new_f, conv, c='k', alpha=1, lw=.5, label='KKR in $f$') 
 
-if analytic_input and analytic_lorentzian:
-    lor = lorentz(omega=f*2*pi, omega0=omega0, gamma=gamma, ampli=ampli*omega0)
-    plot_complex(f, lor, c='b', alpha=.8, lw=1.5,  label='Exact Lorentzian in $f$') 
-    Wa = np.trapz(y=np.abs(lor)**2, x=f); print 'Plancherel theorem test: Energy in analytic osc (f)        :', Wa 
-    print 'Analytic    oscillators frequency, decay and amplitude:\n', np.vstack([omega0/2/np.pi, gamma/2/np.pi, ampli])
-
+## Spectrum 4: use the Filter-Diagonalisation Method, implemented in Harminv, to find discrete oscillators
 if harmonic_inversion:
     import harminv_wrapper
     tscale = 1.0     ## harminv output may have to be tuned by changing this value
@@ -146,38 +138,29 @@ if harmonic_inversion:
     y = y[int(len(y)*FDMtrunc[0]):int(len(y)*FDMtrunc[1])]
     hi = harminv_wrapper.harminv(x, y, amplitude_prescaling=None)
     hi['frequency'] *= tscale 
-    hi['decay'] *= 2/np.pi * tscale
+    hi['decay'] *= tscale
 
     oscillator_count = len(hi['frequency'])
     freq_fine = np.linspace(-maxplotf, maxplotf, 2000)
     sumosc = np.zeros_like(freq_fine)*1j
     for osc in range(oscillator_count):
-        #osc_y = lorentz(omega=freq_fine*2*pi,   omega0=hi['frequency'][osc]*2*pi, gamma=hi['decay'][osc]*4, ampli=hi['amplitude'][osc]*pi**2)
         osc_y = lorentz(omega=freq_fine*2*pi,   
                 omega0=hi['frequency'][osc]*2*pi, 
                 gamma=hi['decay'][osc]*2*pi, 
-                ampli=hi['amplitude'][osc] * np.abs(hi['frequency'][osc]) * 4*np.pi )   #  * np.abs(hi['decay'][osc])
+                ampli=hi['amplitude'][osc] * np.abs(hi['frequency'][osc])*2*pi)
         sumosc += osc_y 
-    plot_complex(freq_fine, sumosc, color="#00aa00", label=u"Harminv modes sum")      # (optional) plot amplitude
+    plot_complex(freq_fine, sumosc, color='g', alpha=.6, lw=2, label=u"Harminv modes sum")      # (optional) plot amplitude
     Wh = np.trapz(y=np.abs(sumosc)**2, x=freq_fine); print 'Plancherel theorem test: Energy in Harminv f               :', Wh, '(i.e. %.5g of timedomain)' % (Wh/Wt)
     print 'All harminv oscillators (frequency, decay and amplitude):\n', np.vstack([hi['frequency'], hi['decay'], hi['amplitude']])
 
-elif convention == 'omega':
-    # Own implementation of slow Fourier transform - in omega XXX
-    omega = np.linspace(-maxplotf*2*pi, maxplotf*2*pi, 3000)  # (note: if only positive frequencies are used, the energy will be half of that in time-domain)
-    yomega = np.sum(y * np.exp(-1j*        np.outer(omega,x)), axis=1) * (x[1]-x[0])  / np.sqrt(2*pi)
-    plot_complex(omega, yomega, c='#440088', label='Real part') # , label='FT in $\\omega$-convention'
-    print 'Plancherel theorem test: Energy in freqdomain omega :', np.trapz(y=np.abs(yomega)**2, x=omega)
+## Spectrum 5: If one Lorentzian is defined, we can plot its shape directly
+if analytic_input and analytic_lorentzian:
+    lor = lorentz(omega=f*2*pi, omega0=omega0, gamma=gamma, ampli=ampli*omega0)
+    plot_complex(f, lor, c='b', alpha=.3, lw=5,  label='Exact Lorentzian in $f$') 
+    Wa = np.trapz(y=np.abs(lor)**2, x=f); print 'Plancherel theorem test: Energy in analytic osc (f)        :', Wa 
+    print 'Analytic    oscillators frequency, decay and amplitude:\n', np.vstack([omega0/2/pi, gamma/2/pi, ampli])
 
-    if test_kramers_kronig:
-        ## Test the Kramers-Kronig relations - in omega
-        new_omega = np.linspace(5, 8, 500)
-        conv = naive_hilbert_transform(omega, yomega, new_omega)
-        plot_complex(new_omega, conv, ls='-', c='k', alpha=1, lw=.5, label='KKR in $f$', ms=3, marker='o') 
 
-    if analytic_lorentzian:
-        lor = lorentz(omega=omega, omega0=omega0, gamma=gamma, ampli=ampli) / (2*pi)**.5
-        plot_complex(omega, lor, ls='-',  c='r', alpha=1, lw=.5,  label='Osc in $f$') 
 
 ## Finish the frequency-domain plot + save 
 if not frequency_full_axis: plt.xlim(left=0, right=maxplotf)

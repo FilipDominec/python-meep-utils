@@ -30,4 +30,4 @@ def harminv(x, y, d=100, f=30, amplitude_prescaling=None):
     if type(mf) == np.float64:
         (mf, md, mQ, mA, mp, merr) = [np.array([val]) for val in (mf, md, mQ, mA, mp, merr)]
 
-    return {'frequency':mf*2, 'decay':md, 'quality':mQ, 'amplitude':mA / amplitude_prescaling, 'phase':mp, 'error':merr}
+    return {'frequency':mf*2, 'decay':md * 2/np.pi, 'quality':mQ, 'amplitude':mA * 2 / amplitude_prescaling, 'phase':mp, 'error':merr}
