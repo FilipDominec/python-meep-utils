@@ -1,15 +1,9 @@
 ## Introduction
-MEEP is an implementation of the FDTD algorithm, which simulates the propagation of electromagnetic
-waves. During my PhD studies, I used it intensively for simulations of metamaterials, photonic crystals and
-many other problems.
+MEEP is an implementation of the FDTD algorithm, which simulates the propagation of electromagnetic waves. During my PhD studies, I used it intensively for simulations of metamaterials, photonic crystals and many other problems.
 
-Unlike many commercial packages, the simulation has to be *programmed*; MEEP is only a library accessible from C/C++, Scheme or Python. I chose to write my simulations using Python, as it has powerful modules  
-for scientific computing. Starting with MEEP was not easy, though, mostly due to lack of resources online. Over few 
-years I wrote multiple utility functions that in my opinion greatly facilitate the simulations, and I publish 
-them under open license, with the hope they might be useful to the scientific community.
+Unlike many commercial packages, the simulation has to be *programmed*; MEEP is only a library accessible from C/C++, Scheme or Python. I chose the python-meep, as it enables seamless integration with powerful modules for scientific computing. Starting with python-meep was not easy, though, mostly due to lack of resources online. Over few years I wrote many different simulations, and noticed that they have much code in common. I therefore collected them in a module *meep_utils.py*, that in my opinion greatly facilitates the simulations. To help others starting with python-meep, I also addded several example scripts that are listed below.
 
-I will be happy if these scripts help you with your thesis, paper or just any project. In such a case, you can 
-made a reference to my website or send me a message; perhaps I can even help you with some useful tips.
+I will be happy if these scripts help you with your thesis, paper or just any project. In such a case, you can made a reference to my website or send me a message; perhaps I can even help you with some useful tips.  
 
 Filip Dominec, filip.dominec@gmail.com,
 2012 - 2015
