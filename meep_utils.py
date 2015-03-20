@@ -386,7 +386,7 @@ class SrcAmplitudeFactor(meep.Callback):
         #return np.exp(-1j*(self.Kx*vec.x() + self.Ky*vec.y()))
         # (oblique) Gaussian beam source:
         return np.exp(-1j*(self.Kx*vec.x() + self.Ky*vec.y()) - (vec.x()/100e-6)**2 - (vec.y()/100e-6)**2) 
-af = SrcAmplitudeFactor(Kx=model.Kx, Ky=model.Ky)
+af = SrcAmplitudeFactor(Kx=model.Kx, Ky=model.Ky) 
 meep.set_AMPL_Callback(af.__disown__())
 f.add_volume_source(meep.Ex, srctype, srcvolume, meep.AMPL)
 
@@ -619,7 +619,6 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
         ## TODO 2. move  the callback-like definition from build_polarizabilities() here - similarly as with EPS
     else:
         meep.master_printf("== Frequency domain structure setup (for frequency of %g Hz) ==\n" % sim_param['frequency'])
-        if (model.Kx!=0 or model.Ky!=0): print "Warning: frequency-domain solver may be broken for nonperpendicular incidence"
         ## Frequency-domain simulation in meep does not accept dispersive materials yet. We must redefine each material by 
         ## using the nondispersive permittivity and the nondispersive conductivity 
         ## (both calculated from polarizabilities at given frequency)

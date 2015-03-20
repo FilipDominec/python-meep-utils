@@ -1,15 +1,11 @@
 ## Introduction
-MEEP is an implementation of the FDTD algorithm, which computes the propagation of electromagnetic
-waves. During my PhD studies, I used it intensively for simulations of metamaterials, photonic crystals and
-many other problems.
+MEEP is a library of functions for numerical simulations of how electromagnetic waves propagate and interact  various structures. The simulation can be programmed in C/C++, Scheme, or Python. I chose the *python-meep* interface as it is a user-friendly language that enables seamless integration with the powerful Python modules such as *numpy*, *scipy* and *matplotlib*.
 
-MEEP is a library of functions and whole computation has to be *programmed* in C/C++, Scheme or Python. 
-I chose to write my simulations using Python, as it enables seamless integration with pre- or postprocessing and 
-nice plotting the results. Over few years I wrote multiple utility functions that in my opinion greatly facilitate the simulations, and I publish 
-them under open license, with the hope they might be useful to the scientific community.
+After I set up several different realistic simulations with *python-meep*, I noticed that much of the Python code for initialisation, material definition, processing and data output can be shared. I therefore moved such code in the *meep_utils.py* and *meep_materials.py* modules. 
 
-I will be happy if these scripts help you with your thesis, paper or just any project. In such a case, you can 
-made a reference to my website or send me a message; perhaps I can even help you with some useful tips.
+To demonstrate how to use these modules, I accompanied them with several simulations of various typical problems.  I believe the presented scripts can be useful for anybody doing their research on photonic crystals, metamaterials, integrated photonics and nanophotonics, cavity resonators, waveguides, etc. 
+
+You are encouraged to clone this repository and to modify the examples to match your needs. I would be very happy if this project helps you with your thesis, homework or some published paper. Do not hesitate to contact me if you need some advice, new functionality or if you find a bug.
 
 Filip Dominec, filip.dominec@gmail.com,
 2012 - 2015

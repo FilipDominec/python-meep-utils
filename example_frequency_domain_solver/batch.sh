@@ -1,6 +1,7 @@
 #!/bin/bash
+# Note: in multiprocessing environment, run this script e.g. as `mpirun -np 2 ./batch.sh'
 
-COMMAND='mpirun -np 1   python ../scatter.py resolution=4u simtime=100p wirethick=10u'
+COMMAND='python ../scatter.py resolution=4u simtime=100p wirethick=10u'
 
 ## Generate frequency-domain results
 for ff in `seq 1000 10 1300`; do  
