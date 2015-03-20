@@ -44,8 +44,8 @@ plot_expe   = 1     ## if 'r.dat', 't.dat', 'N.dat', 'Z.dat', 'eps.dat' or 'mu.d
 find_plasma_frequency = 0 ## find frequencies where epsilon crosses zero
 
 plot_freq_min = 0
-#plot_freq_max = None  ## if None, decide from the input file header
-plot_freq_max = 2.5e12
+plot_freq_max = None  ## if None, decide from the input file header
+#plot_freq_max = 2.5e12
 padding = None
 autobranch_sampler_position = 0.06
 
@@ -108,6 +108,9 @@ def load_rt(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=No
     ## Load data columns
     (freq, s11amp, s11phase, s12amp, s12phase) = \
             map(lambda a: np.array(a, ndmin=1), np.loadtxt(filename+".dat", unpack=True)) 
+    
+    if plot_freq_min == None: plot_freq_min = np.min(freq)
+    if plot_freq_max == None: plot_freq_max = np.max(freq)
 
     ## Limit the frequency range to what will be plotted (recommended) TODO wrong approach
     if truncate and len(freq)>1:
