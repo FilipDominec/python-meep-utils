@@ -21,7 +21,7 @@ import numpy as np
 import sys, os, re, matplotlib 
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve, fmin
-c = 2.99792458e8        # speed of light
+from scipy.constants import pi, c
 
 ## == User settings for postprocessing and plotting == 
 frequnit, frequnitname = 1e12, "THz"
@@ -138,7 +138,7 @@ def shiftmp(freq, s11, shiftplanes):#{{{
 
     Note that this shifting is still an experimental technique and has to be tested out thoroughly. 
     """
-    return np.array(s11) * np.exp(1j*np.array(shiftplanes)/(c/freq) * 2*np.pi * 2)
+    return np.array(s11) * np.exp(1j*np.array(shiftplanes)/(c/freq) * 2*pi * 2)
 #}}}
 def find_maxima(x, y, minimum_value=.1):#{{{
     """ 
@@ -217,26 +217,26 @@ def rt2n(frequency, s11, s12, d, init_branch=0, init_sign=1, uo=[0,0,0,0]): #{{{
     arg = (1+0j-s11**2+s12**2)/2/(s12)
 
     ## Count passing through complex arccos() branch cuts in the complex plane:
-    lu, uo[0] = unwrap_ofs(np.angle(arg + 1. + 0e-3j) + np.pi, uo[0])
+    lu, uo[0] = unwrap_ofs(np.angle(arg + 1. + 0e-3j) + pi, uo[0])
     ru, uo[1] = unwrap_ofs(np.angle(arg - 1. + 0e-3j), uo[1])
 
-    lbc = np.floor(lu/2/np.pi)            
-    rbc = np.floor(ru/2/np.pi)
+    lbc = np.floor(lu/2/pi)            
+    rbc = np.floor(ru/2/pi)
     anl = (-1)**(lbc) ## left cut:  (-inf .. -1]
     anr = (-1)**(rbc) ## right cut: [1 .. +inf)
 
     ## Retrieve the sign and branch of the arccos()
     sign = anr*anl*init_sign
 
-    lbr, uo[2] = unwrap_ofs(np.angle(-anr + 1j*anl) + np.pi, uo[2])
-    rbr, uo[3] = unwrap_ofs(np.angle(+anr - 1j*anl) + np.pi, uo[3])
-    branch = np.floor(lbr/2/np.pi) + np.floor(rbr/2/np.pi) + 1 + init_branch
-    #branch = np.floor(np.unwrap(np.angle(rbc + 1j*lbc))/2/np.pi) + \
-            #np.floor(np.unwrap(np.angle(-rbc - 1j*lbc))/2/np.pi) + 1 + init_branch
+    lbr, uo[2] = unwrap_ofs(np.angle(-anr + 1j*anl) + pi, uo[2])
+    rbr, uo[3] = unwrap_ofs(np.angle(+anr - 1j*anl) + pi, uo[3])
+    branch = np.floor(lbr/2/pi) + np.floor(rbr/2/pi) + 1 + init_branch
+    #branch = np.floor(np.unwrap(np.angle(rbc + 1j*lbc))/2/pi) + \
+            #np.floor(np.unwrap(np.angle(-rbc - 1j*lbc))/2/pi) + 1 + init_branch
 
     ## Standard Fresnel inversion:
-    k = 2*np.pi * frequency/c          # the wave vector
-    N = np.conj((np.arccos(arg)*sign + 2*np.pi*branch) / (k*d)) 
+    k = 2*pi * frequency/c          # the wave vector
+    N = np.conj((np.arccos(arg)*sign + 2*pi*branch) / (k*d)) 
 
     #if abs(frequency[-1]-387.3e9)<1e9: ## debug
         #print "f branch uo", frequency, branch, uo
@@ -278,7 +278,7 @@ def rt2z(s11, s12, init_sign=1, uo=0):#{{{
         #if len(complex_data) <= 1: return np.angle(complex_data)
         #phase, uo = unwrap,ofs(np.angle(complex_data), uo)
         #center_phase = phase[min(5, len(phase)-1)] ## 5 is chosen to avoid zero freq.
-        #return phase-(round(center_phase/2/np.pi)*2*np.pi)
+        #return phase-(round(center_phase/2/pi)*2*pi)
 
     ## Calculate square root arguments 
     Zarg1=((1+s11)**2 - s12**2)
@@ -302,7 +302,7 @@ def rt2z(s11, s12, init_sign=1, uo=0):#{{{
     Zconjugator =  1         
 
     ## Exception to the Re(Z)>0 rule:
-    Z_turnaround = (-1)**np.round(Zphase/np.pi)
+    Z_turnaround = (-1)**np.round(Zphase/pi)
     if FlipZByPhaseMagic: 
         Z = Z * Z_turnaround
     ## For testing only
@@ -335,7 +335,7 @@ def nz2rt(freq, N, Z, d):#{{{
     * thickness d of the layer.
     """
     ## Direct derivation from infinite sum of internal reflections
-    k = 2*np.pi * freq/c          # the wave vector
+    k = 2*pi * freq/c          # the wave vector
     t1 = 2 / (1+Z)              # transmission of front interface
     t2 = 2*Z / (Z+1)            # transmission of back interface
     t1prime = Z*t1       
@@ -501,15 +501,15 @@ if legend_enable: plt.legend(loc="upper right");
 ## Plot r and t phase
 # (Note: phase decreases with frequency, because meep uses the E=E0*exp(-i omega t) convention )
 plt.subplot(subplot_number, 1, 2)
-plt.plot(freq, np.unwrap(np.angle(s11))/np.pi, marker=marker, color="#AA4A00", label=u'$\\phi(s_{11})/\\pi$')
-plt.plot(freq, np.unwrap(np.angle(s12))/np.pi, marker=marker, color="#004AAA", label=u'$\\phi(s_{12})/\\pi$')
+plt.plot(freq, np.unwrap(np.angle(s11))/pi, marker=marker, color="#AA4A00", label=u'$\\phi(s_{11})/\\pi$')
+plt.plot(freq, np.unwrap(np.angle(s12))/pi, marker=marker, color="#004AAA", label=u'$\\phi(s_{12})/\\pi$')
 #
-#plt.plot(freq, np.unwrap(np.angle(s12))/np.pi + np.unwrap(np.angle(s11))/np.pi, marker=marker, color="#888AAA", label=u'$(\\phi(s_{11})+\\phi(s_{11}))/\\pi$')
-#plt.plot(freq, np.unwrap(np.angle(s12))/np.pi - np.unwrap(np.angle(s11))/np.pi, marker=marker, color="#AA8A88", label=u'$(\\phi(s_{11})-\\phi(s_{11}))/\\pi$')
-#plt.plot(freq, 2*np.unwrap(np.angle(s12))/np.pi + np.unwrap(np.angle(s11))/np.pi, marker=marker, color="#8A88AA", label=u'$(2\\phi(s_{11})+\\phi(s_{11}))/\\pi$')
-#plt.plot(freq, 2*np.unwrap(np.angle(s12))/np.pi - np.unwrap(np.angle(s11))/np.pi, marker=marker, color="#8AAA88", label=u'$(2\\phi(s_{11})-\\phi(s_{11}))/\\pi$')
-#plt.plot(freq, np.unwrap(np.angle(s12))/np.pi + 2*np.unwrap(np.angle(s11))/np.pi, marker=marker, color="#88AA8A", label=u'$(\\phi(s_{11})+2\\phi(s_{11}))/\\pi$')
-#plt.plot(freq, np.unwrap(np.angle(s12))/np.pi - 2*np.unwrap(np.angle(s11))/np.pi, marker=marker, color="#AA888A", label=u'$(\\phi(s_{11})-2\\phi(s_{11}))/\\pi$')
+#plt.plot(freq, np.unwrap(np.angle(s12))/pi + np.unwrap(np.angle(s11))/pi, marker=marker, color="#888AAA", label=u'$(\\phi(s_{11})+\\phi(s_{11}))/\\pi$')
+#plt.plot(freq, np.unwrap(np.angle(s12))/pi - np.unwrap(np.angle(s11))/pi, marker=marker, color="#AA8A88", label=u'$(\\phi(s_{11})-\\phi(s_{11}))/\\pi$')
+#plt.plot(freq, 2*np.unwrap(np.angle(s12))/pi + np.unwrap(np.angle(s11))/pi, marker=marker, color="#8A88AA", label=u'$(2\\phi(s_{11})+\\phi(s_{11}))/\\pi$')
+#plt.plot(freq, 2*np.unwrap(np.angle(s12))/pi - np.unwrap(np.angle(s11))/pi, marker=marker, color="#8AAA88", label=u'$(2\\phi(s_{11})-\\phi(s_{11}))/\\pi$')
+#plt.plot(freq, np.unwrap(np.angle(s12))/pi + 2*np.unwrap(np.angle(s11))/pi, marker=marker, color="#88AA8A", label=u'$(\\phi(s_{11})+2\\phi(s_{11}))/\\pi$')
+#plt.plot(freq, np.unwrap(np.angle(s12))/pi - 2*np.unwrap(np.angle(s11))/pi, marker=marker, color="#AA888A", label=u'$(\\phi(s_{11})-2\\phi(s_{11}))/\\pi$')
 
 # Optional: debugging curves(branch, sign, arg, anr, anl)
 if len(freq)>2:
@@ -520,7 +520,7 @@ if len(freq)>2:
     #plt.plot(freq, np.sign(N_debug[2].imag), color="#008800", label=u"sign$arg^{''}$", lw=.3, ls='-') 
 
     #plt.plot(freq, np.arccos(N_debug[2]).real, color="#0000dd", label=u"arccos$arg^'$", lw=1.6, ls='-') 
-    #plt.plot(freq, np.log10(np.pi-np.arccos(N_debug[2]).real), color="#0000dd", label=u"arccos$arg^'$", lw=.6, ls='-') 
+    #plt.plot(freq, np.log10(pi-np.arccos(N_debug[2]).real), color="#0000dd", label=u"arccos$arg^'$", lw=.6, ls='-') 
     #plt.plot(freq, np.arccos(N_debug[2]).imag, color="#0000dd", label=u"arccos$arg^{''}$", lw=1.6, ls='--') 
     #plt.plot(freq, np.log10(abs(N_debug[2].imag)), color="#000000", label=u"log$arg^{''}$", lw=.6, ls='--') 
     #plt.plot(freq, abs(N_debug[2] - (1+0j)), color="#0088dd", label=u"$|arg-1|$", lw=2, ls='-') 
@@ -573,7 +573,7 @@ if len(freq)>2:
         #print 'N_init_sign', N_init_sign
         #N_init_sign = -1 
         #pN_uo = [0,0,0,0]
-        pN_uo = [2*np.pi,2*np.pi,2*np.pi,0]
+        pN_uo = [2*pi,2*pi,2*pi,0]
         det_branch = 0
         #for i in [0]:                           ## whole spectrum
                 #i1 = 0
@@ -597,14 +597,14 @@ if len(freq)>2:
                 pts = np.arange(10000)[i1:i2]; print pts[0], pts[-1],; print pfreq[0]/1e9,
                 ps11    = s11[i1:i2]
                 ps12    = s12[i1:i2]
-                print 'start=', np.array(pN_uo)/np.pi,
+                print 'start=', np.array(pN_uo)/pi,
 
                 ## Plot oldschool N
                 pN_uo_old = pN_uo
                 pN, pN_uo, pN_debug    = rt2n(pfreq, ps11, ps12, d, init_branch=N_init_branch, init_sign=N_init_sign, uo=pN_uo)
                 #if q!=0: pN_uo = pN_uo_old
 
-                #print 'end=', np.array(pN_uo)/np.pi
+                #print 'end=', np.array(pN_uo)/pi
                 if i == 0:
                     try:
                         #print len(pN)
@@ -737,13 +737,13 @@ plt.savefig(last_simulation_name+".png", bbox_inches='tight')
 if plot_bands and not os.path.exists("band"): os.mkdir("band")
 if plot_bands and os.path.isdir("band"):
     plt.figure(figsize=(8,8))
-    plt.plot(np.arcsin(np.sin(np.real(N*freq*d/c) * np.pi)) / np.pi, freq, color="#33AA00", label=u"$k$'")
+    plt.plot(np.arcsin(np.sin(np.real(N*freq*d/c) * pi)) / pi, freq, color="#33AA00", label=u"$k$'")
     plt.plot(np.imag(N*freq*d/c), freq, color="#33AA33", label=u'$\\kappa$', ls='--')
 
     ## Detection of bandgap: ratio of the real to the imaginary part of complex wavenumber
     ## we will use the sin() of the real part of k so that it does not matter in which Brillouin zone it is
     try:
-        realpart = np.arcsin(np.sin(np.pi * 2*np.real(N*freq/c*d)))
+        realpart = np.arcsin(np.sin(pi * 2*np.real(N*freq/c*d)))
         imagpart = np.abs(np.imag(N*freq/c*d))
         pbg_indicator = np.sign(abs(realpart) - abs(imagpart))
         ## starts and ends of band-gap
@@ -929,10 +929,10 @@ if plot_polar and os.path.isdir("polar"):
     for (subpl, data, plotlabel) in zip(range(subplot_number), datalist, plotlabels):
         plt.subplot(4,2,subpl+1)
         if plotlabel.startswith('s'):
-            plt.plot(np.sin(np.linspace(0,2*np.pi)), np.cos(np.linspace(0,2*np.pi)), c='#888888')
-            plt.plot(np.sin(np.linspace(0,2*np.pi))/2+.5, np.cos(np.linspace(0,2*np.pi))/2, c='#aaaaaa')
-            plt.plot(np.sin(np.linspace(0,2*np.pi))+1, np.cos(np.linspace(0,2*np.pi))+1, c='#aaaaaa')
-            plt.plot(np.sin(np.linspace(0,2*np.pi))+1, np.cos(np.linspace(0,2*np.pi))-1, c='#aaaaaa')
+            plt.plot(np.sin(np.linspace(0,2*pi)), np.cos(np.linspace(0,2*pi)), c='#888888')
+            plt.plot(np.sin(np.linspace(0,2*pi))/2+.5, np.cos(np.linspace(0,2*pi))/2, c='#aaaaaa')
+            plt.plot(np.sin(np.linspace(0,2*pi))+1, np.cos(np.linspace(0,2*pi))+1, c='#aaaaaa')
+            plt.plot(np.sin(np.linspace(0,2*pi))+1, np.cos(np.linspace(0,2*pi))-1, c='#aaaaaa')
 
         x = data.real; y = data.imag
         t = np.linspace(0, 10, len(freq))
