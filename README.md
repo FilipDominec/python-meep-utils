@@ -1,11 +1,11 @@
 ## Introduction
-MEEP is a library of functions for numerical simulations of how electromagnetic waves propagate and interact  various structures. The simulation can be programmed in C/C++, Scheme, or Python. I chose the *python-meep* interface as it is a user-friendly language that enables seamless integration with the powerful Python modules such as *numpy*, *scipy* and *matplotlib*.
+MEEP is a library of functions for (FDTD) numerical simulations of how electromagnetic waves propagate and interact with various structures. The simulation can be programmed in C/C++, Scheme, or Python; I chose the latter as it is a user-friendly language that enables seamless integration with the powerful Python modules such as *numpy*, *scipy* and *matplotlib*.
 
 After I set up several different realistic simulations with *python-meep*, I noticed that much of the Python code for initialisation, material definition, processing and data output can be shared. I therefore moved such code in the *meep_utils.py* and *meep_materials.py* modules. 
 
-To demonstrate how to use these modules, I accompanied them with several simulations of various typical problems.  I believe the presented scripts can be useful for anybody doing their research on photonic crystals, metamaterials, integrated photonics and nanophotonics, cavity resonators, waveguides, etc. 
+To demonstrate how to use these modules, I accompanied them with several example simulations of various typical problems.  I believe the presented scripts can be a great starting point for anybody doing their research on photonic crystals, metamaterials, integrated photonics and nanophotonics, cavity resonators, waveguides, etc. 
 
-You are encouraged to clone this repository and to modify the examples to match your needs. I would be very happy if this project helps you with your thesis, homework or some published paper. Do not hesitate to contact me if you need some advice, new functionality or if you find a bug.
+You are encouraged to clone this repository and to modify the examples to match your needs. I would be very happy if this project helps you with your thesis, homework or a publication. Do not hesitate to contact me if you need some advice, new functionality or if you find a bug.
 
 Filip Dominec, filip.dominec@gmail.com,
 2012 - 2015
