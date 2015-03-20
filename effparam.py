@@ -109,6 +109,7 @@ def load_rt(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=No
     (freq, s11amp, s11phase, s12amp, s12phase) = \
             map(lambda a: np.array(a, ndmin=1), np.loadtxt(filename+".dat", unpack=True)) 
     
+    ## If not specified, guess the plot frequency range
     if plot_freq_min == None: plot_freq_min = np.min(freq)
     if plot_freq_max == None: plot_freq_max = np.max(freq)
 
