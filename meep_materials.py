@@ -127,7 +127,7 @@ class material_DrudeMetal():#{{{
         self.where = where
 #}}}
 
-## -- Prepared for FDTD simulations in the terahertz range --
+## -- Prepared for FDTD simulations in the terahertz range (obsoleted) --
 class material_Metal_THz():#{{{ ## Obsoleted
     """
     This model, by default, defines a metal similar to aluminium. Its parameters are roughly: 
@@ -309,7 +309,7 @@ class material_STO_HTChen():#{{{
 #}}}
 
 
-## -- Realistic (not suitable directly for simulations) --
+## -- Realistic (simulations may require to make a copy and optimize) --
 class material_STO():#{{{  
     """
     Strontium titanate
@@ -582,8 +582,9 @@ class material_Al():#{{{
         self.shortname = "Al"
         self.where = where
 #}}}
+
 class material_Au():#{{{
-    """ Drude-Lorentz model for Gold """
+    """ Drude-Lorentz model for gold """
     def __init__(self, where=None, resistivity=0., eps=0.):
         #self.eps = 1. 
         self.eps = 1. 
@@ -598,6 +599,18 @@ class material_Au():#{{{
                 ]
         self.name = "Gold (Drude-Lorentz)"
         self.shortname = "Au"
+        self.where = where
+class material_Ag():#{{{
+    """ Drude-Lorentz model for silver """
+    def __init__(self, where=None, resistivity=0., eps=0.):
+        #self.eps = 1. 
+        self.eps = 1. 
+        omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
+
+        self.pol = [
+                ]
+        self.name = "Silver (Drude-Lorentz)"
+        self.shortname = "Ag"
         self.where = where
 #}}}
 

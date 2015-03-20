@@ -1,11 +1,11 @@
 ## Introduction
-MEEP is an implementation of the FDTD algorithm, which simulates the propagation of electromagnetic
+MEEP is an implementation of the FDTD algorithm, which computes the propagation of electromagnetic
 waves. During my PhD studies, I used it intensively for simulations of metamaterials, photonic crystals and
 many other problems.
 
-Unlike many commercial packages, the simulation has to be *programmed*; MEEP is only a library accessible from C/C++, Scheme or Python. I chose to write my simulations using Python, as it has powerful modules  
-for scientific computing. Starting with MEEP was not easy, though, mostly due to lack of resources online. Over few 
-years I wrote multiple utility functions that in my opinion greatly facilitate the simulations, and I publish 
+MEEP is a library of functions and whole computation has to be *programmed* in C/C++, Scheme or Python. 
+I chose to write my simulations using Python, as it enables seamless integration with pre- or postprocessing and 
+nice plotting the results. Over few years I wrote multiple utility functions that in my opinion greatly facilitate the simulations, and I publish 
 them under open license, with the hope they might be useful to the scientific community.
 
 I will be happy if these scripts help you with your thesis, paper or just any project. In such a case, you can 
@@ -31,9 +31,7 @@ Usually, everything you need to run an example is to change to its directory, an
  * [x]  `example_metamaterial_s_parameters/`, `scatter.py`, `effparam.py` - retrieves the effective parameters of a metamaterial using the s-parameters method; shows how the negative index of refraction is achieved by adding wires to a dielectric sphere. Finally plots how the parameters retain/change when more metamaterial cells are stacked.
  * [x]  `example_frequency_domain_solver/` - runs `scatter.py` multiple times in frequency-domain, and then compares the results to the classical Fourier-transformed time-domain simulation
  * [x]  `example_current_driven_homogenisation/`, `cdh.py`, `plot_cdh.py` - computes and plots data for current-driven homogenization; compares them with those obtained from s-parameters
- * [x]  `example_cylindrical_cavity_modes/` - defines a metallic cylindrical cavity, excites the field by a short pulsed source, and analyzes the ringdown to search for all modes. A comparison of Fourier transform, filter-diagonalisation method and the textbook analytic solution is plotted. 
-   * [ ]	TODO Subsequently, the shapes of the lowest modes are found by frequency-domain solver.
-   * [ ]	fix `../harminv_wrapper.py`, rm harminv from `meep_utils.py`
+ * [x]  `example_ringdown_cylindrical_cavity/`, `cylindrical_cavity.py`, `ringdown_analysis.py`,  - in the first part, defines a metallic cylindrical cavity, excites the field by a short pulsed source, and analyzes the ringdown to search for all modes. A comparison of Fourier transform, filter-diagonalisation method and the textbook analytic solution is plotted. In the second part, the ringdown analysis is used to search for terahertz resonances in experimental transmission water vapour.
  * [x]  `example_surface_plasmons/`, `plasmons.py` - an aperture in a thin metal sheet couples incident light to surface plasmons. If the film is surrounded by two media with similar index of refraction, circular interference pattern can be observed between the symmetric and antisymmetric plasmon modes.  A different (hyperbolic) interference pattern can be obtained when the plasmons are coupled by two holes.
    * [ ]	TODO add support for metal/diel substrate, 
    * [ ] and try to show the sym-asym interference
