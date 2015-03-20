@@ -461,7 +461,7 @@ plt.subplot(subplot_number, 1, 1)
 plt.plot(freq, s11amp, marker=marker, color="#AA4A00", label=u'$|s_{11}|$')
 plt.plot(freq, s12amp, marker=marker, color="#004AAA", label=u'$|s_{12}|$')
 plt.plot(freq, s12amp*1000, marker=marker, color="#00AA4A", label=u'$|s_{12}|*1000$')
-plt.plot(freq, s12amp*1000, marker=marker, color="#4AAA00", label=u'$|s_{12}|*100$')
+plt.plot(freq, s12amp*100, marker=marker, color="#4AAA00", label=u'$|s_{12}|*100$')
 plt.plot(freq, losses, color="#AAAAAA", label=u'loss')
 if plot_expe and os.path.exists('r.dat'):
     rf, ry = np.loadtxt('r.dat', usecols=list(range(2)), unpack=True)
@@ -727,7 +727,7 @@ plt.plot(freq, np.imag(mu),  color="#DDAA00", label=u'$\\mu_{eff}$"', ls='--')
 plt.ylabel(u"Value"); plt.ylim((-10.,10.)); 
 plt.yscale('symlog', linthreshy=10.); 
 plt.xlim((plot_freq_min, plot_freq_max))
-#plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(True)
+plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(True)
 if legend_enable: plt.legend(); 
 
 ## Final plotting 

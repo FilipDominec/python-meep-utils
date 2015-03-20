@@ -38,7 +38,7 @@ class MetalInterface(meep_utils.AbstractMeepModel): #{{{
                     meep_materials.material_Ag(where=None)]
         else:
              self.materials += [meep_materials.material_Au(where=None), # meep_materials.material_Au(where=None),
-                    meep_materials.material_dielectric(eps=10, where=self.where_metal)]
+                    meep_materials.material_Ag(where=self.where_metal)]
 
         for m in self.materials: 
             self.fix_material_stability(m, f_c=5e15, verbose=0) ## rm all osc above the first one, to optimize for speed 
@@ -49,7 +49,7 @@ class MetalInterface(meep_utils.AbstractMeepModel): #{{{
         self.test_materials()
 
     def where_metal(self, r):
-        if in_zslab(r, d=self.cell_size/2, cz=0):
+        if in_zslab(r, d=self.cell_size, cz=0):
             return self.return_value             # (do not change this line)
         return 0
 #}}}
