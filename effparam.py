@@ -26,15 +26,17 @@ from scipy.constants import pi, c
 ## == User settings for postprocessing and plotting == 
 frequnit, frequnitname = 1e12, "THz"
 
-N_init_branch   =   -1
+N_init_branch   =   0
 N_init_sign     =   1
-autocorrect_signs = True
 Z_init_sign     =   -1
+autocorrect_signs = True
+autobranch_sampler_position = 0.05
+autobranch      =   0    ## experimental
+
 check_hilbert   =   0       ## Verifies if Kramers-Kronig relations hold for N  ###XXX
 legend_enable   =   1      
 brillouin_boundaries = 1    ## Plots thin lines where the N would exceed the allowed 
                             ## range for 0-th Bloch mode
-autobranch      = 0
 
 savedat     = 1     ## created directory 'effparam' and saves all params to an ascii file with header
 plot_publi  = 0     ## prepares nice small graphs for publication
@@ -46,8 +48,8 @@ find_plasma_frequency = 0 ## find frequencies where epsilon crosses zero
 plot_freq_min = 0
 plot_freq_max = None  ## if None, decide from the input file header
 #plot_freq_max = 2.5e12
+plot_weak_transmission = False
 padding = None
-autobranch_sampler_position = 0.06
 
 np.seterr(all='ignore')      ## do not print warnings for negative-number logarithms etc.
 ## == </user settings> == 
@@ -388,6 +390,7 @@ freq, s11amp, s11phase, s12amp, s12phase, cell_size, plot_freq_min, plot_freq_ma
         load_rt(last_simulation_name, plot_freq_min=plot_freq_min, plot_freq_max=plot_freq_max, truncate=False, padding=padding)
 
 d = cell_size * cells
+print 'ddddddddddddddd', d
 
 ## Convert to complex numbers and compensate for the additional padding of the monitor planes
 s11 = shiftmp(freq, polar2complex(s11amp, s11phase), padding*np.ones_like(freq))
@@ -460,8 +463,9 @@ subplot_number = 4
 plt.subplot(subplot_number, 1, 1)
 plt.plot(freq, s11amp, marker=marker, color="#AA4A00", label=u'$|s_{11}|$')
 plt.plot(freq, s12amp, marker=marker, color="#004AAA", label=u'$|s_{12}|$')
-plt.plot(freq, s12amp*1000, marker=marker, color="#00AA4A", label=u'$|s_{12}|*1000$')
-plt.plot(freq, s12amp*100, marker=marker, color="#4AAA00", label=u'$|s_{12}|*100$')
+if plot_weak_transmission:
+    plt.plot(freq, s12amp*1000, marker=marker, color="#00AA4A", label=u'$|s_{12}|*1000$')
+    plt.plot(freq, s12amp*100, marker=marker, color="#4AAA00", label=u'$|s_{12}|*100$')
 plt.plot(freq, losses, color="#AAAAAA", label=u'loss')
 if plot_expe and os.path.exists('r.dat'):
     rf, ry = np.loadtxt('r.dat', usecols=list(range(2)), unpack=True)
@@ -531,7 +535,7 @@ if len(freq)>2:
     plt.plot(freq, -np.ones_like(freq), color="k", label=u"", lw=.3, ls='-') 
     plt.plot(freq, np.ones_like(freq), color="k", label=u"", lw=.3, ls='-') 
 
-    if autobranch:
+    if autobranch:          ## EXPERIMENTAL
         # Detection of key points in the spectrum (PBG boundaries, branch skips etc.)
         def find_maxima(x, y, minimum_value=.1):
             """ 

@@ -29,7 +29,7 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
 
         self.register_locals(locals())          ## Remember the parameters
 
-        ## Define materials
+        ## Define materials (with manual Lorentzian clipping) 
         self.materials = []  
 
         tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
