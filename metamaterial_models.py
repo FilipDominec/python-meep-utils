@@ -63,7 +63,7 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class RodArray(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=100e-12, resolution=2e-6, cellsize=100e-6, cells=1, padding=20e-6, 
+    def __init__(self, comment="", simtime=100e-12, resolution=4e-6, cellsize=100e-6, cells=1, padding=20e-6, 
             radius=10e-6, eps2=100):
 
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
@@ -83,10 +83,11 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
         self.cellcenters = np.arange((1-cells)*cellsize/2, cells*cellsize/2, cellsize)
 
         ## Define materials
+        self.materials = [meep_materials.material_TiO2(where = self.where_TiO2)]  
         #self.materials = [meep_materials.material_dielectric(where = self.where_TiO2, eps=eps2)]  
-        self.materials = [meep_materials.material_dielectric(where = self.where_TiO2, eps=eps2)]  
-        self.test_materials()
 
+        for m in self.materials: self.fix_material_stability(m)
+        self.test_materials()
 
     def where_TiO2(self, r):
         #if  in_sphere(r, cx=0, cy=0, cz=0, rad=self.radius) and not  in_sphere(r, cx=0, cy=0, cz=0, rad=self.radius*.75):
