@@ -11,7 +11,7 @@ import meep_mpi as meep
 #import meep
 
 class SphereArray(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=50e-6, cells=1, padding=20e-6, 
+    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=50e-6, cellnumber=1, padding=20e-6, 
             radius=13e-6, wirethick=0):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
@@ -23,9 +23,9 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
 
         self.size_x = cellsize 
         self.size_y = cellsize
-        self.size_z = cells*cellsize + 4*padding + 2*self.pml_thickness
-        self.monitor_z1, self.monitor_z2 = (-(cellsize*cells/2)-padding, (cellsize*cells/2)+padding)
-        self.cellcenters = np.arange((1-cells)*cellsize/2, cells*cellsize/2, cellsize)
+        self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
+        self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
         self.register_locals(locals())          ## Remember the parameters
 
@@ -63,7 +63,7 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class RodArray(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=100e-12, resolution=4e-6, cellsize=100e-6, cells=1, padding=20e-6, 
+    def __init__(self, comment="", simtime=100e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=20e-6, 
             radius=10e-6, eps2=100):
 
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
@@ -78,9 +78,9 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
         self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
 
         self.size_x, self.size_y  = self.resolution*2, cellsize
-        self.size_z = cells*cellsize + 4*padding + 2*self.pml_thickness
-        self.monitor_z1, self.monitor_z2 = (-(cellsize*cells/2)-padding, (cellsize*cells/2)+padding)
-        self.cellcenters = np.arange((1-cells)*cellsize/2, cells*cellsize/2, cellsize)
+        self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
+        self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
         ## Define materials
         self.materials = [meep_materials.material_TiO2(where = self.where_TiO2)]  
@@ -96,7 +96,7 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class Slab(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=15e-15, resolution=4e-9, cells=1, cellsize=50e-9, padding=20e-9):
+    def __init__(self, comment="", simtime=15e-15, resolution=4e-9, cellnumber=1, cellsize=50e-9, padding=20e-9):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -107,9 +107,9 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
 
         self.size_x = resolution*2 
         self.size_y = resolution*2
-        self.size_z = cells*cellsize + 4*padding + 2*self.pml_thickness
-        self.monitor_z1, self.monitor_z2 = (-(cellsize*cells/2)-padding, (cellsize*cells/2)+padding)
-        self.cellcenters = np.arange((1-cells)*cellsize/2, cells*cellsize/2, cellsize)
+        self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
+        self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
         self.register_locals(locals())          ## Remember the parameters
 

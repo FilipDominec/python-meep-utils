@@ -102,7 +102,7 @@ def load_rt(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=No
             if line[0:1] in "0123456789": break         # end of file header
             value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
             if ("cellsize" in line) and (layer_thickness == None): cellsize = float(value)
-            if ("cells" in line) and (layer_thickness == None): cells = float(value)
+            if ("cellnumber" in line) and (layer_thickness == None): cellnumber = float(value)
             if ("plot_freq_min" in line) and (plot_freq_min == None): plot_freq_min = float(value)
             if ("plot_freq_max" in line) and (plot_freq_max == None): plot_freq_max = float(value)
             if ("param padding" in line) and (padding == None): padding = float(value)
@@ -120,7 +120,7 @@ def load_rt(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=No
         (d0,d1) = np.interp((plot_freq_min, plot_freq_max), freq, range(len(freq)))
         (freq, s11amp, s11phase, s12amp, s12phase) = \
                 map(lambda a: a[int(d0):int(d1)], (freq, s11amp, s11phase, s12amp, s12phase))
-    return freq, s11amp, s11phase, s12amp, s12phase, cellsize, plot_freq_min, plot_freq_max, padding, cells
+    return freq, s11amp, s11phase, s12amp, s12phase, cellsize, plot_freq_min, plot_freq_max, padding, cellnumber
 #}}}
 def shiftmp(freq, s11, shiftplanes):#{{{
     """ Adjusts the reflection phase like if the monitor planes were not centered.
@@ -134,7 +134,7 @@ def shiftmp(freq, s11, shiftplanes):#{{{
     
     Even such metamaterials, however, may be properly homogenized if we define the 
     position of monitor planes as a function of frequency. We can assume that:
-    1) This optimum shift shall hold for all simulations with one or more unit cells.
+    1) This optimum shift shall hold for all simulations with one or more unit cellnumber.
     2) When the wave direction is reversed (to get s21, s22 parameters), the shift should be negated.
     These rules should enable us to homogenize any asymmetric non-chiral metamaterial. 
 
@@ -211,7 +211,7 @@ def rt2n(frequency, s11, s12, d, init_branch=0, init_sign=1, uo=[0,0,0,0]): #{{{
           However, the Hilbert transform of the imaginary part of N" gives proper data. Single-cell simulation also gives 
           proper data...
 
-          Putting the layers far apart alleviates this for 2 cells: can it be related to higher-order Bloch modes? 
+          Putting the layers far apart alleviates this for 2 cellnumber: can it be related to higher-order Bloch modes? 
 
     """#}}}
 
@@ -386,10 +386,11 @@ def eval_point(p0):#{{{
 ## --- Calculation -------------------------------------------- 
 ## Get reflection and transmission data
 last_simulation_name = get_simulation_name()
-freq, s11amp, s11phase, s12amp, s12phase, cell_size, plot_freq_min, plot_freq_max, padding, cells = \
+freq, s11amp, s11phase, s12amp, s12phase, cellsize, plot_freq_min, plot_freq_max, padding, cellnumber = \
         load_rt(last_simulation_name, plot_freq_min=plot_freq_min, plot_freq_max=plot_freq_max, truncate=False, padding=padding)
 
-d = cell_size * cells
+d = cellsize * cellnumber
+print 'ddddddddddddddd', cellsize, cellnumber 
 print 'ddddddddddddddd', d
 
 ## Convert to complex numbers and compensate for the additional padding of the monitor planes
