@@ -11,7 +11,7 @@ import meep_mpi as meep
 #import meep
 
 class SphereArray(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cells=1, cell_size=50e-6, padding=20e-6, 
+    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=50e-6, cells=1, padding=20e-6, 
             radius=13e-6, wirethick=0):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
@@ -21,11 +21,11 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
         self.interesting_frequencies = (100e9, 2000e9)    # Which frequencies will be saved to disk
         self.pml_thickness = 20e-6
 
-        self.size_x = cell_size 
-        self.size_y = cell_size
-        self.size_z = cells*cell_size + 4*padding + 2*self.pml_thickness
-        self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
-        self.cellcenters = np.arange((1-cells)*cell_size/2, cells*cell_size/2, cell_size)
+        self.size_x = cellsize 
+        self.size_y = cellsize
+        self.size_z = cells*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cells/2)-padding, (cellsize*cells/2)+padding)
+        self.cellcenters = np.arange((1-cells)*cellsize/2, cells*cellsize/2, cellsize)
 
         self.register_locals(locals())          ## Remember the parameters
 
@@ -62,11 +62,12 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
                 return self.return_value             # (do not change this line)
         return 0
 #}}}
+class RodArray(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=100e-12, resolution=2e-6, cellsize=100e-6, cells=1, padding=20e-6, 
+            radius=10e-6, eps2=100):
 
-class RodCDH_model(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=100e-12, resolution=2e-6, radius=10e-6, spacing=100e-6, eps2=100, Kx=0, Ky=0, Kz=0):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
-        self.simulation_name = "srrstripe"
+        self.simulation_name = "RodArray"
 
         self.register_locals(locals())          ## Remember the parameters
 
@@ -76,15 +77,15 @@ class RodCDH_model(meep_utils.AbstractMeepModel): #{{{
         self.src_freq, self.src_width = 2000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
 
-        self.size_x, self.size_y, self.size_z  = self.resolution*2, spacing, spacing
+        self.size_x, self.size_y  = self.resolution*2, cellsize
+        self.size_z = cells*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cells/2)-padding, (cellsize*cells/2)+padding)
+        self.cellcenters = np.arange((1-cells)*cellsize/2, cells*cellsize/2, cellsize)
 
         ## Define materials
         #self.materials = [meep_materials.material_dielectric(where = self.where_TiO2, eps=eps2)]  
         self.materials = [meep_materials.material_dielectric(where = self.where_TiO2, eps=eps2)]  
         self.test_materials()
-
-        #f_c = c / np.pi/self.resolution/meep_utils.meep.use_Courant()
-        #meep_utils.plot_eps(self.materials, mark_freq=[f_c])
 
 
     def where_TiO2(self, r):
@@ -93,34 +94,45 @@ class RodCDH_model(meep_utils.AbstractMeepModel): #{{{
             return self.return_value             # (do not change this line)
         return 0
 #}}}
-class FishnetCDH_model(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=100e-12, resolution=6e-6, radius=30e-6, spacing=100e-6, zsize=50e-6, thin=.3, Kx=0, Ky=0, Kz=0):
+class Slab(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=15e-15, resolution=4e-9, cells=1, cellsize=50e-9, padding=20e-9):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
-        self.simulation_name = "fishnet"
+
+        ## Constant parameters for the simulation
+        self.simulation_name = "Slab"    
+        self.src_freq, self.src_width = 1000e12, 4000e12  # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (100e12, 2000e12)    # Which frequencies will be saved to disk
+        self.pml_thickness = 20e-9
+
+        self.size_x = resolution*2 
+        self.size_y = resolution*2
+        self.size_z = cells*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cells/2)-padding, (cellsize*cells/2)+padding)
+        self.cellcenters = np.arange((1-cells)*cellsize/2, cells*cellsize/2, cellsize)
 
         self.register_locals(locals())          ## Remember the parameters
 
-        ## Constants for the simulation
-        self.pml_thickness = 20e-6
-        self.simtime = simtime      # [s]
-        self.src_freq, self.src_width = 2000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
-
-        self.size_x, self.size_y, self.size_z  = spacing, spacing, zsize
-
         ## Define materials
-        #self.materials = [meep_materials.material_dielectric(where = self.where_TiO2, eps=eps2)]  
-        self.materials = [meep_materials.material_Metal_THz(where = self.where_metal)]  
+        self.materials = []  
+        if 'Au' in comment:           
+             self.materials += [meep_materials.material_Au(where=self.where_metal)]
+        elif 'Ag' in comment:           
+             self.materials += [meep_materials.material_Ag(where=self.where_metal)]
+        else:
+             self.materials += [meep_materials.material_Ag(where=self.where_metal)]
+
+        for m in self.materials: 
+            self.fix_material_stability(m, f_c=5e15, verbose=0) ## rm all osc above the first one, to optimize for speed 
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
         self.test_materials()
 
-        #f_c = c / np.pi/self.resolution/meep_utils.meep.use_Courant()
-        #meep_utils.plot_eps(self.materials, mark_freq=[f_c])
-
-
     def where_metal(self, r):
-        return 0
-        if (in_zslab(r, cz=-15e-6, d=self.resolution*2) or in_zslab(r, cz=-15e-6, d=self.resolution*2)) and \
-                ((in_yslab(r, cy=0, d=self.radius*2 ) and in_xslab(r, cx=0, d=self.radius*2*self.thin)) or 
-                 (in_yslab(r, cy=0, d=self.radius*2*self.thin) and in_xslab(r, cx=0, d=self.radius*2 ))):
+        if in_zslab(r, d=self.cellsize, cz=0):
             return self.return_value             # (do not change this line)
+        return 0
 #}}}
+
+models = {'Slab':Slab, 'SphereArray':SphereArray, 'RodArray':RodArray}

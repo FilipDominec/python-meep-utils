@@ -19,9 +19,6 @@ TODOs optional:
             5) adjust Courant factor
     * verify that everything works also in the GNU Screen session (without xserver)
       ...   matplotlib.use('Agg') ## Enable plotting even in the GNU screen session
-    * think over a very generic class of 
-      SliceAnalysis(Slices=[], TimeDomainFunction=None, FreqDomainFunction=None, plot_timedomain=True, plot_freqdomain=True)
-      instead of the MonitorPlane
 """
 import os, os.path, sys, subprocess, time
 import numpy as np
@@ -41,7 +38,8 @@ def process_param(args):#{{{
     Some of them control the simulation (`sim_param'), but all remaining will be passed to 
     the model (`model_param')
     """
-    sim_param = {   'frequency_domain':False,
+    sim_param = {   'model':None,
+                    'frequency_domain':False,
                     'frequency':       None,
                     'MaxIter':         5000,
                     'MaxTol':          1e-2,
@@ -49,7 +47,8 @@ def process_param(args):#{{{
     model_param = {}
     for namevalue in args: ## first filter out those parameters that are specific for the simulation, rather than the model
         name, value = namevalue.split("=")
-        if name == "frequency": 
+        if name == "model":         sim_param['model']      = value
+        elif name == "frequency": 
             sim_param['frequency']          = phys_to_float(value)
             sim_param['frequency_domain']   = True
         elif name == "maxtol":      sim_param['MaxTol']     = phys_to_float(value)

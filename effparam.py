@@ -99,7 +99,7 @@ def load_rt(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=No
         for line in datafile:
             if line[0:1] in "0123456789": break         # end of file header
             value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
-            if ("cell_size" in line) and (layer_thickness == None): cell_size = float(value)
+            if ("cellsize" in line) and (layer_thickness == None): cellsize = float(value)
             if ("cells" in line) and (layer_thickness == None): cells = float(value)
             if ("plot_freq_min" in line) and (plot_freq_min == None): plot_freq_min = float(value)
             if ("plot_freq_max" in line) and (plot_freq_max == None): plot_freq_max = float(value)
@@ -118,7 +118,7 @@ def load_rt(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=No
         (d0,d1) = np.interp((plot_freq_min, plot_freq_max), freq, range(len(freq)))
         (freq, s11amp, s11phase, s12amp, s12phase) = \
                 map(lambda a: a[int(d0):int(d1)], (freq, s11amp, s11phase, s12amp, s12phase))
-    return freq, s11amp, s11phase, s12amp, s12phase, cell_size, plot_freq_min, plot_freq_max, padding, cells
+    return freq, s11amp, s11phase, s12amp, s12phase, cellsize, plot_freq_min, plot_freq_max, padding, cells
 #}}}
 def shiftmp(freq, s11, shiftplanes):#{{{
     """ Adjusts the reflection phase like if the monitor planes were not centered.
