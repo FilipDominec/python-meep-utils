@@ -490,9 +490,6 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
     Accepts list of materials
     """
 
-    matplotlib.rc('text', usetex=True)
-    matplotlib.rc('text.latex', preamble = '') # \usepackage{lmodern}, 
-
     #for material in list(to_plot): ## autoscale x axis?
         #for pol in material.pol:
             #if freq_range[1] < pol['omega']: freq_range[1] = pol['omega']*2

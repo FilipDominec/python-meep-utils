@@ -779,14 +779,10 @@ if plot_bands and os.path.isdir("band"):
 if plot_publi:
     if not os.path.exists("publi"): os.mkdir("publi")
     #matplotlib.rc('text', usetex=True)
+    #matplotlib.rc('font', size=14)
     #matplotlib.rc('text.latex', preamble = \
-            #'\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, \usepackage{lmodern},')
-
-    matplotlib.rc('text', usetex=True)
-    matplotlib.rc('font', size=14)
-    matplotlib.rc('text.latex', preamble = \
-            '\usepackage{amsmath}, \usepackage{palatino},\usepackage{upgreek}')
-    matplotlib.rc('font',**{'family':'serif','serif':['palatino, times']})  ## select fonts
+            #'\usepackage{amsmath}, \usepackage{palatino},\usepackage{upgreek}')
+    #matplotlib.rc('font',**{'family':'serif','serif':['palatino, times']})  ## select fonts
 
     fig = plt.figure(figsize=(12,10))
     fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.0, hspace=.0) ## XXX
