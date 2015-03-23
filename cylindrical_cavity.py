@@ -13,7 +13,7 @@ import meep_mpi as meep
 
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
 class HollowCyl_model(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=30e-9, resolution=5e-3, cells=1, padding=9e-3, radius=33.774e-3, height=122.36e-3 ,  Kx=0, Ky=0): ## XXXheight=122.3642686e-3
+    def __init__(self, comment="", simtime=30e-9, resolution=5e-3, cellnumber=1, padding=9e-3, radius=33.774e-3, height=122.36e-3 ,  Kx=0, Ky=0): ## XXXheight=122.3642686e-3
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
         self.simulation_name = "HollowCyl"    
         

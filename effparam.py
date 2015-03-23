@@ -390,8 +390,6 @@ freq, s11amp, s11phase, s12amp, s12phase, cellsize, plot_freq_min, plot_freq_max
         load_rt(last_simulation_name, plot_freq_min=plot_freq_min, plot_freq_max=plot_freq_max, truncate=False, padding=padding)
 
 d = cellsize * cellnumber
-print 'ddddddddddddddd', cellsize, cellnumber 
-print 'ddddddddddddddd', d
 
 ## Convert to complex numbers and compensate for the additional padding of the monitor planes
 s11 = shiftmp(freq, polar2complex(s11amp, s11phase), padding*np.ones_like(freq))

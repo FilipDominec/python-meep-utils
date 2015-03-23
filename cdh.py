@@ -66,8 +66,8 @@ if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % 
 for k in ('Kx','Ky','Kz'):
     if k in sim_param.keys(): model.simulation_name += ("_%s=%.4e" % (k, sim_param[k]))
 
-## Note: in CDH, we do not need any PML, padding nor multiple cells; cell_size thus overrides the dimensions given in model
-model.size_x, model.size_y, model.size_z = model.cell_size, model.cell_size, model.cell_size
+## Note: in CDH, we do not need any PML, padding nor multiple cells; cellsize thus overrides the dimensions given in model
+model.size_x, model.size_y, model.size_z = model.cellsize, model.cellsize, model.cellsize
 
 ## Initialize volume and structure according to the model
 vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)

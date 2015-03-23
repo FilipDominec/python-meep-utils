@@ -14,7 +14,7 @@ import meep_mpi as meep
 #import meep
 
 class MetalInterface(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=15e-15, resolution=4e-9, cells=1, cell_size=50e-9, padding=20e-9):
+    def __init__(self, comment="", simtime=15e-15, resolution=4e-9, cellnumber=1, cellsize=50e-9, padding=20e-9):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -25,9 +25,9 @@ class MetalInterface(meep_utils.AbstractMeepModel): #{{{
 
         self.size_x = resolution*2 
         self.size_y = resolution*2
-        self.size_z = cells*cell_size + 4*padding + 2*self.pml_thickness
-        self.monitor_z1, self.monitor_z2 = (-(cell_size*cells/2)-padding, (cell_size*cells/2)+padding)
-        self.cellcenters = np.arange((1-cells)*cell_size/2, cells*cell_size/2, cell_size)
+        self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
+        self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
         self.register_locals(locals())          ## Remember the parameters
 
@@ -49,7 +49,7 @@ class MetalInterface(meep_utils.AbstractMeepModel): #{{{
         self.test_materials()
 
     def where_metal(self, r):
-        if in_zslab(r, d=self.cell_size, cz=0):
+        if in_zslab(r, d=self.cellsize, cz=0):
             return self.return_value             # (do not change this line)
         return 0
 #}}}
