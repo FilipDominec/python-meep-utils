@@ -705,9 +705,8 @@ if plot_expe and os.path.exists('eps.dat'):
 if plot_expe and os.path.exists('mu.dat'):
     tf, ty = np.loadtxt('mu.dat', usecols=list(range(2)), unpack=True)
     plt.plot(tf*frequnit, ty, lw=0, color='#AA8800', marker='o') ## XXX
-    plt.plot(tf*frequnit, -ty, lw=0, color='#AA8888', marker='s') ## XXX
-    #plt.plot(tf     , ty, lw=0, color='#AA0088', marker='o') ## XXX
-
+    plt.plot(tf*frequnit, -ty, lw=0, color='#AA8888', marker='s') ## XXX 
+    #plt.plot(tf     , ty, lw=0, color='#AA0088', marker='o') ## XXX 
 if check_hilbert and len(freq)>1:
     import scipy.fftpack
     eps[0] = 0  ## avoid NaN
@@ -728,7 +727,7 @@ plt.plot(freq, np.imag(eps), color="#FF22DD", label=u'$\\varepsilon_{eff}$"', ls
 plt.plot(freq, np.real(mu),  color="#BB8800", label=u"$\\mu_{eff}$'")
 plt.plot(freq, np.imag(mu),  color="#DDAA00", label=u'$\\mu_{eff}$"', ls='--')
 plt.ylabel(u"Value"); plt.ylim((-10.,10.)); 
-plt.yscale('symlog', linthreshy=10.); 
+plt.yscale('symlog', linthreshy=.1); 
 plt.xlim((plot_freq_min, plot_freq_max))
 plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(True)
 if legend_enable: plt.legend(); 
@@ -969,5 +968,4 @@ if plot_polar and os.path.isdir("polar"):
     plt.savefig(outfile, bbox_inches='tight')
 
 #}}}
-
 
