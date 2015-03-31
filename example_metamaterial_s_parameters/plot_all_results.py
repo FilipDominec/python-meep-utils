@@ -20,7 +20,7 @@ fig = plt.figure(figsize=(10,10))
 
 ## Sort arguments by a _numerical_ value in their parameter, keep the color order
 filenames = sys.argv[1:]
-paramname = 'wirethick'
+paramname = 'radius'
 def get_param(filename):             ## Load header to the 'parameters' dictionary
     parameters = {}
     with open(filename) as datafile:

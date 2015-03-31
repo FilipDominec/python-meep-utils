@@ -83,7 +83,7 @@ def get_cmdline_parameters():#{{{ (unused)
         Nsign = np.ones(len(freq))*int(sys.argv[3])
         last_simulation_name += "_SIGN=%s" % sys.argv[3]
     return branch_offset, Nsign#}}}
-def load_rt(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=None, truncate=True, padding=None): #{{{
+def load_rt(filename, cellsize=None, cellnumber=1, plot_freq_min=None, plot_freq_max=None, truncate=True, padding=None): #{{{
     """ Loads the reflection and transmission spectra and simulation settings 
 
     Returns:
@@ -101,8 +101,8 @@ def load_rt(filename, layer_thickness=None, plot_freq_min=None, plot_freq_max=No
         for line in datafile:
             if line[0:1] in "0123456789": break         # end of file header
             value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
-            if ("cellsize" in line) and (layer_thickness == None): cellsize = float(value)
-            if ("cellnumber" in line) and (layer_thickness == None): cellnumber = float(value)
+            if ("cellsize" in line) and (cellsize == None): cellsize = float(value)
+            if ("cellnumber" in line): cellnumber = float(value)
             if ("plot_freq_min" in line) and (plot_freq_min == None): plot_freq_min = float(value)
             if ("plot_freq_max" in line) and (plot_freq_max == None): plot_freq_max = float(value)
             if ("param padding" in line) and (padding == None): padding = float(value)
