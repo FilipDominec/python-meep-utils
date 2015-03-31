@@ -49,7 +49,7 @@ def get_param(filename):             ## Load header to the 'parameters' dictiona
 
 ## Start figure + subplot 
 fig = plt.figure(figsize=(10,10))
-#fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.05, hspace=.05) ## (for interactive mode)
+fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.05, hspace=.05) ## (for interactive mode)
 
 ## Sort arguments by a _numerical_ value in their parameter, keep the color order
 print args.filenames
@@ -61,10 +61,7 @@ datasets.sort()
 colors = cmap(np.linspace(0.0,0.9,len(filenames)+1)[:-1]) ## add the colors to sorted files
 datasets = zip(colors, *zip(*datasets))
 
-
-freq_unit = 1e12
-
-ax = plt.subplot(311, axisbg='w')
+ax = plt.subplot(111, axisbg='w')
 
 def loadtxt_columns(filename): #{{{
     columns     = []
@@ -76,10 +73,10 @@ def loadtxt_columns(filename): #{{{
 def get_col_index(col, fn):#{{{
     columnnames = loadtxt_columns(fn)
     try:
-        return int(col), columnnames[int(col)]
+        return int(col), columnnames[int(col)]      ## column number given, find its name
     except ValueError:
         try:
-            return loadtxt_columns(fn).index(col), col
+            return loadtxt_columns(fn).index(col), col      ## column name given, find its number
         except:
             raise ValueError, "Could not find column %s for the x-axis in file %s" % (col, fn)
 #}}}
