@@ -6,6 +6,7 @@ I believe some of these functions ought to be implemented in the meep module.
 Filip Dominec 2012-2015
 
 TODOs optional:
+    * separate functions that use the 'meep' module, keep them apart?
     * allow simple switching between 3-D and 2-D simulation
             1) requires to send the field along X direction, not Z
             2) choosing between 2-D field polarisations needs rotating source/monitor 
@@ -690,7 +691,7 @@ def savetxt(fname, X, header, **kwargs):#{{{
         outfile.write(header)
         np.savetxt(outfile, X, **kwargs)
 #}}}
-def loadtxt_params(filename):#{{{
+def loadtxt_params(filename): #{{{
     parameters  = {}
     with open(filename) as datafile:
         for line in datafile:
@@ -701,11 +702,11 @@ def loadtxt_params(filename):#{{{
             parameters[key] = value
     return parameters
 #}}}
-def loadtxt_columns(filename):#{{{
+def loadtxt_columns(filename): #{{{
     columns     = []
     with open(filename) as datafile:
         for line in datafile:
-            if ('column' in line.lower()): columns.append(line.strip().split(' ', 1)[-1])
+            if ('column' in line.lower()): columns.append(line.strip().split(' ', 1)[-1]) # (todo) this may need fixing to avoid collision
     return columns
 #}}}
 

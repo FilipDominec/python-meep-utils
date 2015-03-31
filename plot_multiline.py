@@ -13,15 +13,7 @@ matplotlib.rc('font', size=12)
 matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}') #, \usepackage{palatino} \usepackage{lmodern}, 
 matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
 
-## Start figure + subplot 
-fig = plt.figure(figsize=(10,10))
-#fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.05, hspace=.05) ## (for interactive mode)
-
-
-## Sort arguments by a _numerical_ value in their parameter, keep the color order
-filenames = sys.argv[1:]
-paramname = 'radius'
-def get_param(filename):             ## Load header to the 'parameters' dictionary
+def get_param(filename):             ## Load header to the 'parameters' dictionary#{{{
     parameters = {}
     with open(filename) as datafile:
         for line in datafile:
@@ -31,6 +23,23 @@ def get_param(filename):             ## Load header to the 'parameters' dictiona
             except: pass                ## otherwise keep as string
             parameters[key] = value
     return parameters
+#}}}
+def loadtxt_columns(filename): #{{{
+    columns     = []
+    with open(filename) as datafile:
+        for line in datafile:
+            if ('column' in line.lower()): columns.append(line.strip().split(' ', 1)[-1]) # (todo) this may need fixing to avoid collision
+    return columns
+#}}}
+
+## Start figure + subplot 
+fig = plt.figure(figsize=(10,10))
+#fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.05, hspace=.05) ## (for interactive mode)
+
+## Sort arguments by a _numerical_ value in their parameter, keep the color order
+filenames = sys.argv[1:]
+paramname = 'radius'
+
 params  = [get_param(n)[paramname] for n in filenames]
 datasets = zip(params, filenames)                               ## sort the files by the parameter
 datasets.sort()
