@@ -5,7 +5,29 @@
 import matplotlib, sys, os, time
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
 from scipy.constants import c, hbar, pi
+
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--paramname', type=str, help='parameter by which the lines are sorted')
+parser.add_argument('--paramunit',  type=float, default=1., help='prescaling of the parameter')
+parser.add_argument('--xunit',  type=float, default=1., help='prescaling of the x-axis')
+parser.add_argument('--yunit',  type=float, default=1., help='prescaling of the y-axis')
+parser.add_argument('--paramlabel', type=str, default='parameter = %g', help='line label (use %d, %s, %f or %g to format the parameter, use LaTeX for typesetting)')
+parser.add_argument('--xcol', type=str, default='0', help='number or exact name of the x-axis column') ## TODO or -- if it is to be generated
+parser.add_argument('--ycol', type=str, default='1', help='number or exact name of the y-axis column')
+parser.add_argument('--xlabel', type=str, default='', help='label of the x-axis (use LaTeX)')
+parser.add_argument('--ylabel', type=str, default='', help='label of the y-axis (use LaTeX)')
+parser.add_argument('--output', type=str, default='output.png', help='output file (e.g. output.png or output.pdf)')
+parser.add_argument('--colormap', type=str, default='hsv', help='matplotlib colormap, available are: hsv (default), jet, gist_earth, greys, dark2, brg...')
+parser.add_argument('filenames', type=str, nargs='+', help='CSV files to be processed')
+args = parser.parse_args()
+
+
+## Options 
+#cmap = matplotlib.cm.gist_earth
+cmap = getattr(matplotlib.cm, args.colormap)
+
 
 ## Use LaTeX
 matplotlib.rc('text', usetex=True)
@@ -24,6 +46,26 @@ def get_param(filename):             ## Load header to the 'parameters' dictiona
             parameters[key] = value
     return parameters
 #}}}
+
+## Start figure + subplot 
+fig = plt.figure(figsize=(10,10))
+#fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.05, hspace=.05) ## (for interactive mode)
+
+## Sort arguments by a _numerical_ value in their parameter, keep the color order
+print args.filenames
+filenames = args.filenames
+
+params  = [get_param(n)[args.paramname] for n in filenames]
+datasets = zip(params, filenames)                               ## sort the files by the parameter
+datasets.sort()
+colors = cmap(np.linspace(0.0,0.9,len(filenames)+1)[:-1]) ## add the colors to sorted files
+datasets = zip(colors, *zip(*datasets))
+
+
+freq_unit = 1e12
+
+ax = plt.subplot(311, axisbg='w')
+
 def loadtxt_columns(filename): #{{{
     columns     = []
     with open(filename) as datafile:
@@ -31,54 +73,27 @@ def loadtxt_columns(filename): #{{{
             if ('column' in line.lower()): columns.append(line.strip().split(' ', 1)[-1]) # (todo) this may need fixing to avoid collision
     return columns
 #}}}
+def get_col_index(col, fn):#{{{
+    columnnames = loadtxt_columns(fn)
+    try:
+        return int(col), columnnames[int(col)]
+    except ValueError:
+        try:
+            return loadtxt_columns(fn).index(col), col
+        except:
+            raise ValueError, "Could not find column %s for the x-axis in file %s" % (col, fn)
+#}}}
 
-## Start figure + subplot 
-fig = plt.figure(figsize=(10,10))
-#fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.05, hspace=.05) ## (for interactive mode)
-
-## Sort arguments by a _numerical_ value in their parameter, keep the color order
-filenames = sys.argv[1:]
-paramname = 'radius'
-
-params  = [get_param(n)[paramname] for n in filenames]
-datasets = zip(params, filenames)                               ## sort the files by the parameter
-datasets.sort()
-colors = matplotlib.cm.gist_earth(np.linspace(0.1,0.9,len(filenames)+1)[:-1]) ## add the colors to sorted files
-datasets = zip(colors, *zip(*datasets))
-
-
-freq_unit = 1e12
-
-ax = plt.subplot(311, axisbg='w')
 for color, param, filename in datasets:
-    (x, r) = np.loadtxt(filename, usecols=[0,1], unpack=True)
-    plt.plot(x/freq_unit, r,color=color, label='$p = %.3g$' % (param))
-plt.ylabel(u"y"); 
+    xcol, xcolname = get_col_index(args.xcol, filename)
+    ycol, ycolname = get_col_index(args.ycol, filename)
+    (x, y) = np.loadtxt(filename, usecols=[xcol, ycol], unpack=True)
+    plt.plot(x/args.xunit, y/args.yunit, color=color, label=args.paramlabel % (param/args.paramunit))
+plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
+plt.ylabel(ycolname if args.ylabel == '' else args.ylabel)
 plt.grid()
-plt.legend(prop={'size':12}, loc='upper left') #.draw_frame(False)
-
-
-ax = plt.subplot(312, axisbg='w')
-plt.axvspan(1e12/freq_unit, 1.5e12/freq_unit, color='b', alpha=.1); 
-for color, param, filename in datasets:
-    (x, t) = np.loadtxt(filename, usecols=[0,3], unpack=True)
-    plt.plot(x/freq_unit, t,color=color, label='$p = %.3g$' % (param))
-plt.ylim((1e-3, 1.1e0))
-plt.yscale('log')
-plt.ylabel(u"y"); 
-plt.grid()
-plt.legend(prop={'size':12}, loc='upper left') #.draw_frame(False)
-
-ax = plt.subplot(313, axisbg='w')
-for color, param, filename in datasets:
-    (x, r, t) = np.loadtxt(filename, usecols=[0,1,3], unpack=True)
-    plt.plot(x/freq_unit, 1-r**2-t**2,color=color, label='ko\\v ci\\v cka $\int\lambda_{\Gamma} x = %.3g$' % (param))
-plt.xlabel(u"frequency [THz]"); 
-plt.ylabel(u"y"); 
-plt.grid()
-plt.legend(prop={'size':12}, loc='upper left') #.draw_frame(False)
+plt.legend(prop={'size':12}, loc='upper left').draw_frame(False)
 
 
 ## ==== Outputting ====
-plt.savefig("output.png", bbox_inches='tight')
-plt.savefig("output.pdf", bbox_inches='tight')
+plt.savefig(args.output, bbox_inches='tight')
