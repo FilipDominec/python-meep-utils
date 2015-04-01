@@ -51,17 +51,6 @@ def get_param(filename):             ## Load header to the 'parameters' dictiona
 fig = plt.figure(figsize=(10,10))
 fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.05, hspace=.05) ## (for interactive mode)
 
-## Sort arguments by a _numerical_ value in their parameter, keep the color order
-print args.filenames
-filenames = args.filenames
-
-params  = [get_param(n)[args.paramname] for n in filenames]
-datasets = zip(params, filenames)                               ## sort the files by the parameter
-datasets.sort()
-colors = cmap(np.linspace(0.0,0.9,len(filenames)+1)[:-1]) ## add the colors to sorted files
-datasets = zip(colors, *zip(*datasets))
-
-ax = plt.subplot(111, axisbg='w')
 
 def loadtxt_columns(filename): #{{{
     columns     = []
@@ -81,6 +70,19 @@ def get_col_index(col, fn):#{{{
             raise ValueError, "Could not find column %s for the x-axis in file %s" % (col, fn)
 #}}}
 
+
+## Sort arguments by a _numerical_ value in their parameter, keep the color order
+filenames = args.filenames
+
+
+params  = [get_param(n)[args.paramname] for n in filenames]
+datasets = zip(params, filenames)                               ## sort the files by the parameter
+datasets.sort()
+colors = cmap(np.linspace(0.0,0.9,len(filenames)+1)[:-1]) ## add the colors to sorted files
+datasets = zip(colors, *zip(*datasets))
+
+ax = plt.subplot(111, axisbg='w')
+
 for color, param, filename in datasets:
     xcol, xcolname = get_col_index(args.xcol, filename)
     ycol, ycolname = get_col_index(args.ycol, filename)
@@ -90,6 +92,8 @@ plt.xlabel(xcolname if args.xlabel == '' else args.xlabel)
 plt.ylabel(ycolname if args.ylabel == '' else args.ylabel)
 plt.grid()
 plt.legend(prop={'size':12}, loc='upper left').draw_frame(False)
+
+## TODO contours here
 
 
 ## ==== Outputting ====
