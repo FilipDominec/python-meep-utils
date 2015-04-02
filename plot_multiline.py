@@ -10,10 +10,10 @@ from scipy.constants import c, hbar, pi
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--paramname', type=str, help='parameter by which the lines are sorted')
-parser.add_argument('--paramunit',  type=float, default=1., help='prescaling of the parameter')
+parser.add_argument('--paramunit',  type=float, default=1., help='prescaling of the parameter (if it is a number)')
 parser.add_argument('--xunit',  type=float, default=1., help='prescaling of the x-axis')
 parser.add_argument('--yunit',  type=float, default=1., help='prescaling of the y-axis')
-parser.add_argument('--paramlabel', type=str, default='parameter = %g', help='line label (use %d, %s, %f or %g to format the parameter, use LaTeX for typesetting)')
+parser.add_argument('--paramlabel', type=str, default='', help='line label (use %d, %s, %f or %g to format the parameter, use LaTeX for typesetting)')
 parser.add_argument('--xcol', type=str, default='0', help='number or exact name of the x-axis column') ## TODO or -- if it is to be generated
 parser.add_argument('--ycol', type=str, default='1', help='number or exact name of the y-axis column')
 parser.add_argument('--xlabel', type=str, default='', help='label of the x-axis (use LaTeX)')
@@ -61,6 +61,7 @@ def loadtxt_columns(filename): #{{{
 #}}}
 def get_col_index(col, fn):#{{{
     columnnames = loadtxt_columns(fn)
+    if columnnames == []: return int(col), ("column %s" % str(col))
     try:
         return int(col), columnnames[int(col)]      ## column number given, find its name
     except ValueError:
@@ -87,7 +88,11 @@ for color, param, filename in datasets:
     xcol, xcolname = get_col_index(args.xcol, filename)
     ycol, ycolname = get_col_index(args.ycol, filename)
     (x, y) = np.loadtxt(filename, usecols=[xcol, ycol], unpack=True)
-    plt.plot(x/args.xunit, y/args.yunit, color=color, label=args.paramlabel % (param/args.paramunit))
+    if type(param) in (float, int):
+        label = (args.paramlabel % (param/args.paramunit)) if args.paramlabel else ("%s = %.3g" % (args.paramname, (param/args.paramunit)))
+    else:
+        label = (args.paramlabel % (param)) if args.paramlabel else ("%s = %s" % (args.paramname, (param)))
+    plt.plot(x/args.xunit, y/args.yunit, color=color, label=label)
 plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
 plt.ylabel(ycolname if args.ylabel == '' else args.ylabel)
 plt.grid()
