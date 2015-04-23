@@ -1,7 +1,7 @@
 #!/bin/bash
 
 np=2
-otherparams='simtime=30p'
+otherparams='simtime=10p'
 
 mpirun -np $np ../../nearfield.py radius=-1 wireth=-1 comment=Ref  $otherparams 
 mv Apert*comment=Ref*.dat ref.dat

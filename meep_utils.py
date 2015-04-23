@@ -890,6 +890,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     t, Ex1 = monitor1_Ex.get_waveforms()
     t, Hy1 = monitor1_Hy.get_waveforms()
     t, Ex2 = monitor2_Ex.get_waveforms()
+    print Ex2
     t, Hy2 = monitor2_Hy.get_waveforms()
 
     ## Hann-window fadeout to suppress spectral leakage

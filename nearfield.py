@@ -15,8 +15,8 @@ import meep_mpi as meep
 # Model selection
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
 class ApertureSphere_model(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=100e-12, resolution=3e-6, padding=00e-6, Kx=0, Ky=0, 
-            spacing=75e-6, monzd=50e-6,                             # lateral simulation size, and the z-length left for whole structure
+    def __init__(self, comment="", simtime=100e-12, resolution=3e-6, Kx=0, Ky=0, 
+            spacing=75e-6, monzd=50e-6,                              # lateral simulation size, and the z-length left for whole structure
             apertured=5e-6, apertureth=5e-6, gaasth=2e-6,           # metal aperture (square hole size, metal thickness, gallium arsenide layer thickness)
             radius=10e-6, epsloss=0.01, spherey=0e-6, spherez=-14e-6, # dielectric sphere (radius and dielectric losses)
             wireth=4e-6, wirey=14e-6, wirez=-14e-6                    # metallic wire along x  (diameter, lateral position)
@@ -27,7 +27,7 @@ class ApertureSphere_model(meep_utils.AbstractMeepModel): #{{{
 
         ## Constants for the simulation
         self.pml_thickness = 20e-6
-        self.monitor_z1, self.monitor_z2 = -monzd, self.apertureth+self.gaasth
+        self.monitor_z1, self.monitor_z2 = -monzd/2, self.apertureth+self.gaasth
         print  "self.monitor_z1, self.monitor_z2", self.monitor_z1, self.monitor_z2
         self.simtime = simtime      # [s]
         self.src_freq, self.src_width = 1000e9, 2000e9      # [Hz] (note: gaussian source ends at t=10/src_width)
@@ -35,7 +35,7 @@ class ApertureSphere_model(meep_utils.AbstractMeepModel): #{{{
 
         self.size_x = spacing 
         self.size_y = spacing
-        self.size_z = monzd + apertureth + gaasth + 2*self.pml_thickness
+        self.size_z = monzd*2 + 2*self.pml_thickness
 
         ## Define materials
         #self.materials = [meep_materials.material_dielectric(where = self.where_GaAs, eps=10)]  
