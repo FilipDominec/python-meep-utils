@@ -31,6 +31,9 @@ Usually, everything you need to run an example is to change to its directory, an
  * [x]  `example_surface_plasmons/`, `plasmons.py` - an aperture in a thin metal sheet couples incident light to surface plasmons. If the film is surrounded by two media with similar index of refraction, circular interference pattern can be observed between the symmetric and antisymmetric plasmon modes.  A different (hyperbolic) interference pattern can be obtained when the plasmons are coupled by two holes.
    * [ ]	TODO add support for metal/diel substrate, 
    * [ ] and try to show the sym-asym interference
+ * [x]  `example_aperture_near-field_microscope/` 
+   * [x] detection of field behind the aperture, normalized against free reference
+   * [ ] anisotropic permittivity of the dielectric sphere
  * [ ]  `example_dielectric_bars_width_scan/`
    * [ ]	TODO
  * [ ]  `example_dielectric_slab_oblique_incidence/`
@@ -41,8 +44,6 @@ Usually, everything you need to run an example is to change to its directory, an
    * [ ]	TODO implement nonlinearity, test out
  * [ ]  `example_SPDC/`, `spdc.py` - TODO
    * [ ]	TODO
- * [ ]  `example_aperture_near-field_microscope/` 
-   * [ ] TODO
 
 ## Related resources
  * Official website of MEEP: http://ab-initio.mit.edu/wiki/index.php/Meep     
@@ -97,3 +98,5 @@ materials, data postprocessing etc. is elaborated there.
    * oblique-wave fabry-pérot resonances, comparison with analytic solution
    * resonances in cylinder cavity, application of harminv and comparison with analytic
    * modeling spontaneous parametric down-conversion
+- [ ] check what functionality is available on Windows (could add the procedure to compile python-meep for Win)
+   * probably no run_bash call will work - slice export will fail on Windows?

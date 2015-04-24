@@ -9,18 +9,18 @@ import argparse
 from scipy.constants import c, hbar, pi
 
 parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--paramname', type=str, help='parameter by which the lines are sorted')
+parser.add_argument('--paramname',  type=str,               help='parameter by which the lines are sorted')
 parser.add_argument('--paramunit',  type=float, default=1., help='prescaling of the parameter (if it is a number)')
-parser.add_argument('--xunit',  type=float, default=1., help='prescaling of the x-axis')
-parser.add_argument('--yunit',  type=float, default=1., help='prescaling of the y-axis')
-parser.add_argument('--paramlabel', type=str, default='', help='line label (use %d, %s, %f or %g to format the parameter, use LaTeX for typesetting)')
-parser.add_argument('--xcol', type=str, default='0', help='number or exact name of the x-axis column') ## TODO or -- if it is to be generated
-parser.add_argument('--ycol', type=str, default='1', help='number or exact name of the y-axis column')
-parser.add_argument('--xlabel', type=str, default='', help='label of the x-axis (use LaTeX)')
-parser.add_argument('--ylabel', type=str, default='', help='label of the y-axis (use LaTeX)')
-parser.add_argument('--output', type=str, default='output.png', help='output file (e.g. output.png or output.pdf)')
-parser.add_argument('--colormap', type=str, default='hsv', help='matplotlib colormap, available are: hsv (default), jet, gist_earth, greys, dark2, brg...')
-parser.add_argument('filenames', type=str, nargs='+', help='CSV files to be processed')
+parser.add_argument('--xunit',      type=float, default=1., help='prescaling of the x-axis')
+parser.add_argument('--yunit',      type=float, default=1., help='prescaling of the y-axis')
+parser.add_argument('--paramlabel', type=str,   default='', help='line label (use %d, %s, %f or %g to format the parameter, use LaTeX for typesetting)')
+parser.add_argument('--xcol',       type=str,   default='0', help='number or exact name of the x-axis column') ## TODO or -- if it is to be generated
+parser.add_argument('--ycol',       type=str,   default='1', help='number or exact name of the y-axis column')
+parser.add_argument('--xlabel',     type=str,   default='', help='label of the x-axis (use LaTeX)')
+parser.add_argument('--ylabel',     type=str,   default='', help='label of the y-axis (use LaTeX)')
+parser.add_argument('--output',     type=str,   default='output.png', help='output file (e.g. output.png or output.pdf)')
+parser.add_argument('--colormap',   type=str,   default='hsv', help='matplotlib colormap, available are: hsv (default), jet, gist_earth, greys, dark2, brg...')
+parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
 args = parser.parse_args()
 
 
@@ -40,7 +40,9 @@ def get_param(filename):             ## Load header to the 'parameters' dictiona
     with open(filename) as datafile:
         for line in datafile:
             if (line[0:1] in '0123456789') or ('column' in line.lower()): break    # end of parameter list
-            key, value = line.replace(',', ' ').split()[-2:]
+            ## key-value separator is either ',' or '='; take the left word from it as the param name, and everything on the right as the param value
+            left, value = line.replace(',', '=').strip().split('=', 1)
+            key = left.split()[-1]
             try: value = float(value) ## Try to convert to float, if possible
             except: pass                ## otherwise keep as string
             parameters[key] = value
@@ -91,7 +93,8 @@ for color, param, filename in datasets:
     if type(param) in (float, int):
         label = (args.paramlabel % (param/args.paramunit)) if args.paramlabel else ("%s = %.3g" % (args.paramname, (param/args.paramunit)))
     else:
-        label = (args.paramlabel % (param)) if args.paramlabel else ("%s = %s" % (args.paramname, (param)))
+        label = (args.paramlabel % (param)) if args.paramlabel else ("%s = %s" % (args.paramname, param))
+        #label = 'jarda'
     plt.plot(x/args.xunit, y/args.yunit, color=color, label=label)
 plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
 plt.ylabel(ycolname if args.ylabel == '' else args.ylabel)

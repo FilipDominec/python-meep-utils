@@ -30,8 +30,8 @@ class ApertureSphere_model(meep_utils.AbstractMeepModel): #{{{
         self.monitor_z1, self.monitor_z2 = -monzd/2, self.apertureth+self.gaasth
         print  "self.monitor_z1, self.monitor_z2", self.monitor_z1, self.monitor_z2
         self.simtime = simtime      # [s]
-        self.src_freq, self.src_width = 1000e9, 2000e9      # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (0e9, 5000e9)        # Which frequencies will be saved to disk
+        self.src_freq, self.src_width = 2000e9, 4000e9      # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (0e9, 4000e9)        # Which frequencies will be saved to disk
 
         self.size_x = spacing 
         self.size_y = spacing
