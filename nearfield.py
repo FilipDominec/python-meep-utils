@@ -16,7 +16,7 @@ import meep_mpi as meep
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
 class ApertureSphere_model(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=100e-12, resolution=3e-6, Kx=0, Ky=0, 
-            spacing=75e-6, monzd=50e-6,                              # lateral simulation size, and the z-length left for whole structure
+            spacing=75e-6, monzd=80e-6,                              # lateral simulation size, and the z-length left for whole structure
             apertured=5e-6, apertureth=5e-6, gaasth=2e-6,           # metal aperture (square hole size, metal thickness, gallium arsenide layer thickness)
             radius=10e-6, epsloss=0.01, spherey=0e-6, spherez=-14e-6, # dielectric sphere (radius and dielectric losses)
             wireth=4e-6, wirey=14e-6, wirez=-14e-6                    # metallic wire along x  (diameter, lateral position)
@@ -132,6 +132,7 @@ if meep.my_rank() == 0:
             intf=getattr(model, 'interesting_frequencies', [0, model.src_freq+model.src_width]),
             pad_zeros=1.0, Kx=sim_param.get('Ky', 0), Ky=sim_param.get('Ky', 0))
 
+    print 'np.abs(s11)', np.abs(s11)
     if not os.path.isfile('ref.dat'):   ## no reference yet, let us save one
         print "Saving the fields as a reference"
         meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",

@@ -3,6 +3,7 @@
 np=2
 otherparams='simtime=10p'
 
+rm -f ref.dat
 mpirun -np $np ../../nearfield.py radius=-1 wireth=-1 comment=Ref  $otherparams 
 mv Apert*comment=Ref*.dat ref.dat
 

@@ -888,10 +888,13 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     ## TODO allow omitting second monitor (-> returns s12=None)
 
     t, Ex1 = monitor1_Ex.get_waveforms()
+    print Ex1
     t, Hy1 = monitor1_Hy.get_waveforms()
+    print Hy1
     t, Ex2 = monitor2_Ex.get_waveforms()
     print Ex2
     t, Hy2 = monitor2_Hy.get_waveforms()
+    print Hy2
 
     ## Hann-window fadeout to suppress spectral leakage
     if not frequency_domain:
