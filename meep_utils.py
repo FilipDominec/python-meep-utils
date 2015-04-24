@@ -846,13 +846,13 @@ class Slice(): #{{{
             if self.outputgif or self.outputpng:
                 meep.master_printf("Generating %d images\n" % self.images_number)
                 #run_bash("cd %s; h5topng -t 0:%d -R -Zc dkbluered -a yarg %s.h5 -S 1 -o %s.png" %   ## XXX
-                run_bash("cd %s; h5topng -t 0:%d -R -Zc dkbluered -a yarg %s.h5 -S 1 -o %s.png" % 
+                run_bash("cd '%s'; h5topng -t 0:%d -R -Zc dkbluered -a yarg %s.h5 -S 1 -o %s.png" % 
                         (self.outputdir, self.images_number-1, self.name, self.name))
             if self.outputgif: 
                 meep.master_printf("Converting %d images to gif\n" % self.images_number)
-                run_bash("cd %s; convert -compress None -delay 10 %s*png %s.gif" % (self.outputdir, self.name, self.name))
+                run_bash("cd '%s'; convert -compress None -delay 10 %s*png %s.gif" % (self.outputdir, self.name, self.name))
             if self.outputgif and not self.outputpng: 
-                run_bash("cd %s; rm %s*.png" % (self.outputdir, self.name))
+                run_bash("cd '%s'; rm %s*.png" % (self.outputdir, self.name))
 
             # TODO if self.outputplot: 
 
@@ -863,11 +863,11 @@ class Slice(): #{{{
                     if comp_name not in ('eps', 'cond', 'mu'): comp_name += self.real_or_imag
                     export_args += "%s.h5:%s " % (self.name, comp_name)
                 flatten_time =  "-t 0" if not self.isrange(self.at_t) else "" ## avoid flat 4th dimension (otherwise vtk fails)
-                run_bash ("cd %s; h5tovtk %s %s -o %s.vtk" % 
+                run_bash ("cd '%s'; h5tovtk '%s' '%s' -o '%s.vtk'" % 
                         (self.outputdir, export_args, flatten_time, self.name))
 
             if not self.outputhdf: 
-                run_bash("cd %s; rm %s.h5" % (self.outputdir, self.name))
+                run_bash("cd '%s'; rm '%s.h5'" % (self.outputdir, self.name))
     #}}}
 
 ## Obtain and process the s-parameters of the structure 
