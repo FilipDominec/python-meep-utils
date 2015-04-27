@@ -861,9 +861,9 @@ class Slice(): #{{{
                 for component in self.components:
                     comp_name = meep.component_name(component)
                     if comp_name not in ('eps', 'cond', 'mu'): comp_name += self.real_or_imag
-                    export_args += "%s.h5:%s " % (self.name, comp_name)
+                    export_args += "'%s.h5:%s' " % (self.name, comp_name)
                 flatten_time =  "-t 0" if not self.isrange(self.at_t) else "" ## avoid flat 4th dimension (otherwise vtk fails)
-                run_bash ("cd '%s'; h5tovtk '%s' '%s' -o '%s.vtk'" % 
+                run_bash ("cd '%s'; h5tovtk %s '%s' -o '%s.vtk'" % 
                         (self.outputdir, export_args, flatten_time, self.name))
 
             if not self.outputhdf: 
@@ -888,13 +888,9 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     ## TODO allow omitting second monitor (-> returns s12=None)
 
     t, Ex1 = monitor1_Ex.get_waveforms()
-    print Ex1
     t, Hy1 = monitor1_Hy.get_waveforms()
-    print Hy1
     t, Ex2 = monitor2_Ex.get_waveforms()
-    print Ex2
     t, Hy2 = monitor2_Hy.get_waveforms()
-    print Hy2
 
     ## Hann-window fadeout to suppress spectral leakage
     if not frequency_domain:
