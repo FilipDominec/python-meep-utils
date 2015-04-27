@@ -284,7 +284,7 @@ class AbstractMeepModel(meep.Callback):
         if f_c == "Auto": f_c = self.f_c()
         f_c_safe = f_c * 0.5
 
-        ## Check and fix the first stability criterion
+        ## Check and fix the first stability criterion (that tno oscillator may be above the cricital frequency f_c)
         for n, osc in enumerate(material.pol[:]):
             if osc['omega'] > f_c_safe: 
                 material.eps += osc['sigma']
@@ -303,6 +303,7 @@ class AbstractMeepModel(meep.Callback):
                 ## and grows above it. To push permittivity above zero at f_c, gamma must be lower than f_c
                 ## but not too much. One half is reasonable.
                 max_gamma = f_c_safe
+                print 'oscgamma, max_gamma: ', osc['gamma'] , max_gamma
                 if osc['gamma'] > max_gamma: 
                     osc['gamma'] = max_gamma
 
@@ -324,14 +325,15 @@ class AbstractMeepModel(meep.Callback):
         """
         f_c = self.f_c()
         for n, material in enumerate(self.materials): 
-            ## Check the first stability criterion (that MEEP checks, but in a wrong way)
+            ## Check the stability criterion that no oscillator may be above the cricital frequency f_c (MEEP checks this, but perhaps in a wrong way)
             for osc in material.pol:
                 if osc['omega'] > f_c: 
                     meep.master_printf("\n\tWARNING: the oscillator %d in material `%s' defined above the critical frequency (%g)." % (n, material.name, f_c))
                     meep.master_printf("\n\t         It may help to run fix_material_stability for this material, or edit it manually.\n\n")
 
-            ## Check the 2nd stability criterion for all remaining oscillators
-            eps_fc      = analytic_eps(self.materials[0], f_c)
+            ## Check the stability criterion that at f_c, real part of permittivity must be higher than ca. 0.87
+            eps_fc      = analytic_eps(material, f_c)
+            meep.master_printf('xxxxxxxxxxxxxxxxxxxxxxxxxx %g %gi at %g \n' % (eps_fc.real, eps_fc.imag , f_c))
             eps_minimum = meep.use_Courant()**2 * 3 # for three dimensions (2-D simulations are safer as they multiply by 2 only, but it is ignored here)
             if (eps_fc.real < eps_minimum):
                 meep.master_printf("\n\tWARNING: at the critical frequency %f, real permittivity of %s is below the criterion for stability (%f < %f)"

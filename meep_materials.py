@@ -118,7 +118,7 @@ class material_DrudeMetal():#{{{
         #print 'LFC = %.3e' % (omega_p**2 * epsilon_0 / self.gamma)
 
         ## Feed MEEP with a Lorentz oscillator of arbitrarily low frequency f_0 so that it behaves as the Drude model
-        omega_0 = 1e7           
+        omega_0 = .1           
         self.pol = [
                 {'omega': omega_0/(2*np.pi), 'gamma': self.gamma/(2*np.pi), 'sigma': (omega_p/omega_0)**2}, # (Lorentz) model
                 ## Note: meep also uses keywords 'omega' and 'gamma', but they are non-angular units
