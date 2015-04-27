@@ -314,7 +314,7 @@ class AbstractMeepModel(meep.Callback):
                     material.eps += 1 - eps_at_fc
                     if verbose: 
                         meep.master_printf(("Increasing high-frequency permittivity by %.1f to "+ \
-                                "make stable the material: %s\n") % (1 - eps_at_fc, material.name))
+                                "ensure stability of: %s\n") % (1 - eps_at_fc, material.name))
         #}}}
     def test_materials(self, verbose="false"):#{{{
         """ 

@@ -42,9 +42,9 @@ class ApertureSphere_model(meep_utils.AbstractMeepModel): #{{{
         #self.materials += [meep_materials.material_TiO2_THz(where = self.where_TiO2)]  
         self.materials = []
         if self.radius > 0: self.materials += [meep_materials.material_dielectric(where = self.where_TiO2, eps=94., loss=epsloss)]  
-        #if not 'NoGaAs' in comment:  self.materials += [meep_materials.material_Metal_THz(where = self.where_metal) ] %TODO  add GaAs
-        #self.materials += [meep_materials.material_Metal_THz(where = self.where_metal) ] ## TODO USE GOLD
+        #if not 'NoGaAs' in comment:  self.materials += [meep_materials.material_dielectric(where = self.where_gaas, eps=12) ] %TODO test GaAs where-func
         self.materials += [meep_materials.material_Au(where = self.where_metal) ]
+        for m in self.materials: self.fix_material_stability(m)
 
         ## Test the validity of the model
         meep_utils.plot_eps(self.materials, plot_conductivity=True, 
