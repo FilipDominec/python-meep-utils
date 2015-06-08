@@ -306,16 +306,17 @@ class AbstractMeepModel(meep.Callback):
                 print 'oscgamma, max_gamma: ', osc['gamma'] , max_gamma
                 if osc['gamma'] > max_gamma: 
                     osc['gamma'] = max_gamma
+                print 'oscgamma, max_gamma: ', osc['gamma'] , max_gamma
 
                 ## For a typical Drude conductive material, permittivity is such a big negative number at low frequencies,
-                ## so pushing it above 1 at high frequencies does not make any appreciable error.
+                ## that pushing it above 1 at high frequencies does not make any appreciable error.
                 ## To be on the safe side, we ensure eps' > 1 even at f_c*0.5.
-                eps_at_fc = np.real(analytic_eps(material, freq=f_c * 0.5))
-                if eps_at_fc < 1:
-                    material.eps += 1 - eps_at_fc
+                eps_at_fcs = np.real(analytic_eps(material, freq=f_c_safe))
+                if eps_at_fcs < 1:
+                    material.eps += 1 - eps_at_fcs
                     if verbose: 
                         meep.master_printf(("Increasing high-frequency permittivity by %.1f to "+ \
-                                "ensure stability of: %s\n") % (1 - eps_at_fc, material.name))
+                                "ensure stability of: %s\n") % (1 - eps_at_fcs, material.name))
         #}}}
     def test_materials(self, verbose="false"):#{{{
         """ 
@@ -371,6 +372,9 @@ def in_ellipsoid(r,cx,cy,cz,rad,ex):
     xd, yd, zd = (cx-r.x()), (cy-r.y()), (cz-r.z())
     return ((xd+yd)**2/2.*ex**2 + (xd-yd)**2/2./ex**2 + zd**2)**.5 < rad
 #}}}
+
+## The band source is useful, but is not guarranteed to be compiled in:
+band_src_time = meep.band_src_time if 'band_src_time' in dir(meep) else meep.gaussian_src_time
 
 ## Note: An example of how to define a custom source - put this code into your simulation script 
 #{{{

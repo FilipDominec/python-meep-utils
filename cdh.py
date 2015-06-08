@@ -85,7 +85,7 @@ f.use_bloch(meep.Z, sim_param.get('Kz',.0) / (-2*np.pi))
 
 # Add the field source (see meep_utils for an example of how an arbitrary source waveform is defined)
 if not sim_param['frequency_domain']:           ## Select the source dependence on time
-    src_time_type = meep.band_src_time(model.src_freq/c, model.src_width/c, model.simtime*c/10)
+    src_time_type = meep_utils.band_src_time(model.src_freq/c, model.src_width/c, model.simtime*c/10)
     #src_time_type = meep.gaussian_src_time(model.src_freq/c, model.src_width/c)
 else:
     src_time_type = meep.continuous_src_time(sim_param['frequency']/c)
