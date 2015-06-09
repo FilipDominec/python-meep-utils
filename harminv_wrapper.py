@@ -16,6 +16,7 @@ def harminv(x, y, d=100, f=30, amplitude_prescaling=None):
     with open('/tmp/harminv_input.dat', 'w') as outfile: 
         outfile.write("#t[s]\t E(t)\n")
         np.savetxt(outfile, zip(x/2, np.real(y) * amplitude_prescaling), fmt="%.8e")
+
     import subprocess
     dt = x[1]-x[0]
     subprocess.Popen('harminv %f-%f -t %g   < /tmp/harminv_input.dat > /tmp/harminv_output.dat' % (0, 1./dt/10., dt*1.), shell=True, stdout=subprocess.PIPE).stdout.read().strip()

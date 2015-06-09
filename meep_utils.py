@@ -303,10 +303,8 @@ class AbstractMeepModel(meep.Callback):
                 ## and grows above it. To push permittivity above zero at f_c, gamma must be lower than f_c
                 ## but not too much. One half is reasonable.
                 max_gamma = f_c_safe
-                print 'oscgamma, max_gamma: ', osc['gamma'] , max_gamma
                 if osc['gamma'] > max_gamma: 
                     osc['gamma'] = max_gamma
-                print 'oscgamma, max_gamma: ', osc['gamma'] , max_gamma
 
                 ## For a typical Drude conductive material, permittivity is such a big negative number at low frequencies,
                 ## that pushing it above 1 at high frequencies does not make any appreciable error.
@@ -334,7 +332,6 @@ class AbstractMeepModel(meep.Callback):
 
             ## Check the stability criterion that at f_c, real part of permittivity must be higher than ca. 0.87
             eps_fc      = analytic_eps(material, f_c)
-            meep.master_printf('xxxxxxxxxxxxxxxxxxxxxxxxxx %g %gi at %g \n' % (eps_fc.real, eps_fc.imag , f_c))
             eps_minimum = meep.use_Courant()**2 * 3 # for three dimensions (2-D simulations are safer as they multiply by 2 only, but it is ignored here)
             if (eps_fc.real < eps_minimum):
                 meep.master_printf("\n\tWARNING: at the critical frequency %f, real permittivity of %s is below the criterion for stability (%f < %f)"
@@ -597,11 +594,14 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
     pml_axes may be selected from those: None, meep.X, meep.XY, meep.Y or meep.Z, "All" 
     """
     def init_perfectly_matched_layers():
+        print "mmmmmmmmmmmmmmmmmmmmmm"
         if pml_axes == "All" or pml_axes == "all":
             perfectly_matched_layers=meep.pml(model.pml_thickness)
             s = meep.structure(volume, meep.EPS, perfectly_matched_layers, meep.identity())
         elif pml_axes == None or pml_axes == "none" or pml_axes == "None":
+            print "nnnnnnnnnnnnnnnnnnnnnn"
             s = meep.structure(volume, meep.EPS)
+            print "oooooooooooooooooooooo"
         else:
             perfectly_matched_layers=meep.pml(model.pml_thickness, pml_axes)
             s = meep.structure(volume, meep.EPS, perfectly_matched_layers, meep.identity())

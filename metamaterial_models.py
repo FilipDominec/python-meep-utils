@@ -12,7 +12,7 @@ import meep_mpi as meep
 
 class SphereArray(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=50e-6, cellnumber=1, padding=20e-6, 
-            radius=13e-6, wirethick=0, loss=1):
+            radius=13e-6, wirethick=0, loss=1, eps=-1):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -32,8 +32,11 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
         ## Define materials (with manual Lorentzian clipping) 
         self.materials = []  
 
-        tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
-        if loss != 1: tio2.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
+        if eps==-1:     ## use titanium dioxide if permittivity not specified...
+            tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
+            if loss != 1: tio2.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
+        else:           ## ...or define a custom dielectric if permittivity not specified
+            tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=self.eps) 
 
         self.fix_material_stability(tio2, f_c=2e13, verbose=0) ## rm all osc above the first one, to optimize for speed 
         self.materials.append(tio2)

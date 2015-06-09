@@ -122,11 +122,11 @@ if plot_FFT:
     ## Plot contours for gridded data
 
     if filesuffix == 'phase':
-        z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.angle(Efs), ki*interp_anisotropy, fi, interp='nn')
+        z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.angle(Efs), ki*interp_anisotropy, fi, interp='linear')
         contours = plt.contourf(ki, fi, z, levels=np.linspace(-np.pi,np.pi,50), cmap=matplotlib.cm.hsv, extend='both') 
         plt.colorbar()
     elif filesuffix == 'ampli':
-        z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.abs(Efs), ki*interp_anisotropy, fi, interp='nn')
+        z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.abs(Efs), ki*interp_anisotropy, fi, interp='linear')
         log_min, log_max = np.log10(np.min(z)), np.log10(np.max(z))
         #log_min, log_max = -5, .5
         levels = 10**(np.arange(         log_min,          log_max,  .2))       ## where the contours are drawn
@@ -135,7 +135,7 @@ if plot_FFT:
         plt.colorbar(ticks=ticks).set_ticklabels(['$10^{%d}$' % int(np.log10(t)) for t in ticks])
     elif filesuffix == 'epsilon':
         ## TODO: non-logarithmic plotting of the effective spatial-dispersive permittivity ε(ω,K)
-        Y = griddata(Kzs*interp_anisotropy, freqs/frequnit, Efs, ki*interp_anisotropy, fi, interp='nn') 
+        Y = griddata(Kzs*interp_anisotropy, freqs/frequnit, Efs, ki*interp_anisotropy, fi, interp='linear') 
         g_min, g_max = 0, 10.05
         levels = np.linspace(g_min,  g_max,  100)       ## where the contours are drawn
         ticks  = np.linspace(g_min, g_max, 10)       ## where a number is printed

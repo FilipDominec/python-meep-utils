@@ -9,7 +9,7 @@ if [ -z "$NUMCPU" ]; then
 
 compare_dispersion() {
 	## scan through the wave vector
-	for Kz in `seq 0  5000 60000`; do 
+	for Kz in `seq 0  2000 60000`; do 
 		mpirun -np $NUMCPU ../cdh.py Kz=$Kz $1; done
 	../plot_cdh.py cdh/*dat ## (preview)
 
@@ -22,8 +22,28 @@ compare_dispersion() {
 	../plot_cdh.py cdh/*dat 
 }
 
-compare_dispersion 'model=SphereArray comment=LoLoss wirethick=4u simtime=100p'
-mv cdh SphereArray_results		# prevent the results from being overwritten
 
-compare_dispersion 'model=RodArray comment=LoLoss wirethick=4u simtime=100p'
-mv cdh RodArray_results			# prevent the results from being overwritten
+#compare_dispersion 'model=RodArray simtime=100p cellsize=100u'
+#mv cdh_ampli.png RodArray_dispersion2.png    # prevent the results from being overwritten
+#mv cdh			 cdh_RodArray2.png			# archive the raw data
+
+compare_dispersion 'model=SphereArray comment=LoLoss wirethick=4u '
+mv cdh_ampli.png SphereArray_dispersionTMP.png    # prevent the results from being overwritten
+mv cdh			 cdh_SphereArrayTMP.png			# archive the raw data
+
+#compare_dispersion 'model=SphereArray comment=LoLoss wirethick=4u simtime=100p radius=30u cellsize=100u'
+#mv cdh_ampli.png SphereArray_dispersion.png    # prevent the results from being overwritten
+#mv cdh			 cdh_SphereArray.png			# archive the raw data
+
+#compare_dispersion 'model=SphereArray resolution=6u comment=LoLoss wirethick=4u simtime=100p radius=40u cellsize=100u eps=12'
+#mv cdh_ampli.png SphereArray_dispersion_r40_eps12.png    # prevent the results from being overwritten
+#mv cdh			 cdh_SphereArray_r40_eps12.png			# archive the raw data
+
+#compare_dispersion 'model=SphereArray resolution=6u comment=LoLoss wirethick=4u simtime=100p '
+#mv cdh_ampli.png SphereArray_dispersion_r40_eps12.png    # prevent the results from being overwritten
+#mv cdh			 cdh_SphereArray_r40_eps12.png			# archive the raw data
+
+#compare_dispersion 'model=Crosses3D comment=LoLoss wirethick=4u simtime=100p'
+#mv cdh_ampli.png SphereArray_dispersion.png    # prevent the results from being overwritten
+#mv cdh			 cdh_SphereArray.png			# archive the raw data
+

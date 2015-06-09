@@ -58,8 +58,9 @@ class AmplitudeMonitorVolume():#{{{
 
 # Model selection
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
+model = (metamaterial_models.models.get(sim_param['model'], metamaterial_models.models.values()[0]))(**model_param)
 #model = metamaterial_models.SphereCDH_model(**model_param)
-model = metamaterial_models.SphereArray(**model_param)
+#model = metamaterial_models.SphereArray(**model_param)
 #model = metamaterial_models.RodCDH_model(**model_param)
 #model = metamaterial_models.FishnetCDH_model(**model_param)
 if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
@@ -132,6 +133,8 @@ else:                                       ## frequency-domain computation
 if meep.my_rank() == 0:
     headerstring = "#x-column Frequency [Hz]\n#Column Ex real\n#Column Ex imag\n"
     t, E = monitor1_Ex.get_waveforms()
+    print E
+    print sum(E)
     if not os.path.exists("cdh"): os.mkdir("cdh")
     meep_utils.savetxt(fname=os.path.join('cdh',model.simulation_name+".dat"), fmt="%.6e", 
             X=zip(t, E.real, E.imag), 
