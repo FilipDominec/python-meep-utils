@@ -161,6 +161,8 @@ class AbstractMeepModel(meep.Callback):
         meep.Callback.__init__(self)
         self.double_vec = None          # (callback function to be redirected to the desired function)
         self.return_value = True  
+        print dir(self)
+        print self.eps
         #}}}
     def eps(self, r):#{{{
         """ Scans through materials and returns the high-frequency part of permittivity for the first in the list. 
@@ -274,12 +276,10 @@ class AbstractMeepModel(meep.Callback):
         part of permittivity is increased. Second, the possible Drude term is detected and fixed
         so that metals work in low-resolution simulations as well.
 
-        Note that this function is not guarranteed to give optimal results. Sometimes an oscillator 
+        Note that this function is not guaranteed to give optimal results. Sometimes an oscillator 
         is so strong that it pulls permittivity negative above the critical frequency f_c, and 
         simulation goes unstable. Very often the models need to be adjusted for the simulation to
         be faster and more accurate.
-
-        More information is on the authors website.
         """
         if f_c == "Auto": f_c = self.f_c()
         f_c_safe = f_c * 0.5
@@ -591,7 +591,7 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
 
     model, volume and sim_param are objects that need to be passed from the main simulation
 
-    pml_axes may be selected from those: None, meep.X, meep.XY, meep.Y or meep.Z, "All" 
+    pml_axes may be selected from these: None, meep.X, meep.XY, meep.Y or meep.Z, "All" 
     """
     def init_perfectly_matched_layers():
         print "mmmmmmmmmmmmmmmmmmmmmm"
