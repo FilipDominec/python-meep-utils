@@ -63,18 +63,20 @@ materials, data postprocessing etc. is elaborated there.
 
 ## Troubleshooting
 #### Outright errors
- * simulation fails, writing out `terminate called after throwing an instance of 'Swig::DirectorMethodException'` and an ugly call trace - there is some run-time error in the structure definition. Call `meep_utils.testmaterials()` at the end of the model's initialization may help to get a reasonable Python report to find the error.
- * the same as above, but `meep_utils.testmaterials()` did not help - this happens, too, no reason known?
- * simulation aborts with `lorentzian unstable` although the medium passed the `meep_utils.testmaterials()` function - the compiled-in check for Lorentzian stability is overly prudent; it sometimes aborts a simulation that would be completely stable. You may either change the material model, or change the meep sources to bypass the `abort` in function `lorentzian_unstable` in `src/susceptibility.cpp` and recompile meep. I consider this to be just an unfixed bug, see also the discussion https://github.com/stevengj/meep/issues/12.
- * time-domain simulation aborts when I try to define a material with a negative permittivity - such materials can not be computed by the time-domain solver. See, again, https://github.com/stevengj/meep/issues/12. Resort to the frequency-domain solver, or define a proper Drude-Lorentz model.
+ * simulation fails, writing out `terminate called after throwing an instance of 'Swig::DirectorMethodException'` and an ugly call trace - _there is some run-time error in the structure definition. Call `meep_utils.testmaterials()` at the end of the model's initialization may help to get a reasonable Python report to find the error._
+ * the same as above, but `meep_utils.testmaterials()` did not help - _this happens, too, no reason known?_
+ * simulation aborts with `lorentzian unstable` although the medium passed the `meep_utils.testmaterials()` function - _the compiled-in check for Lorentzian stability is overly prudent; it sometimes aborts a simulation that would be completely stable. You may either change the material model, or change the meep sources to bypass the `abort` in function `lorentzian_unstable` in `src/susceptibility.cpp` and recompile meep. I consider this to be just an unfixed bug, see also the discussion https://github.com/stevengj/meep/issues/12._
+ * time-domain simulation aborts when I try to define a material with a negative permittivity - _such materials can not be computed by the time-domain solver. See, again, https://github.com/stevengj/meep/issues/12. Resort to the frequency-domain solver, or define a proper Drude-Lorentz model.
+
 #### Invalid or weird results
- * exported figures show no fields and are black - infinite values or not-a-numbers resulted from the simulation. This is perhaps due to simulation being unstable (see `amplitudes_time_domain.png`, if available, whether the fields are exponentially decaying or growing. 
- * the simulation seems to be stable, but no valid data are plotted - did you use the same polarisation (field-component) of the source and 
- * the retrieved transmission or reflection is over unity - this may be due to spectral leakage, try prolonging the simulation time or using a lossy medium.
+ * exported figures show no fields and are black - _infinite values or not-a-numbers resulted from the simulation. This is perhaps due to simulation being unstable (see `amplitudes_time_domain.png`, if available, whether the fields are exponentially decaying or growing. _
+ * the simulation seems to be stable, but no valid data are plotted - _did you use the same polarisation (field-component) of the source and detectors, etc.? Did you use correct order of magnitude for the source duration and simulation?_
+ * the retrieved transmission or reflection is over unity - _this may be due to spectral leakage, try prolonging the simulation time or using a lossy medium._
+
 #### Confusing printouts
- * the frequency-domain solver does not converge - this happens, reason not known. Try changing the resolution or using other materials. Try running few time-domain steps before running frequency-domain solver. 
- * simulation gives correct results, but at the end complaints that `mpirun has exited ... without calling "finalize"` - this is harmless, I did not find any way to prevent the message in Python-meep
- * simulation writes about 'epsilon averaging' although I did not explicitly enable it - this is OK, it is some bug, no averaging is probably happening anyway
+ * the frequency-domain solver does not converge - _this happens, reason not known. Try changing the resolution or using other materials. Try running few time-domain steps before running frequency-domain solver. _
+ * simulation gives correct results, but at the end complaints that `mpirun has exited ... without calling "finalize"` - _this is harmless, I did not find any way to prevent the message in Python-meep_
+ * simulation writes about 'epsilon averaging' although I did not explicitly enable it - _this is OK, it is some bug, no averaging is probably happening anyway_
 
 
 ## TODO
