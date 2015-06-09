@@ -161,10 +161,8 @@ class AbstractMeepModel(meep.Callback):
         meep.Callback.__init__(self)
         self.double_vec = None          # (callback function to be redirected to the desired function)
         self.return_value = True  
-        print dir(self)
-        print self.eps
         #}}}
-    def eps(self, r):#{{{
+    def get_static_permittivity(self, r):#{{{
         """ Scans through materials and returns the high-frequency part of permittivity for the first in the list. 
         Be careful when materials overlap - their polarizabilities still sum up, making a nonrealistic result. 
         """
@@ -594,14 +592,11 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
     pml_axes may be selected from these: None, meep.X, meep.XY, meep.Y or meep.Z, "All" 
     """
     def init_perfectly_matched_layers():
-        print "mmmmmmmmmmmmmmmmmmmmmm"
         if pml_axes == "All" or pml_axes == "all":
             perfectly_matched_layers=meep.pml(model.pml_thickness)
             s = meep.structure(volume, meep.EPS, perfectly_matched_layers, meep.identity())
         elif pml_axes == None or pml_axes == "none" or pml_axes == "None":
-            print "nnnnnnnnnnnnnnnnnnnnnn"
             s = meep.structure(volume, meep.EPS)
-            print "oooooooooooooooooooooo"
         else:
             perfectly_matched_layers=meep.pml(model.pml_thickness, pml_axes)
             s = meep.structure(volume, meep.EPS, perfectly_matched_layers, meep.identity())
@@ -611,7 +606,7 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
         meep.master_printf("== Time domain structure setup ==\n")
         ## Define each polarizability by redirecting the callback to the corresponding "where_material" function
         ## Define the frequency-independent epsilon for all materials (needed here, before defining s, or unstable)
-        model.double_vec = model.eps
+        model.double_vec = model.get_static_permittivity
         meep.set_EPS_Callback(model.__disown__())
         structure = init_perfectly_matched_layers()
 

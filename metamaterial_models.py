@@ -138,11 +138,11 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
 #}}}
 class SRRArray(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=20e-6, 
-            radius=40e-6, wirethick=6e-6, srrthick=6e-6, splitting=16e-6):
+            radius=40e-6, wirethick=6e-6, srrthick=6e-6, splitting=16e-6, splitting2=16e-6):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
-        self.simulation_name = "SphereArray"    
+        self.simulation_name = "SRRArray"    
         self.src_freq, self.src_width = 1000e9, 4000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (100e9, 2000e9)    # Which frequencies will be saved to disk
         self.pml_thickness = 20e-6
@@ -175,9 +175,11 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
                 return self.return_value             # (do not change this line)
 
             ## define the split-ring resonator
-            if  in_ycyl(r, cx=0, cz=cellc, rad=self.radius) \
-                    and not in_ycyl(r, cy=0, cz=cellc, rad=self.radius-self.srrthick) \
-                    and in_yslab(r, cz=0, d=self.wirethick):
+            if  (in_ycyl(r, cx=0, cz=cellc, rad=self.radius)                            # outer radius
+                    and not in_ycyl(r, cx=0, cz=cellc, rad=self.radius-self.srrthick)   # subtract inner radius
+                    and in_yslab(r, cy=0, d=self.srrthick)                              # delimit to a disc
+                    and not (r.z()>0 and in_xslab(r, cx=0, d=self.splitting))           # make the first splitting
+                    and not (r.z()<0 and in_xslab(r, cx=0, d=self.splitting2))):        # make the second splitting, if any
                 return self.return_value             # (do not change this line)
         return 0
 #}}}

@@ -80,7 +80,7 @@ if not sim_param['frequency_domain']:
     meep.master_printf("== Time domain structure setup ==\n")
     ## Define each polarizability by redirecting the callback to the corresponding "where_material" function
     ## Define the frequency-independent epsilon for all materials (needed here, before defining s, or unstable)
-    model.double_vec = model.eps; meep.set_EPS_Callback(model.__disown__())
+    model.double_vec = model.get_static_permittivity; meep.set_EPS_Callback(model.__disown__())
     s = meep.structure(vol, meep.EPS, perfectly_matched_layers, meep.identity())
 
     ## Add all the materials
