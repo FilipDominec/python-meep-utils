@@ -17,8 +17,10 @@ See its short code for inspiration how to use the frequency-domain simulations.
 
 
 ## Expected results
-The results are in the form of one big plot with the comparison, accompanied by the `png/` directory containing the Ex field shapes from the frequency-domain.
+The results are in the form of one big plot with the comparison of FDTD (line) and FDFD (discrete points). Reflection of the structure is `s11`, transmission is `s12`. From the FDTD results, also the effective parameters are computed using the s-parameter method:
 
 ![The result of the batch.sh script](./SphereArray_simtime=1.000e-10_wirethick=1.000e-05.png)
+
+Each point is accompanied by the `png/` directory containing the Ex field shapes from the frequency-domain.
 
 ![The Ex field amplitude at the frequency of 1 THz](./png/At1.000e+12Hz_at_x0.000e+00_tinf.png)
