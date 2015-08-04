@@ -24,6 +24,6 @@ The results are in the form of one big plot with the comparison of FDTD (line) a
 Each point is accompanied by the `png/` directory containing the Ex field shapes from the frequency-domain. Following field plots are the results for 1000, 1050 and 1100 GHz, respectively:
 
 ![The Ex field amplitude at the frequency of 1.00 THz](./png/At1.000e+12Hz_at_x0.000e+00_tinf.png)
-![The Ex field amplitude at the frequency of 1.05 THz](./png/At1.000e+12Hz_at_x0.000e+00_tinf.png)
-![The Ex field amplitude at the frequency of 1.10 THz](./png/At1.000e+12Hz_at_x0.000e+00_tinf.png)
+![The Ex field amplitude at the frequency of 1.05 THz](./png/At1.050e+12Hz_at_x0.000e+00_tinf.png)
+![The Ex field amplitude at the frequency of 1.10 THz](./png/At1.100e+12Hz_at_x0.000e+00_tinf.png)
 
