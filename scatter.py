@@ -16,13 +16,16 @@ import meep_mpi as meep
 # Model selection
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
 model = (metamaterial_models.models.get(sim_param['model'], metamaterial_models.models.values()[0]))(**model_param)
-print model
 if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
 
 ## Initialize volume, structure and the fields according to the model
 vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
 vol.center_origin()
+
+t0 = time.time()
 s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes=meep.Z)
+print "time=", time.time()-t0 
+
 f = meep.fields(s)
 f.use_bloch(meep.X, sim_param.get('Kx', 0) / (-2*np.pi)) # (any transversal component of k-vector is allowed)
 f.use_bloch(meep.Y, sim_param.get('Ky',.0) / (-2*np.pi))

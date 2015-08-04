@@ -174,6 +174,17 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
                     in_xcyl(r, cy= -self.size_y/2, cz=cellc, rad=self.wirethick):
                 return self.return_value             # (do not change this line)
 
+        #r = self.RotatedCoordsY(r, angle=np.pi/4)
+        #print dir(r)
+        r = self.rotatedX(r, np.pi/4)
+        r = self.rotatedY(r, np.pi/4)
+        #without rot =  66  s
+        #with    rot = 165  s
+        #with   2rot = 239  s
+        #with    rot = 74.7442  s (optimized):
+        #with   2rot = 74.7442  s (optimized):
+
+        for cellc in self.cellcenters:
             ## define the split-ring resonator
             if  (((in_ycyl(r, cx=0, cz=cellc, rad=self.radius+self.srrthick/2)             # outer radius
                     and not in_ycyl(r, cx=0, cz=cellc, rad=self.radius-self.srrthick/2)   # subtract inner radius

@@ -347,6 +347,18 @@ class AbstractMeepModel(meep.Callback):
                 meep.master_printf("\n\tWARNING: `where' parameter is not a function, material not used: %s\n\n" % (material.name))
                 self.materials.remove(material)
         #}}}
+    ## The following three functions rotate the meep's position vector (= an object providing x(), y(), z() methods) 
+    ## All structures defined below the substitution, e.g., r = self.RotatedCoordsY(r, angle=np.pi/4)
+    ## will appear rotated along the respective axis. Rotations may be stacked, but note they are not commutative. 
+    def rotatedX(self, r, angle):
+        x,y,z,c,s = r.x(), r.y(), r.z(), np.cos(angle), np.sin(angle)
+        return  meep.vec(x, y*c+z*s, z*c-y*s)
+    def rotatedY(self, r, angle):
+        x,y,z,c,s = r.x(), r.y(), r.z(), np.cos(angle), np.sin(angle)
+        return  meep.vec(x*c-z*s, y, z*c+x*s)
+    def rotatedZ(self, r, angle):
+        x,y,z,c,s = r.x(), r.y(), r.z(), np.cos(angle), np.sin(angle)
+        return  meep.vec(x*c+y*s, y*c-x*s, z)
 
 ## Geometrical primitives to help defining the geometry
 def in_xslab(r,cx,d):#{{{
