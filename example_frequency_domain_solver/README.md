@@ -19,6 +19,6 @@ See its short code for inspiration how to use the frequency-domain simulations.
 ## Expected results
 The results are in the form of one big plot with the comparison, accompanied by the `png/` directory containing the Ex field shapes from the frequency-domain.
 
-![The result of the batch.sh script](example_frequency_domain_solver/SphereArray_simtime=1.000e-10_wirethick=1.000e-05.png)
+![The result of the batch.sh script](./SphereArray_simtime=1.000e-10_wirethick=1.000e-05.png)
 
-![The Ex field amplitude at the frequency of 1 THz](./example_frequency_domain_solver/png/At1.000e+12Hz_at_x0.000e+00_tinf.png)
+![The Ex field amplitude at the frequency of 1 THz](./png/At1.000e+12Hz_at_x0.000e+00_tinf.png)
