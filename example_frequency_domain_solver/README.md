@@ -7,7 +7,7 @@ where L is the Maxwell operator [1], *ψ* is the (vector) field function sought 
 
 Here, the script `scatter.py` is ran multiple times in frequency-domain to compute a simple negative-index metamaterial - a dielectric microsphere embedded in a metallic mesh.  For more information on this structure, see e.g. `metamaterial_models.py` where it is defined.
 
-Finally, its results are computed to the classical Fourier-transformed time-domain simulation and it is shown that they are similar, although the algorithm are fundamentally different.
+Finally, its results are computed to the classical Fourier-transformed time-domain simulation and it is shown that they are similar, although the algorithms are fundamentally different.
 
 A big effort was put into the Python scripts to make the switch between FDTD and FDFD simulations as easy as possible: It can be done just by adding the parameter `frequency=...`.
 

@@ -138,7 +138,7 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
 #}}}
 class SRRArray(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=20e-6, 
-            radius=40e-6, wirethick=6e-6, srrthick=6e-6, splitting=16e-6, splitting2=16e-6):
+            radius=40e-6, wirethick=6e-6, srrthick=6e-6, splitting=16e-6, splitting2=0e-6, capacitorr=0e-6):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -169,17 +169,18 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
 
     def where_wire(self, r):
         for cellc in self.cellcenters:
-            ## define the 
+            ## define the wires
             if  in_xcyl(r, cy=self.size_y/2, cz=cellc, rad=self.wirethick) or \
                     in_xcyl(r, cy= -self.size_y/2, cz=cellc, rad=self.wirethick):
                 return self.return_value             # (do not change this line)
 
             ## define the split-ring resonator
-            if  (in_ycyl(r, cx=0, cz=cellc, rad=self.radius)                            # outer radius
-                    and not in_ycyl(r, cx=0, cz=cellc, rad=self.radius-self.srrthick)   # subtract inner radius
-                    and in_yslab(r, cy=0, d=self.srrthick)                              # delimit to a disc
-                    and not (r.z()>0 and in_xslab(r, cx=0, d=self.splitting))           # make the first splitting
-                    and not (r.z()<0 and in_xslab(r, cx=0, d=self.splitting2))):        # make the second splitting, if any
+            if  (((in_ycyl(r, cx=0, cz=cellc, rad=self.radius+self.srrthick/2)             # outer radius
+                    and not in_ycyl(r, cx=0, cz=cellc, rad=self.radius-self.srrthick/2)   # subtract inner radius
+                    and in_yslab(r, cy=0, d=self.srrthick))                               # delimit to a disc
+                    or (in_xcyl(r, cy=0, cz=cellc+self.radius, rad=self.capacitorr) and in_xslab(r, cx=0, d=self.splitting+2*self.wirethick)))
+                    and not (r.z()>cellc and in_xslab(r, cx=0, d=self.splitting))           # make the first splitting
+                    and not (r.z()<cellc and in_xslab(r, cx=0, d=self.splitting2))):        # make the second splitting, if any
                 return self.return_value             # (do not change this line)
         return 0
 #}}}

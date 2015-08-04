@@ -16,6 +16,7 @@ import meep_mpi as meep
 # Model selection
 sim_param, model_param = meep_utils.process_param(sys.argv[1:])
 model = (metamaterial_models.models.get(sim_param['model'], metamaterial_models.models.values()[0]))(**model_param)
+print model
 if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
 
 ## Initialize volume, structure and the fields according to the model
