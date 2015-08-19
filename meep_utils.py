@@ -88,7 +88,10 @@ def phys_to_float(s):#{{{
         else:
             return s
     except ValueError:
-        return s#}}}
+        return s
+    except IndexError:
+        raise ValueError("Empty string was provided as a parameter")
+    #}}}
 class Timer():#{{{ 
     """
     Prints total estimated time of computation, and the simulation progress 
@@ -347,20 +350,8 @@ class AbstractMeepModel(meep.Callback):
                 meep.master_printf("\n\tWARNING: `where' parameter is not a function, material not used: %s\n\n" % (material.name))
                 self.materials.remove(material)
         #}}}
-    ## The following three functions rotate the meep's position vector (= an object providing x(), y(), z() methods) 
-    ## All structures defined below the substitution, e.g., r = self.RotatedCoordsY(r, angle=np.pi/4)
-    ## will appear rotated along the respective axis. Rotations may be stacked, but note they are not commutative. 
-    def rotatedX(self, r, angle):
-        x,y,z,c,s = r.x(), r.y(), r.z(), np.cos(angle), np.sin(angle)
-        return  meep.vec(x, y*c+z*s, z*c-y*s)
-    def rotatedY(self, r, angle):
-        x,y,z,c,s = r.x(), r.y(), r.z(), np.cos(angle), np.sin(angle)
-        return  meep.vec(x*c-z*s, y, z*c+x*s)
-    def rotatedZ(self, r, angle):
-        x,y,z,c,s = r.x(), r.y(), r.z(), np.cos(angle), np.sin(angle)
-        return  meep.vec(x*c+y*s, y*c-x*s, z)
 
-## Geometrical primitives to help defining the geometry
+## Geometrical primitives to help defining the geometry and  structure rotation
 def in_xslab(r,cx,d):#{{{
     return (abs(r.x()-cx) < d/2)
 def in_yslab(r,cy,d):
@@ -378,10 +369,21 @@ def in_sphere(r,cx,cy,cz,rad):
 def in_ellipsoid(r,cx,cy,cz,rad,ex):
     xd, yd, zd = (cx-r.x()), (cy-r.y()), (cz-r.z())
     return ((xd+yd)**2/2.*ex**2 + (xd-yd)**2/2./ex**2 + zd**2)**.5 < rad
-#}}}
+## The following three functions rotate the meep's position vector (= an object providing x(), y(), z() methods)  
+## All structures defined below the transformation in the following form:    r = self.RotatedCoordsY(r, angle=np.pi/4)
+## will appear rotated along the respective axis. Rotations may be stacked as needed, but note they are not commutative. 
+def rotatedX(self, r, angle):
+    x,y,z,c,s = r.x(), r.y(), r.z(), np.cos(angle), np.sin(angle)
+    return  meep.vec(x,         y*c+z*s,        z*c-y*s)
+def rotatedY(self, r, angle):
+    x,y,z,c,s = r.x(), r.y(), r.z(), np.cos(angle), np.sin(angle)
+    return  meep.vec(x*c-z*s,   y,              z*c+x*s)
+def rotatedZ(self, r, angle):
+    x,y,z,c,s = r.x(), r.y(), r.z(), np.cos(angle), np.sin(angle)
+    return  meep.vec(x*c+y*s,   y*c-x*s,        z)          # }}}
 
-## The band source is useful, but is not guarranteed to be compiled in:
-band_src_time = meep.band_src_time if 'band_src_time' in dir(meep) else meep.gaussian_src_time
+## The band source is useful, but is not guaranteed to be compiled in:
+band_src_time = meep.band_src_time if ('band_src_time' in dir(meep)) else meep.gaussian_src_time
 
 ## Note: An example of how to define a custom source - put this code into your simulation script 
 #{{{
