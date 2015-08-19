@@ -195,6 +195,106 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
                 return self.return_value             # (do not change this line)
         return 0
 #}}}
+class SphereArray(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=50e-6, cellnumber=1, padding=20e-6, 
+            radius=13e-6, wirethick=0, loss=1, epsilon=-1):
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
-models = {'Slab':Slab, 'SphereArray':SphereArray, 'RodArray':RodArray, 'SRRArray':SRRArray}
+        ## Constant parameters for the simulation
+        self.simulation_name = "SphereArray"    
+        self.src_freq, self.src_width = 1000e9, 4000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (100e9, 2000e9)    # Which frequencies will be saved to disk
+        self.pml_thickness = 20e-6
+
+        self.size_x = cellsize 
+        self.size_y = cellsize
+        self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
+        self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
+
+        self.register_locals(locals())          ## Remember the parameters
+
+        ## Define materials (with manual Lorentzian clipping) 
+        self.materials = []  
+
+        if epsilon==-1:     ## use titanium dioxide if permittivity not specified...
+            tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
+            if loss != 1: tio2.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
+        else:           ## ...or define a custom dielectric if permittivity not specified
+            tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=self.epsilon) 
+
+        self.fix_material_stability(tio2, f_c=2e13, verbose=0) ## rm all osc above the first one, to optimize for speed 
+        self.materials.append(tio2)
+
+        if wirethick > 0:
+            au = meep_materials.material_Au(where=self.where_wire)
+            self.fix_material_stability(au, verbose=0)
+            self.materials.append(au)
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        self.test_materials()
+
+    def where_sphere(self, r):
+        for cellc in self.cellcenters:
+            if  in_sphere(r, cx=0, cy=0, cz=cellc, rad=self.radius):
+                return self.return_value             # (do not change this line)
+        return 0
+    def where_wire(self, r):
+        for cellc in self.cellcenters:
+            if  in_xcyl(r, cy=self.size_y/2, cz=cellc, rad=self.wirethick) or \
+                    in_xcyl(r, cy= -self.size_y/2, cz=cellc, rad=self.wirethick):
+                return self.return_value             # (do not change this line)
+        return 0
+#}}}
+class Thibault1(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=50e-15, resolution=4e-9, cellsize=27e-9, cellnumber=1, padding=20e-9, 
+            radius=10e-9, pdist=0, loss=1, epsilon=2):
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
+
+        ## Constant parameters for the simulation
+        self.simulation_name = "SphereArray"    
+        self.src_freq, self.src_width = 1000e12, 4000e12    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (100e12, 2000e12)    # Which frequencies will be saved to disk
+        self.pml_thickness = 20e-9
+
+        self.size_x = cellsize 
+        self.size_y = cellsize
+        self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
+        self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
+
+        self.register_locals(locals())          ## Remember the parameters
+
+        ## Define materials
+        self.materials = [
+               meep_materials.material_Au(where=self.where_particle),
+               meep_materials.material_dielectric(where=self.where_ptfe, eps=self.epsilon),
+               meep_materials.material_SiO2(where=self.where_substrate),
+               ]  
+
+        for m in self.materials: self.fix_material_stability(m)
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        self.test_materials()
+
+    def where_particle(self, r):
+        if  in_sphere(r, cx=0, cy=0, cz=self.radius/2, rad=self.radius):
+            return self.return_value             # (do not change this line)
+        return 0
+    def where_ptfe(self, r):
+        if self.where_particle(r): return 0 
+        if in_zslab(r, cz=self.pdist/2, d=self.pdist):
+            return self.return_value             # (do not change this line)
+        return 0
+    def where_substrate(self, r):
+        if r.z() > 0:
+            return self.return_value             # (do not change this line)
+        return 0
+#}}}
+
+models = {'Slab':Slab, 'SphereArray':SphereArray, 'RodArray':RodArray, 'SRRArray':SRRArray, 'Thibault1':Thibault1}
 
