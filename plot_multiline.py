@@ -13,7 +13,7 @@ parser.add_argument('--paramname',  type=str,               help='parameter by w
 parser.add_argument('--paramunit',  type=float, default=1., help='prescaling of the parameter (if it is a number)')
 parser.add_argument('--xunit',      type=float, default=1., help='prescaling of the x-axis')
 parser.add_argument('--yunit',      type=float, default=1., help='prescaling of the y-axis')
-parser.add_argument('--paramlabel', type=str,   default='', help='line label (use %d, %s, %f or %g to format the parameter, use LaTeX for typesetting)')
+parser.add_argument('--paramlabel', type=str,   default='', help='line label (use standard "printf" format for the parameter, and/or LaTeX for typesetting)')
 parser.add_argument('--xcol',       type=str,   default='0', help='number or exact name of the x-axis column') ## TODO or -- if it is to be generated
 parser.add_argument('--ycol',       type=str,   default='1', help='number or exact name of the y-axis column')
 parser.add_argument('--xlabel',     type=str,   default='', help='label of the x-axis (use LaTeX)')
