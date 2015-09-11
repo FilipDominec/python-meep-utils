@@ -327,7 +327,7 @@ class AbstractMeepModel(meep.Callback):
                 if osc['omega'] >= drude_term_frequency and osc['omega'] <= minimum_freq:      ## detects the Drude term from ordinary lorentzians
                     material.pol.remove(osc)
                     if verbose: 
-                        meep.master_printf("Removing oscillator #%d at too a high frequency (%.2e) from material: %s\n" % \
+                        meep.master_printf("Removing oscillator #%d at too a low frequency (%.2e) from material: %s\n" % \
                                 (n+1, osc['omega'], material.name))
         #}}}
     def test_materials(self, verbose="false"):#{{{
