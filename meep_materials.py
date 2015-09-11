@@ -435,7 +435,7 @@ class material_SiO2():#{{{
                 {'omega': 2.6e15, 'gamma': .5e15, 'sigma': .5},
                 {'omega': 2.8e15, 'gamma': .2e15, 'sigma': .55},
                 ]
-        self.name = "Amorphous silica glass (SiO2) for IR range"
+        self.name = "Amorphous silica glass"
         self.shortname = "SiO2 (IR)"
         self.where = where
 #}}}
@@ -583,10 +583,9 @@ class material_Al():#{{{
         self.where = where
 #}}}
 
-class material_Au():#{{{
+class material_Au(): #{{{
     """ Drude-Lorentz model for gold """
     def __init__(self, where=None, resistivity=0., eps=0.):
-        #self.eps = 1. 
         self.eps = 1. 
         omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
         self.pol = [
@@ -597,9 +596,10 @@ class material_Au():#{{{
                 {'omega':1e6*c*3.4714 , 'gamma':1e6*c*2.0115 , 'sigma':2.6455},
                 {'omega':1e6*c*10.743 , 'gamma':1e6*c*1.7857 , 'sigma':2.0148},
                 ]
-        self.name = "Gold (Drude-Lorentz)"
+        self.name = "Gold"
         self.shortname = "Au"
         self.where = where
+#}}}
 class material_Ag():#{{{
     """ Drude-Lorentz model for silver """
     def __init__(self, where=None, resistivity=0., eps=0.):

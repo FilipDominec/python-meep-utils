@@ -3,6 +3,7 @@
 
 import numpy as np
 ## Harminv
+## Call filter-diagonalisation method to analyze time-domain data  
 def harminv(x, y, d=100, f=30, amplitude_prescaling=None):
     """
     suggested visualisation:

@@ -188,7 +188,7 @@ class AbstractMeepModel(meep.Callback):
         ## prepare the parameter to be added into name (if not conversible to float, add it as a string)
         try: 
             if nondefault: self.simulation_name += ("_%s=%.3e") % (param, float(val))
-            self.parameterstring += "#param %s,%.4e\n" % (param, val)
+            self.parameterstring += "#param %s,%.4e\n" % (param, float(val))
             #meep.master_printf("  <float> %s%s = %.3e %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
         except ValueError: 
             if nondefault: self.simulation_name += ("_%s=%s") % (param, val)
@@ -270,23 +270,26 @@ class AbstractMeepModel(meep.Callback):
             #             #set_chi3(meep::structure *,meep::material_function &)
             #             #set_chi3(meep::structure *,double (*)(meep::vec const &)) XXX this is perhaps used XXX
         #}}}
-    def fix_material_stability(self, material, f_c="Auto", verbose="false"):#{{{
+    def fix_material_stability(self, material, f_c="Auto", minimum_freq=False, verbose="false"):#{{{
         """ Little heuristics to make the time-domain simulation (mostly) stable
 
         First, all oscillators with too high frequencies are removed, and the nondispersive
         part of permittivity is increased. Second, the possible Drude term is detected and fixed
-        so that metals work in low-resolution simulations as well.
+        so that metals work in low-resolution simulations as well. Finally, it speeds up the simulation
+        by removing low-frequency Lorentz terms at too low frequencies.
+
 
         Note that this function is not guaranteed to give optimal results. Sometimes an oscillator 
         is so strong that it pulls permittivity negative above the critical frequency f_c, and 
         simulation goes unstable. Very often the models need to be adjusted for the simulation to
         be faster and more accurate.
         """
-        if f_c == "Auto": f_c = self.f_c()
+        drude_term_frequency = 1  ## TODO make this detection more general (or even define new parameters for Drude term)
+        if type(f_c) == str and f_c.lower() == 'auto': f_c = self.f_c()
         f_c_safe = f_c * 0.5
 
-        ## Check and fix the first stability criterion (that tno oscillator may be above the cricital frequency f_c)
-        for n, osc in enumerate(material.pol[:]):
+        ## Check and fix the first stability criterion (that no oscillator may be above the cricital frequency f_c)
+        for n, osc in enumerate(material.pol[:]):   ## (removing from a list requires iterating over its copy)
             if osc['omega'] > f_c_safe: 
                 material.eps += osc['sigma']
                 material.pol.remove(osc)
@@ -296,7 +299,7 @@ class AbstractMeepModel(meep.Callback):
 
         ## Find possible Drude terms and fix them if they break the 2nd stability criterion
         for osc in material.pol:
-            if osc['omega'] < 1:      ## detects Drude term, TODO make more general (or even define new parameters for Drude term)
+            if osc['omega'] <= drude_term_frequency:      ## detects the Drude term from ordinary lorentzians
                 ## Retrieve the properties of the Drude term
                 gamma    = osc['gamma'] * 2*np.pi  # angular scattering frequency 
 
@@ -316,6 +319,16 @@ class AbstractMeepModel(meep.Callback):
                     if verbose: 
                         meep.master_printf(("Increasing high-frequency permittivity by %.1f to "+ \
                                 "ensure stability of: %s\n") % (1 - eps_at_fcs, material.name))
+
+        #Lorentz oscillators order of magnitude below the lower bound of 'interesting_frequencies', if specified in the
+        #model, can be removed, too.
+        if type(minimum_freq) == float:
+            for osc in material.pol[:]:   ## (removing from a list requires iterating over its copy)
+                if osc['omega'] >= drude_term_frequency and osc['omega'] <= minimum_freq:      ## detects the Drude term from ordinary lorentzians
+                    material.pol.remove(osc)
+                    if verbose: 
+                        meep.master_printf("Removing oscillator #%d at too a high frequency (%.2e) from material: %s\n" % \
+                                (n+1, osc['omega'], material.name))
         #}}}
     def test_materials(self, verbose="false"):#{{{
         """ 
@@ -576,14 +589,15 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
 
     ## Annotate frequencies and finish the graph 
     plt.subplot(subplotnumber,1,1)
-    plt.legend(prop={'size':10}) 
+    plt.legend(prop={'size':8}, loc='lower right') 
     plt.xlabel(u"frequency $f$ [Hz]") 
     plt.ylabel(u"relative permittivity $\\varepsilon_r$")
-    plt.xscale('log'); plt.grid(True)
+    plt.grid(True)
+    plt.xscale('log')
     ylim = (-1e7, 1e6); plt.ylim(ylim); plt.yscale('symlog')
     annotate_frequency_axis(mark_freq, log_y=True, arrow_length=50) # TODO , print_freq=True
     if draw_instability_area:
-        plt.gca().add_patch(plt.Rectangle((draw_instability_area[0], ylim[0]), 1e20, draw_instability_area[1]-ylim[0], color='#dddddd'))
+        plt.gca().add_patch(plt.Rectangle((draw_instability_area[0], ylim[0]), 1e20, draw_instability_area[1]-ylim[0], color='#bbbbbb'))
 
     if plot_conductivity:
         plt.subplot(subplotnumber,1,2)
@@ -594,7 +608,6 @@ def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range
 
     plt.xlabel(u"frequency $f$ [Hz]") 
     plt.savefig(filename, bbox_inches='tight')
-    plt.savefig(filename+".pdf", bbox_inches='tight')
 #}}}
 
 def init_structure(model, volume, sim_param, pml_axes):#{{{
@@ -651,8 +664,7 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
 
 
 ## === Results post-processing and export ===
-## Call filter-diagonalisation method to analyze time-domain data  
-## (TODO not using MEEP functions --> shall be synced against harminv_wrapper.py and removed from here)
+## Saving and loading data (not dependent on MEEP functions, but better if ran by the 1st process only)
 def run_bash(cmd, anyprocess=False): #{{{
     if meep.my_rank() == 0 or anyprocess:
         meep.master_printf("CMD: "  + cmd+ "\n")  # (diagnostics)
@@ -660,32 +672,6 @@ def run_bash(cmd, anyprocess=False): #{{{
         out = p.stdout.read().strip()
         return out
 #}}}
-def harminv(x, y, d=100, f=30, amplitude_prescaling=1):#{{{
-    """
-    This algorithm may be very sensitive to input amplitude etc.
-
-    Suggested visualisation:
-    hi = meep_utils.harminv(x,y)
-    plt.scatter(hi['frequency'], hi['amplitude'], c=hi['phase'], s=np.abs(hi['quality'])/20 + 2, cmap=plt.cm.hsv, alpha=.3)
-    """
-
-    # TODO: try-except to catch when harminv returns no data (this happens)
-    with open('hitest.dat', 'w') as outfile: 
-        outfile.write("#t[s]\t E(t)\n")
-        np.savetxt(outfile, zip(x/2, y * amplitude_prescaling), fmt="%.8e")
-    import subprocess
-    dt = x[1]-x[0]
-    subprocess.Popen('harminv 0-%f -t %g -d %g -f %g < hitest.dat > hiout.dat' % (1/dt/10, dt, d, f), shell=True, stdout=subprocess.PIPE).stdout.read().strip()
-    try:
-        (mf, md, mQ, mA, mp, merr) = np.loadtxt('hiout.dat', usecols=list(range(6)), unpack=True, delimiter=', ', skiprows=1)
-    except:
-        meep.master_printf("\nWARNING: Harminv detected no resonances.\n\n")
-        (mf, md, mQ, mA, mp, merr) = [np.array([]) for _ in range(6)]
-
-    return {'frequency':np.abs(mf*2), 'decay':md, 'quality':mQ, 'amplitude':mA/amplitude_prescaling, 'phase':mp, 'error':merr}
-#}}}
-
-## Saving and loading data (not dependent on MEEP functions, but better if ran by the 1st process only)
 def sim_param_string(sim_param):#{{{
     if sim_param['frequency_domain']:
         output = "#param frequency_domain,True\n#param SolverTol,%d\n#param SolverMaxIter,%d\n#param SolverBiCGStab,%d\n" % \
