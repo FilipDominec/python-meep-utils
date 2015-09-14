@@ -8,12 +8,12 @@ import numpy as np
 import argparse
 from scipy.constants import c, hbar, pi
 
-parser = argparse.ArgumentParser(description='Process some integers.')
+parser = argparse.ArgumentParser(description='Plot a selected column from each of multiple files into a single comparison plot. ')
 parser.add_argument('--paramname',  type=str,               help='parameter by which the lines are sorted')
 parser.add_argument('--paramunit',  type=float, default=1., help='prescaling of the parameter (if it is a number)')
 parser.add_argument('--xunit',      type=float, default=1., help='prescaling of the x-axis')
 parser.add_argument('--yunit',      type=float, default=1., help='prescaling of the y-axis')
-parser.add_argument('--paramlabel', type=str,   default='', help='line label (use standard "printf" format for the parameter, and/or LaTeX for typesetting)')
+parser.add_argument('--paramlabel', type=str,   default='', help='line label (use standard "printf percent substitutes" to format the parameter, use LaTeX for typesetting)')
 parser.add_argument('--xcol',       type=str,   default='0', help='number or exact name of the x-axis column') ## TODO or -- if it is to be generated
 parser.add_argument('--ycol',       type=str,   default='1', help='number or exact name of the y-axis column')
 parser.add_argument('--xlabel',     type=str,   default='', help='label of the x-axis (use LaTeX)')
@@ -50,7 +50,7 @@ def get_param(filename):             ## Load header to the 'parameters' dictiona
 #}}}
 
 ## Start figure + subplot 
-fig = plt.figure(figsize=(10,10))
+fig = plt.figure(figsize=(8,4))
 fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.05, hspace=.05) ## (for interactive mode)
 
 
