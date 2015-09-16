@@ -12,11 +12,18 @@ parser = argparse.ArgumentParser(description='Plot a selected column from each o
 parser.add_argument('--paramname',  type=str,               help='parameter by which the lines are sorted')
 parser.add_argument('--paramunit',  type=float, default=1., help='prescaling of the parameter (if it is a number)')
 parser.add_argument('--xunit',      type=float, default=1., help='prescaling of the x-axis')
+# todo: remove the --xunit --yunit
 parser.add_argument('--yunit',      type=float, default=1., help='prescaling of the y-axis')
 parser.add_argument('--paramlabel', type=str,   default='', help='line label (use standard "printf percent substitutes" to format the parameter, use LaTeX for typesetting)')
 parser.add_argument('--xcol',       type=str,   default='0', help='number or exact name of the x-axis column') ## TODO or -- if it is to be generated
 parser.add_argument('--ycol',       type=str,   default='1', help='number or exact name of the y-axis column')
-parser.add_argument('--xlabel',     type=str,   default='', help='label of the x-axis (use LaTeX)')
+parser.add_argument('--xeval',      type=str,   default='x', help='any python expression to preprocess the `x`-values, e.g. `1e6*c/x` to convert Hertz to micrometers') 
+parser.add_argument('--yeval',      type=str,   default='y', help='any python expression to preprocess the `y`-values, e.g. `y/x` to normalize against newly computed x') 
+parser.add_argument('--xlim1',       type=str,   default='', help='start for the x-axis range')
+parser.add_argument('--xlim2',       type=str,   default='', help='end for the x-axis range')
+parser.add_argument('--ylim1',       type=str,   default='', help='start for the y-axis range')
+parser.add_argument('--ylim2',       type=str,   default='', help='end for the y-axis range')
+parser.add_argument('--xlabel',     type=str,   default='', help='label of the x-axis (can use LaTeX)')
 parser.add_argument('--ylabel',     type=str,   default='', help='label of the y-axis (use LaTeX)')
 parser.add_argument('--output',     type=str,   default='output.png', help='output file (e.g. output.png or output.pdf)')
 parser.add_argument('--colormap',   type=str,   default='hsv', help='matplotlib colormap, available are: hsv (default), jet, gist_earth, greys, dark2, brg...')
@@ -90,12 +97,20 @@ for color, param, filename in datasets:
     xcol, xcolname = get_col_index(args.xcol, filename)
     ycol, ycolname = get_col_index(args.ycol, filename)
     (x, y) = np.loadtxt(filename, usecols=[xcol, ycol], unpack=True)
+    
+    x = eval(args.xeval)
+    y = eval(args.yeval)
+
+    # if the legend format is not supplied by user, generate it from the parameter name 
     if type(param) in (float, int):
         label = (args.paramlabel % (param/args.paramunit)) if args.paramlabel else ("%s = %.3g" % (args.paramname, (param/args.paramunit)))
     else:
         label = (args.paramlabel % (param)) if args.paramlabel else ("%s = %s" % (args.paramname, param))
-        #label = 'jarda'
     plt.plot(x/args.xunit, y/args.yunit, color=color, label=label)
+    if args.xlim1 != "": plt.xlim(left=float(args.xlim1))
+    if args.xlim2 != "": plt.xlim(right=float(args.xlim2))
+    if args.ylim1 != "": plt.ylim(left=float(args.ylim1))
+    if args.ylim2 != "": plt.ylim(right=float(args.ylim2))
 plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
 plt.ylabel(ycolname if args.ylabel == '' else args.ylabel)
 plt.grid()
