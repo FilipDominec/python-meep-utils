@@ -11,7 +11,7 @@ from scipy.constants import c, hbar, pi
 parser = argparse.ArgumentParser(description='Plot a selected column from each of multiple files into a single comparison plot. ')
 parser.add_argument('--paramname',  type=str,               help='parameter by which the lines are sorted')
 parser.add_argument('--paramunit',  type=float, default=1., help='prescaling of the parameter (if it is a number)')
-parser.add_argument('--xunit',      type=float, default=1., help='prescaling of the x-axis')
+parser.add_argument('--title',      type=str, default='', help='plot title')
 # todo: remove the --xunit --yunit
 parser.add_argument('--yunit',      type=float, default=1., help='prescaling of the y-axis')
 parser.add_argument('--paramlabel', type=str,   default='', help='line label (use standard "printf percent substitutes" to format the parameter, use LaTeX for typesetting)')
@@ -60,8 +60,8 @@ def get_param(filename):             ## Load header to the 'parameters' dictiona
 fig = plt.figure(figsize=(8,4))
 fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.05, hspace=.05) ## (for interactive mode)
 
-
 def loadtxt_columns(filename): #{{{
+    """ Retrieves the names of columns from a CSV file header """
     columns     = []
     with open(filename) as datafile:
         for line in datafile:
@@ -83,8 +83,6 @@ def get_col_index(col, fn):#{{{
 
 ## Sort arguments by a _numerical_ value in their parameter, keep the color order
 filenames = args.filenames
-
-
 params  = [get_param(n)[args.paramname] for n in filenames]
 datasets = zip(params, filenames)                               ## sort the files by the parameter
 datasets.sort()
@@ -93,11 +91,12 @@ datasets = zip(colors, *zip(*datasets))
 
 ax = plt.subplot(111, axisbg='w')
 
+## Cycle through all files
 for color, param, filename in datasets:
-    xcol, xcolname = get_col_index(args.xcol, filename)
+    # identify the x,y columns by its number or by its name, load them and optionally process them with an expression
+    xcol, xcolname = get_col_index(args.xcol, filename) 
     ycol, ycolname = get_col_index(args.ycol, filename)
     (x, y) = np.loadtxt(filename, usecols=[xcol, ycol], unpack=True)
-    
     x = eval(args.xeval)
     y = eval(args.yeval)
 
@@ -106,18 +105,17 @@ for color, param, filename in datasets:
         label = (args.paramlabel % (param/args.paramunit)) if args.paramlabel else ("%s = %.3g" % (args.paramname, (param/args.paramunit)))
     else:
         label = (args.paramlabel % (param)) if args.paramlabel else ("%s = %s" % (args.paramname, param))
-    plt.plot(x/args.xunit, y/args.yunit, color=color, label=label)
-    if args.xlim1 != "": plt.xlim(left=float(args.xlim1))
-    if args.xlim2 != "": plt.xlim(right=float(args.xlim2))
-    if args.ylim1 != "": plt.ylim(left=float(args.ylim1))
-    if args.ylim2 != "": plt.ylim(right=float(args.ylim2))
+    plt.plot(x, y, color=color, label=label)
+
+if args.xlim1 != "": plt.xlim(left=float(args.xlim1))
+if args.xlim2 != "": plt.xlim(right=float(args.xlim2))
+if args.ylim1 != "": plt.ylim(left=float(args.ylim1))
+if args.ylim2 != "": plt.ylim(right=float(args.ylim2))
+if args.title: plt.title(args.title)
 plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
 plt.ylabel(ycolname if args.ylabel == '' else args.ylabel)
 plt.grid()
 plt.legend(prop={'size':12}, loc='upper left').draw_frame(False)
-
-## TODO contours here
-
 
 ## ==== Outputting ====
 plt.savefig(args.output, bbox_inches='tight')
