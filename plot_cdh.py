@@ -10,7 +10,7 @@ from scipy.constants import c, hbar, pi
 ## Use LaTeX
 #matplotlib.rc('text', usetex=True)
 #matplotlib.rc('font', size=13)
-#matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, ')
+#matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, ')
 
 # -- settings --
 maxfreq = 4e12

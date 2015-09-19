@@ -48,7 +48,7 @@ add_delta_function =  0
 ## Prepare plot, optionally use LaTeX
 #matplotlib.rc('text', usetex=True)
 #matplotlib.rc('font', size=12)
-#matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, \usepackage{lmodern},')
+#matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, \usepackage{lmodern},')
 #matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
 plt.figure(figsize=(20,10))
 

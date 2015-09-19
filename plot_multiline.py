@@ -39,7 +39,7 @@ cmap = getattr(matplotlib.cm, args.colormap)
 ## Use LaTeX
 matplotlib.rc('text', usetex=True)
 matplotlib.rc('font', size=12)
-matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{yfonts}, \usepackage{txfonts}, \usepackage{upgreek}') #, \usepackage{palatino} \usepackage{lmodern}, 
+matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, \usepackage{upgreek}') #, \usepackage{palatino} \usepackage{lmodern}, 
 matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
 
 def get_param(filename):             ## Load header to the 'parameters' dictionary#{{{
