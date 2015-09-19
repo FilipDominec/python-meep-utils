@@ -1,10 +1,10 @@
 ![python-meep-utils logo](./meep_header.png)
 ## Introduction
-MEEP is a library of functions for (FDTD) numerical simulations of how electromagnetic waves propagate and interact with various structures. The simulation can be programmed in C/C++, Scheme, or Python; I chose the latter as it is a user-friendly language that enables seamless integration with the powerful Python modules such as *numpy*, *scipy* and *matplotlib*.
+MEEP is a library of functions for numerical simulations of how electromagnetic waves propagate and interact with various structures; it is a finite-difference time-domain solver of the Maxwell equations. The simulation is defined by programming, with bindings to C/C++, Scheme, or Python; I chose to use `python-meep` as Python is a user-friendly language that makes simple simulations (relatively) simple, and really complex ones possible. One can also seamlessly intergrate them with powerful modules such as *numpy*, *scipy* and *matplotlib*.
 
 After I set up several different realistic simulations with *python-meep*, I noticed that much of the Python code for initialisation, material definition, processing and data output can be shared. I therefore moved such code in the *meep_utils.py* and *meep_materials.py* modules. 
 
-To demonstrate how to use these modules, I accompanied them with several example simulations of various typical problems.  I believe the presented scripts can be a great starting point for anybody doing their research on photonic crystals, metamaterials, integrated photonics and nanophotonics, cavity resonators, waveguides, etc. 
+To demonstrate how to use them to simplify the simulation setup, I accompany these modules with several ready-to-use simulations of various typical problems.  I believe the presented scripts can be a great starting point for anybody doing their research on photonic crystals, metamaterials, integrated photonics and nanophotonics, cavity resonators, waveguides, etc. 
 
 You are encouraged to clone this repository and to modify the examples to match your needs. I would be very happy if this project helps you with your thesis, homework or a publication. Do not hesitate to contact me if you need some advice, new functionality or if you find a bug.
 
@@ -32,14 +32,15 @@ The procedure is tested on Debian-based Linux distributions. You may have to man
 
 
 #### Examples using the simulation scripts
-Usually, everything you need to run an example is to change to its directory, and launch `./batch.sh`. In a multiprocessing environment, it is recommended to launch it like `mpirun -np 4 ./batch.sh`. 
+Usually, everything you need to run an example is to change to its directory, and launch `./batch.sh`. In a multiprocessing environment, it is recommended to launch it like `export NP=4; ./batch.sh`. 
 
- * [x]  `example_metamaterial_s_parameters/`, `scatter.py`, `effparam.py` - retrieves the effective parameters of a metamaterial using the s-parameters method; shows how the negative index of refraction is achieved by adding wires to a dielectric sphere. Finally plots how the parameters retain/change when more metamaterial cells are stacked.
+ * [x]  `example_metamaterial_s_parameters/`, `scatter.py`, `effparam.py` - retrieves the effective behaviour of a metamaterial using the Nichols-Ross-Weir (s-parameters) method. Some of these examples are scans through a parameter of the structure.
  * [x]  `example_frequency_domain_solver/` - runs `scatter.py` multiple times in frequency-domain, and then compares the results to the classical Fourier-transformed time-domain simulation
  * [x]  `example_current_driven_homogenisation/`, `cdh.py`, `plot_cdh.py` - computes and plots data for current-driven homogenization; compares them with those obtained from s-parameters
- * [x]  `example_ringdown_cylindrical_cavity/`, `cylindrical_cavity.py`, `ringdown_analysis.py`,  - in the first part, defines a metallic cylindrical cavity, excites the field by a short pulsed source, and analyzes the ringdown to search for all modes. A comparison of Fourier transform, filter-diagonalisation method and the textbook analytic solution is plotted. In the second part, the ringdown analysis is used to search for terahertz resonances in experimental transmission water vapour.
+ * [x]  `example_ringdown_cylindrical_cavity/`, `cylindrical_cavity.py`, `ringdown_analysis.py`,  - in the first part, defines a metallic cylindrical cavity, excites the field by a short pulsed source, and analyzes the ringdown to search for all modes. A comparison of Fourier transform, filter-diagonalisation method and the textbook analytic solution is plotted. 
+   * [ ] TODO In the second part, the ringdown analysis is used to search for terahertz resonances in experimental transmission water vapour.
  * [x]  `example_surface_plasmons/`, `plasmons.py` - an aperture in a thin metal sheet couples incident light to surface plasmons. If the film is surrounded by two media with similar index of refraction, circular interference pattern can be observed between the symmetric and antisymmetric plasmon modes.  A different (hyperbolic) interference pattern can be obtained when the plasmons are coupled by two holes.
-   * [ ]	TODO add support for metal/diel substrate, 
+   * [ ] TODO add support for metal/diel substrate, 
    * [ ] and try to show the sym-asym interference
  * [x]  `example_aperture_near-field_microscope/` 
    * [x] detection of field behind the aperture, normalized against free reference
