@@ -1,8 +1,7 @@
 ##Examples of metamaterial scattering parameters computation
 ####Basic structures
 __Slab__ made of dielectric
- * [ ] spectrum of pure Bragg PBGs
- * [ ] modes of 1-D PhC (PB, PBG, PB, PBG ...), (?? show also NZEpsMu?)
+ * [ ] spectrum of pure Bragg PBGs (cf. with MPB and modes of 1-D PhC)
  * [ ] fill-fraction scan (point out zero-width gaps = Fabry-Pérot resonances)
 
 __Wires__ [metallic wires oriented along electric field]
@@ -31,15 +30,15 @@ __Wire pairs__
 
 __Dielectric spheres__ 
  * [ ] spacing-scan
+ * [ ] permittivity scan (e.g. ferroelectric tunability)
+ * [x] loss-scan
  * [ ] ellipticity scan along __x__
  * [ ] ellipticity scan along __y__
  * [ ] ellipticity scan along __z__
- * [x] loss-scan
- * [ ] permittivity scan (refer to tunability)
 
 ####Negative-index structures
 __Dielectric spheres with wires__ 
- * [ ] principles (s, w, s+w)
+ * [x] principles (s, w, s+w)
  * [ ] wire radius scan
 
 __Rod array__ parallel to E 
@@ -51,7 +50,7 @@ __Rod array__ parallel to E
 	 (analogy with diel slab?)
 
 __Fishnet__
- * [ ] inter-layer z-distance scan
+ * [ ] inter-layer __z__-distance scan
  * [ ] aperture size scan
  * [ ] aperture __x__-axis scan
  * [ ] aperture __y__-axis scan
