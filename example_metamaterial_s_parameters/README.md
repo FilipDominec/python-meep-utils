@@ -1,5 +1,5 @@
-== Examples of metamaterial scattering parameters computation ==
-==== Basic structures ====
+==Examples of metamaterial scattering parameters computation==
+====Basic structures====
 __Slab__ made of dielectric
  * [ ] spectrum of pure Bragg PBGs
  * [ ] modes of 1-D PhC (PB, PBG, PB, PBG ...), (?? show also NZEpsMu?)
@@ -15,7 +15,7 @@ __Cut wires__  parallel to __E__
  * [ ] spectrum
  * [ ] wire 
 
-==== Negative-permeability resonant structures ====
+====Negative-permeability resonant structures====
 __Rod array__ parallel to __H__
  * [ ] spectrum
  * [ ] modes [1st mode, 2nd mode, 3rd mode]
@@ -37,7 +37,7 @@ __Dielectric spheres__
  * [x] loss-scan
  * [ ] permittivity scan (refer to tunability)
 
-==== Negative-index structures ====
+====Negative-index structures====
 __Dielectric spheres with wires__ 
  * [ ] principles (s, w, s+w)
  * [ ] wire radius scan
@@ -57,7 +57,7 @@ __Fishnet__
  * [ ] aperture __y__-axis scan
  * [ ] 
 
-==== Extraordinary transmission ====
+====Studies of extraordinary transmission====
 __Metallic slab__ parallel to the magnetic field
  * [ ] slab width (i.e. fill-fraction) scan
  * [ ] slab thickness scan
