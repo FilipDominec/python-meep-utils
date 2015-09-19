@@ -1,3 +1,4 @@
+![python-meep-utils logo](./meep_header.png)
 ## Introduction
 MEEP is a library of functions for (FDTD) numerical simulations of how electromagnetic waves propagate and interact with various structures. The simulation can be programmed in C/C++, Scheme, or Python; I chose the latter as it is a user-friendly language that enables seamless integration with the powerful Python modules such as *numpy*, *scipy* and *matplotlib*.
 
@@ -10,8 +11,17 @@ You are encouraged to clone this repository and to modify the examples to match 
 Filip Dominec, filip.dominec@gmail.com,
 2012 - 2015
 
-## File overview
+## Project overview
+#### Installation procedure 
+The scripts require working python-meep environment, recommended compilation procedure is supplied in the `python-meep-install.py` script which is hosted here: https://github.com/FilipDominec/python-meep-install
+
+Some scripts use the matplotlib's binding for LaTeX for nicer plots. You may either install the dependencies using 
+`sudo apt-get install -y texlive-latex-extra dvipng`, or modify the scripts to avoid using late.
+
+The procedure is tested on Debian-based Linux distributions. You may have to manually modify it if your system differs. Please read the script for details.
+
 #### General modules and other files
+
  * `meep_utils.py`       - the main module with routines useful for python-meep simulations
  * `meep_materials.py`   - module containing realistic definition of materials used 
  * `README.md`		 - this file
@@ -19,6 +29,7 @@ Filip Dominec, filip.dominec@gmail.com,
  * `metamaterial_models.py` - different metamaterial models (that can be shared by other scripts)
  * `plot_scan_as_contours.py` - if multiple simulations are run as a parametric scan, this allows to present all results in a single contour plot
  * `harminv_wrapper.py` - allows to simply use filter diagonalisation method from Python 
+
 
 #### Examples using the simulation scripts
 Usually, everything you need to run an example is to change to its directory, and launch `./batch.sh`. In a multiprocessing environment, it is recommended to launch it like `mpirun -np 4 ./batch.sh`. 
@@ -44,24 +55,25 @@ Usually, everything you need to run an example is to change to its directory, an
  * [ ]  `example_SPDC/`, `spdc.py` - TODO
    * [ ]	TODO
 
+
 ## Related resources
  * Official website of MEEP: http://ab-initio.mit.edu/wiki/index.php/Meep     
-Information on the FDTD algorithm and simulations in general, documentation of the MEEP functions. Examples 
+Contains information on the FDTD algorithm and simulations in general, documentation of the MEEP functions. Examples 
 are mostly in Scheme. 
    * Since 2014, the MEEP source code is hosted at Github: https://github.com/stevengj/meep
-   * Your questions may (or may not) be answered at the mailing list: meep-discuss@ab-initio.mit.edu,      
+   * Your questions may (or may not) be answered in the MEEP mailing list: meep-discuss@ab-initio.mit.edu,      
 http://www.mail-archive.com/meep-discuss@ab-initio.mit.edu/
 
  * Website of the python-meep interface: https://launchpad.net/python-meep     
-Provides examples of how the python-meep functions can be used in scripts.
+Provides some examples of how the python-meep functions can be used in scripts.
 
- * I also write own website on simulations: http://f.dominec.eu/meep/index.html     
-My experience with installation requirements and procedure, simulation performance, realistic definition of 
-materials, data postprocessing etc. is elaborated there.
+ * I also write my own website on simulations: http://f.dominec.eu/meep/index.html     
+Contains my experience with installation requirements and procedure, simulation performance, realistic definition of 
+materials, data postprocessing etc.
 
  * License: GPLv2, http://www.gnu.org/licenses/gpl-2.0.html
 
-## Troubleshooting
+## Troubleshooting - what may happen and what it means
 #### Outright errors
  * simulation fails, writing out `terminate called after throwing an instance of 'Swig::DirectorMethodException'` and an ugly call trace - _there is some run-time error in the structure definition. Call `meep_utils.testmaterials()` at the end of the model's initialization may help to get a reasonable Python report to find the error._
  * the same as above, but `meep_utils.testmaterials()` did not help - _some other error happens. Make sure not to use an `eps` parameter. _
@@ -84,7 +96,7 @@ materials, data postprocessing etc. is elaborated there.
 - [x] scatter.py, cdh and others should output sim_param in the header (moreover CDH has weird header!!)
 - [x] move Kx, Ky out of the model parameters
 - [x] put the models into separate module
-- [ ] sync harminv from its module with meep_utils, and remove from the latter
+- [x] sync harminv from its module with meep_utils, and remove from the latter
 - [ ] effparam.py does not cope with "plot_freq_max=None" anymore? -- fix
 - [ ] why I do not see interference of sym/asym plasmons in the example? wrong metal model?
 - [ ] plot_contour to read any column from direct sim output / effparam
