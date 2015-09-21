@@ -188,12 +188,12 @@ class AbstractMeepModel(meep.Callback):
         ## prepare the parameter to be added into name (if not conversible to float, add it as a string)
         try: 
             if nondefault: self.simulation_name += ("_%s=%.3e") % (param, float(val))
-            self.parameterstring += "#param %s,%.4e\n" % (param, float(val))
-            #meep.master_printf("  <float> %s%s = %.3e %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
+            self.parameterstring += "#param %s,%.3e\n" % (param, float(val))
+            meep.master_printf("  <float> %s%s = %.3e %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
         except ValueError: 
             if nondefault: self.simulation_name += ("_%s=%s") % (param, val)
             self.parameterstring += "#param %s,%s\n" % (param, val)
-            #meep.master_printf("  <str>   %s%s = %s %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
+            meep.master_printf("  <str>   %s%s = %s %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
         #}}}
     def register_locals(self, params):#{{{
         """ Scans through the parameters and calls register_local() for each """
@@ -204,13 +204,16 @@ class AbstractMeepModel(meep.Callback):
         self.parameterstring = ""
         ## First look up for the "VIP" parameters that should come first in the name:
         preferred_params = ['resolution', 'comment', 'frequency', 'simtime']
-        for param in preferred_params:
-            if params.get(param): 
-                val = params.get(param)
-                self.register_local(param, val)
+        #for param in preferred_params:
+            #if params.get(param): 
+                #val = params.get(param)
+                #self.register_local(param, val)
         ## Then add all remaining parameters of the model
         for (param, val) in params.iteritems():
-            if param != 'self' and param not in preferred_params:
+            if param in preferred_params:
+                self.register_local(param, val)
+        for (param, val) in params.iteritems():
+            if param not in preferred_params and param != 'self':
                 self.register_local(param, val)
         #}}}
     def f_c(self):#{{{
