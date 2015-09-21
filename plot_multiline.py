@@ -19,6 +19,7 @@ parser.add_argument('--xcol',       type=str,   default='0', help='number or exa
 parser.add_argument('--ycol',       type=str,   default='1', help='number or exact name of the y-axis column')
 parser.add_argument('--xeval',      type=str,   default='x', help='any python expression to preprocess the `x`-values, e.g. `1e6*c/x` to convert Hertz to micrometers') 
 parser.add_argument('--yeval',      type=str,   default='y', help='any python expression to preprocess the `y`-values, e.g. `y/x` to normalize against newly computed x') 
+parser.add_argument('--yeval',      type=str,   default='param', help='any python expression to preprocess the `param`-values, e.g. `param/1e-9` to convert it to nanometers') 
 parser.add_argument('--xlim1',       type=str,   default='', help='start for the x-axis range')
 parser.add_argument('--xlim2',       type=str,   default='', help='end for the x-axis range')
 parser.add_argument('--ylim1',       type=str,   default='', help='start for the y-axis range')
@@ -104,6 +105,7 @@ for color, param, filename in datasets:
 
     # if the legend format is not supplied by user, generate it from the parameter name 
     if type(param) in (float, int):
+        param = eval(args.parameval)
         label = (args.paramlabel % (param/args.paramunit)) if args.paramlabel else ("%s = %.3g" % (args.paramname, (param/args.paramunit)))
     else:
         label = (args.paramlabel % (param)) if args.paramlabel else ("%s = %s" % (args.paramname, param))
