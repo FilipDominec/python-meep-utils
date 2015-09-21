@@ -134,13 +134,13 @@ def last_simulation_name(argindex=1): #{{{
     Priority: 1) parameter, 2) last_simulation_name.dat, 3) working directory"""
     cwd = os.getcwd()
     if len(sys.argv)>argindex and sys.argv[argindex] != "-"  and __name__ == "__main__": 
-        print "Parameter passed:", sys.argv[argindex]
+        #print "Parameter passed:", sys.argv[argindex]
         last_simulation_name = sys.argv[argindex]
     elif os.path.exists(os.path.join(cwd, 'last_simulation_name.dat')):
-        print "Loading from", os.path.join(cwd, 'last_simulation_name.dat')
+        #print "Loading from", os.path.join(cwd, 'last_simulation_name.dat')
         last_simulation_name = os.path.join(cwd, open(os.path.join(cwd, 'last_simulation_name.dat'),'r').read().strip())
     else:
-        print "Error: No input file provided and 'last_simulation_name.dat' not found!"
+        meep.master_printf("Error: No input file provided and 'last_simulation_name.dat' not found!")
         last_simulation_name = cwd
     if (last_simulation_name[-4:] == ".dat"): last_simulation_name = last_simulation_name[:-4] # strip the .dat extension
     return  last_simulation_name
@@ -804,8 +804,6 @@ class Slice(): #{{{
         else:
             self.volume = meep.volume(meep.vec(at_x[0], at_y[0]), meep.vec(at_x[1], at_y[1])) ## 2D
         
-        #print at_x, at_y, at_z, at_t
-        #print "Export dimension:", count_ranges((at_x, at_y, at_z, at_t))
         self.name = "%s_at%s" % (name if name else "Slice", 
                 generate_name((self.at_x, self.at_y, self.at_z, self.at_t), 'xyzt'))
 
@@ -916,7 +914,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         plt.yscale("log")
         plt.savefig("amplitudes_time_domain.png", bbox_inches='tight')
     except:
-        print "Timedomain plot failed"
+        meep.master_printf("Timedomain plot failed")
 
 
     ## Obtain the electric and magnetic fields spectra
@@ -959,7 +957,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         plt.xlabel('Frequency'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
         plt.savefig("amplitudes_freq_domain.png", bbox_inches='tight')
     except:
-        print "Raw freq-domain plot failed", sys.exc_info()[0]
+        meep.master_printf("Raw freq-domain plot failed", sys.exc_info()[0]))
 
 
     ## Prepare the angles at which the wave propagates (dependent on frequency, Kx and Ky)
