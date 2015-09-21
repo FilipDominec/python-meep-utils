@@ -209,12 +209,12 @@ class AbstractMeepModel(meep.Callback):
                 #val = params.get(param)
                 #self.register_local(param, val)
         ## Then add all remaining parameters of the model
-        for (param, val) in params.iteritems():
-            if param in preferred_params:
-                self.register_local(param, val)
-        for (param, val) in params.iteritems():
-            if param not in preferred_params and param != 'self':
-                self.register_local(param, val)
+        for (param_name, val) in params.iteritems():
+            if param_name in preferred_params:
+                self.register_local(param_name, val)
+        for (param_name, val) in params.iteritems():
+            if param_name not in preferred_params and param_name != 'self':
+                self.register_local(param_name, val)
         #}}}
     def f_c(self):#{{{
         """ critical_frequency for FDTD stability """
