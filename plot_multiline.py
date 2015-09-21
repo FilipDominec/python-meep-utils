@@ -27,6 +27,7 @@ parser.add_argument('--xlabel',     type=str,   default='', help='label of the x
 parser.add_argument('--ylabel',     type=str,   default='', help='label of the y-axis (use LaTeX)')
 parser.add_argument('--output',     type=str,   default='output.png', help='output file (e.g. output.png or output.pdf)')
 parser.add_argument('--colormap',   type=str,   default='hsv', help='matplotlib colormap, available are: hsv (default), jet, gist_earth, greys, dark2, brg...')
+parser.add_argument('--usetex',    type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
 parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
 args = parser.parse_args()
 
@@ -37,7 +38,8 @@ cmap = getattr(matplotlib.cm, args.colormap)
 
 
 ## Use LaTeX
-# matplotlib.rc('text', usetex=True)
+if args.usetex == 'yes':
+    matplotlib.rc('text', usetex=True)
 matplotlib.rc('font', size=12)
 matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, \usepackage{upgreek}') #, \usepackage{palatino} \usepackage{lmodern}, 
 matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
