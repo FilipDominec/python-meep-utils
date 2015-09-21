@@ -864,8 +864,7 @@ class Slice(): #{{{
                     if comp_name not in ('eps', 'cond', 'mu'): comp_name += self.real_or_imag
                     export_args += "'%s.h5:%s' " % (self.name, comp_name)
                 flatten_time =  "'-t 0'" if not self.isrange(self.at_t) else "" ## avoid flat 4th dimension (otherwise vtk fails)
-                run_bash ("cd '%s'; h5tovtk %s %s -o '%s.vtk'" % 
-                        (self.outputdir, export_args, flatten_time, self.name))
+                run_bash ("cd '%s'; h5tovtk %s %s -o '%s.vtk'" % (self.outputdir, export_args, flatten_time, self.name))
 
             if not self.outputhdf: 
                 run_bash("cd '%s'; rm '%s.h5'" % (self.outputdir, self.name))

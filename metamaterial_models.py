@@ -28,6 +28,7 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
         self.register_locals(locals())          ## Remember the parameters
+        print self.comment
 
         ## Define materials (with manual Lorentzian clipping) 
         self.materials = []  
