@@ -134,7 +134,6 @@ def last_simulation_name(argindex=1): #{{{
     Priority: 1) parameter, 2) last_simulation_name.dat, 3) working directory"""
     cwd = os.getcwd()
     if len(sys.argv)>argindex and sys.argv[argindex] != "-"  and __name__ == "__main__": 
-        #print "Parameter passed:", sys.argv[argindex]
         last_simulation_name = sys.argv[argindex]
     elif os.path.exists(os.path.join(cwd, 'last_simulation_name.dat')):
         #print "Loading from", os.path.join(cwd, 'last_simulation_name.dat')
@@ -1008,7 +1007,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         plt.yscale("log")
         plt.savefig("amplitudes_spectra.png", bbox_inches='tight')
     except:
-        print "Wave amplitude freq-domain plot failed", sys.exc_info()[0]
+        meep.master_printf("Wave amplitude freq-domain plot failed", sys.exc_info()[0]))
 
     ## Get the s-parameters 
     s11 = out1 / in1
