@@ -196,6 +196,47 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
                 return self.return_value             # (do not change this line)
         return 0
 #}}}
+class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=50e-12, resolution=20e-9, cellnumber=1, padding=50e-6, 
+            tdist=50e-6, ldist=100e-6, rcore1=6e-6, rclad1=0, rcore2=6e-6, tshift=0):
+        """ I have a red laser (spot size : 2mm of diameter) that goes through 2 grids placed a 50cm (see pictures below) but 100um apart from each other. A photomultiplier is placed behind the grids at 1m. During the experiment the second grid moves transversally and alternatively block the light and let the light reaching the photomultiplier. The grids induce a diffraction pattern, of which we only collect the central bright spot with the photomultiplier (a pinhole is placed in front of it with a 2mm diameter hole). What I would like to do is to simulate the profile of intensity of the light collected at the photomultiplier while the second grid moves. That's a first thing. Secondly, I would like to simulate how the profile changes while some material is deposit on the bars of the first grids and obstruct slowly the light to go through. So what matters to me is to recorded "how much light" of the initial light reach my PM while the second grid moves for various thicknesses of material deposited on the first one. """
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
-models = {'Slab':Slab, 'SphereArray':SphereArray, 'RodArray':RodArray, 'SRRArray':SRRArray}
+        ## Constant parameters for the simulation
+        self.simulation_name = "TMathieu_Grating"    
+        self.src_freq, self.src_width = 500e12, 1000e12    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (100e9, 2000e9)    # Which frequencies will be saved to disk
+        self.pml_thickness = 2e-6
+
+        self.size_x = self.resolution*1.8 
+        self.size_y = tdist
+        self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(ldist/2)-padding, (ldist/2)+padding)
+
+        self.register_locals(locals())          ## Remember the parameters
+
+        ## Define materials (with manual Lorentzian clipping) 
+        self.materials = []  
+
+        au = meep_materials.material_Au(where=self.where_wire)
+        self.fix_material_stability(au, verbose=0)
+        self.materials.append(au)
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        self.test_materials()
+
+    def where_wire(self, r):
+        if  in_xcyl(r, cy=-0.25*self.size_y, cz=-ldist/2, rad=self.rcore1):
+            return self.return_value             # (do not change this line)
+
+        if  in_xcyl(r, cy=-0.25*self.size_y+self.tshift, cz=ldist/2, rad=self.rcore2) or \
+                in_xcyl(r, cy=-1.25*self.size_y+self.tshift, cz=ldist/2, rad=self.rcore2):
+            return self.return_value             # (do not change this line)
+
+        return 0
+#}}}
+
+models = {'Slab':Slab, 'SphereArray':SphereArray, 'RodArray':RodArray, 'SRRArray':SRRArray, 'TMathieu_Grating':TMathieu_Grating}
 

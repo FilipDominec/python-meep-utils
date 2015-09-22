@@ -956,7 +956,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         plt.xlabel('Frequency'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
         plt.savefig("amplitudes_freq_domain.png", bbox_inches='tight')
     except:
-        meep.master_printf("Raw freq-domain plot failed", sys.exc_info()[0]))
+        meep.master_printf("Raw freq-domain plot failed", sys.exc_info()[0])
 
 
     ## Prepare the angles at which the wave propagates (dependent on frequency, Kx and Ky)
