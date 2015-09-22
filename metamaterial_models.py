@@ -212,7 +212,7 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
         self.size_y = tdist
         self.size_z = ldist + 4*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(ldist/2)-padding, (ldist/2)+padding)
-        self.cell_size = ldist+2*padding
+        cell_size = ldist+2*padding
 
         self.register_locals(locals())          ## Remember the parameters
 
