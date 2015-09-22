@@ -205,13 +205,14 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
         ## Constant parameters for the simulation
         self.simulation_name = "TMathieu_Grating"    
         self.src_freq, self.src_width = 500e12, 1000e12    # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (100e9, 2000e9)    # Which frequencies will be saved to disk
+        self.interesting_frequencies = (300e12, 2000e12)    # Which frequencies will be saved to disk
         self.pml_thickness = 2e-6
 
         self.size_x = resolution*1.8 
         self.size_y = tdist
         self.size_z = ldist + 4*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(ldist/2)-padding, (ldist/2)+padding)
+        self.cell_size = ldist+2*padding
 
         self.register_locals(locals())          ## Remember the parameters
 
@@ -228,11 +229,11 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
         self.test_materials()
 
     def where_wire(self, r):
-        if  in_xcyl(r, cy=-0.25*self.size_y, cz=-self.ldist/2, rad=self.rcore1):
+        if  in_xcyl(r, cy=0, cz=-self.ldist/2, rad=self.rcore1):                        ## first grid
             return self.return_value             # (do not change this line)
 
-        if  in_xcyl(r, cy=-0.25*self.size_y+self.tshift, cz=self.ldist/2, rad=self.rcore2) or \
-                in_xcyl(r, cy=-1.25*self.size_y+self.tshift, cz=self.ldist/2, rad=self.rcore2):
+        if  in_xcyl(r, cy=self.tshift, cz=self.ldist/2, rad=self.rcore2) or \
+                in_xcyl(r, cy=self.tshift-self.size_y, cz=self.ldist/2, rad=self.rcore2):       ## second grid may be transversally shifted
             return self.return_value             # (do not change this line)
 
         return 0
