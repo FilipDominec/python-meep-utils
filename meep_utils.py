@@ -60,10 +60,6 @@ def process_param(args):#{{{
         elif name == "Kz":          sim_param['Kz']         = phys_to_float(value)
         else:           ## all other parameters will be passed to the model:
             model_param[name] = phys_to_float(value)
-            if type(model_param[name]) == str:
-                meep.master_printf("  <str>   %s%s = %s\n" % (name, " "*max(10-len(name), 0), model_param[name]))
-            else:
-                meep.master_printf("  <float> %s%s = %.3e\n" % (name, " "*max(10-len(name), 0), model_param[name]))
     return sim_param, model_param
 #}}}
 def phys_to_float(s):#{{{
@@ -212,7 +208,7 @@ class AbstractMeepModel(meep.Callback):
             if param_name in preferred_params:
                 self.register_local(param_name, val)
         for (param_name, val) in params.iteritems():
-            if param_name not in preferred_params and param_name != 'self':
+            if (param_name not in preferred_params) and param_name != 'self':
                 self.register_local(param_name, val)
         #}}}
     def f_c(self):#{{{
@@ -956,7 +952,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         plt.xlabel('Frequency'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
         plt.savefig("amplitudes_freq_domain.png", bbox_inches='tight')
     except:
-        meep.master_printf("Raw freq-domain plot failed", sys.exc_info()[0])
+        meep.master_printf("Raw freq-domain plot failed %s" % sys.exc_info()[0])
 
 
     ## Prepare the angles at which the wave propagates (dependent on frequency, Kx and Ky)
@@ -1007,7 +1003,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         plt.yscale("log")
         plt.savefig("amplitudes_spectra.png", bbox_inches='tight')
     except:
-        meep.master_printf("Wave amplitude freq-domain plot failed", sys.exc_info()[0]))
+        meep.master_printf("Wave amplitude freq-domain plot failed %s" % sys.exc_info()[0])
 
     ## Get the s-parameters 
     s11 = out1 / in1
