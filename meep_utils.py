@@ -664,6 +664,7 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
 ## === Results post-processing and export ===
 ## Saving and loading data (not dependent on MEEP functions, but better if ran by the 1st process only)
 def run_bash(cmd, anyprocess=False): #{{{
+    meep.all_wait()
     if meep.my_rank() == 0 or anyprocess:
         meep.master_printf("CMD: "  + cmd+ "\n")  # (diagnostics)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
