@@ -84,13 +84,14 @@ materials, data postprocessing etc.
 #### Invalid or weird results
  * exported figures show no fields and are black - _infinite values or not-a-numbers resulted from the simulation. This is perhaps due to simulation being unstable (see `amplitudes_time_domain.png`, if available, whether the fields are exponentially decaying or growing. _
  * the simulation seems to be stable, but no valid data are plotted - _did you use the same polarisation (field-component) of the source and detectors, etc.? Did you use correct order of magnitude for the source duration and simulation?_
- * the retrieved transmission or reflection is over unity - _this may be due to spectral leakage, try prolonging the simulation time or using a lossy medium._
+ * the retrieved transmission or reflection is over unity - _this may be due to spectral leakage from a high-quality resonances, try prolonging the simulation time or using a lossy medium._
+ * frequency-domain and time-domain results are different - either the frequency-domain solver did not converge correctly, or the time-domain solver had to modify the material definition to make the simulation stable. In either case, read the simulation printouts what happened.
 
 #### Confusing printouts
- * tracebacks are double printed, and the lines are randomly mixed - Tracebacks un the simulation in single process.
+ * tracebacks are double printed, and the lines are randomly mixed - run the simulation in single process.
  * the frequency-domain solver does not converge - _this happens, reason not known. Try changing the resolution or using other materials. Try running few time-domain steps before running frequency-domain solver. _
  * simulation gives correct results, but at the end complaints that `mpirun has exited ... without calling "finalize"` - _this is harmless, I did not find any way to prevent the message in Python-meep_
- * simulation writes about 'epsilon averaging' although I did not explicitly enable it - _this is OK, it is some bug, no averaging is probably happening anyway_
+ * simulation writes about 'epsilon averaging' although I did not explicitly enable it - _this is a known bug of python-meep; no matter what it writes, the averaging is probably off anyway_
 
 
 ## TODO

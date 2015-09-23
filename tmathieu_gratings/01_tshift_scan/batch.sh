@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
 # par='model=TMathieu_Grating resolution=20n cellsize=100n'
-par='model=TMathieu_Grating resolution=50n padding=10u ldist=15u tdist=10u rcore1=2u rcore2=2u'
+par='model=TMathieu_Grating resolution=100n padding=10u ldist=15u tdist=10u rcore1=2u rcore2=2u'
 
 for x in `seq 0 1 5`; do
 	mpirun -np $NP   python ../../scatter.py $par simtime=1000f tshift=${x}u
