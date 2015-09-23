@@ -664,7 +664,6 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
 ## === Results post-processing and export ===
 ## Saving and loading data (not dependent on MEEP functions, but better if ran by the 1st process only)
 def run_bash(cmd, anyprocess=False): #{{{
-    meep.all_wait()
     if meep.my_rank() == 0 or anyprocess:
         meep.master_printf("CMD: "  + cmd+ "\n")  # (diagnostics)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -840,6 +839,7 @@ class Slice(): #{{{
             for component in self.components:
                 self.field.output_hdf5(component, self.volume, self.openfile, 1) 
         del(self.openfile)          ## all processes must release the HDF5 file
+        meep.all_wait()
         if meep.my_rank() == 0:        ## but postprocessing is to be done by a single process
             if self.outputgif or self.outputpng:
                 meep.master_printf("Generating %d images\n" % self.images_number)
