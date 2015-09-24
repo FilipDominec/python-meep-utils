@@ -204,13 +204,13 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
 
         ## Constant parameters for the simulation
         self.simulation_name = "TMathieu_Grating"    
-        self.src_freq, self.src_width = 500e12, 1500e12    # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (300e12, 1500e12)    # Which frequencies will be saved to disk
-        self.pml_thickness = 2e-6
+        self.src_freq, self.src_width = 500e12, 2000e12    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (380e12, 730e12)    # Which frequencies will be saved to disk
+        self.pml_thickness = 500e-9
 
         self.size_x = resolution*1.8 
         self.size_y = tdist
-        self.size_z = ldist + 4*padding + 2*self.pml_thickness
+        self.size_z = ldist + 2*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(ldist/2)-padding, (ldist/2)+padding)
         cellsize = ldist+2*padding
 
