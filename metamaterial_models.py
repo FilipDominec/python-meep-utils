@@ -263,6 +263,7 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         self.size_z = 2*padding + 2*self.pml_thickness + 6*resolution
         self.monitor_z1, self.monitor_z2 = (-padding, padding)
         self.register_locals(locals())          ## Remember the parameters
+        self.mon2eps = epsilon                  ## store what dielectric is the second monitor embedded in
 
         ## Define materials
         self.materials = []  
