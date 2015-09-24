@@ -76,7 +76,7 @@ if meep.my_rank() == 0:
             intf=getattr(model, 'interesting_frequencies', [0, model.src_freq+model.src_width]),  ## clip the frequency range for plotting
             pad_zeros=1.0,                                                                        ## speed-up FFT, and stabilize eff-param retrieval
             Kx=sim_param.get('Ky', 0), Ky=sim_param.get('Ky', 0),                                 ## enable oblique incidence (works only if monitors in vacuum)
-            eps1=getattr(model, 'epsilon1', 1)), eps2=getattr(model, 'epsilon', 1))               ## enable monitors inside dielectrics
+            eps1=getattr(model, 'mon1eps', 1)), eps2=getattr(model, 'mon2eps', 1))               ## enable monitors inside dielectrics
 
     meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",                            
             X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)),                  ## Save 5 columns: freq, amplitude/phase for reflection/transmission
