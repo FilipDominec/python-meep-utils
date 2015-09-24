@@ -166,9 +166,16 @@ class AbstractMeepModel(meep.Callback):
         """
         ## TODO #CSGspeedup rewrite to:  sum([mat.eps for mat in self.materials if mat.where(r)]) or 1 
         ## TODO rewrite the geometric functions to lambdas and test the speed!
+        #for mat in self.materials:
+            #if mat.where(r): return mat.eps         ## TODO: #realCproject will MEEP use the natural speed of light 3e8 m/s, if this is multiplied by eps0?
+            #else: return 1.                             ## TODO: and here too   (... this also needs that similar approach is used to define mu=mu0 everywhere)
+
+        sum_permittivity = 1        # start with relative permittivity vacuum 
         for mat in self.materials:
-            if mat.where(r): return mat.eps         ## TODO: #realCproject will MEEP use the natural speed of light 3e8 m/s, if this is multiplied by eps0?
-        else: return 1.                             ## TODO: and here too   (... this also needs that similar approach is used to define mu=mu0 everywhere)
+            #materialhere = mat.where(r)
+            #if materialhere > 0: 
+            sum_permittivity += (mat.eps-1)*mat.where(r)
+        return sum_permittivity      # materials can be blended, but if none present, assume vacuum
         #}}}
     def register_local(self, param, val):#{{{
         """ Adds a parameter as an attribute of the model (either number or float). 
@@ -956,17 +963,22 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         meep.master_printf("Raw freq-domain plot failed %s" % sys.exc_info()[0])
 
 
-    ## Prepare the angles at which the wave propagates (dependent on frequency, Kx and Ky)
     ## Separate the forward and backward wave in frequency domain 
     ##    (Efield+Hfield)/2 ->    forward wave amplitude, 
     ##    (Efield-Hfield)/2 ->    backward wave amplitude
+    
+    ## test: works for perp. incidence, and in any dielectric
+    Ex1f, Hy1f = Ex1f*(eps1**.25), Hy1f/(eps1**.25)
+    Ex2f, Hy2f = Ex2f*(eps2**.25), Hy2f/(eps2**.25)
     in1, out1 =  (Ex1f+Hy1f)/2, (Ex1f-Hy1f)/2 ## old: works only for perp. incidence beta0=0
     in2, out2 =  (Ex2f-Hy2f)/2, (Ex2f+Hy2f)/2
+
     #beta0 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c))
     #in1, out1 =  (Ex1f+Hy1f/np.cos(beta0))/2, (Ex1f-Hy1f/np.cos(beta0))/2 ## old: works only for monitors placed in vacuum
     #in2, out2 =  (Ex2f-Hy2f/np.cos(beta0))/2, (Ex2f+Hy2f/np.cos(beta0))/2
 
 
+    ## Prepare the angles at which the wave propagates (dependent on frequency, Kx and Ky)
     # **********************
     # amplitude squared is double Poynting vector (in any medium):   2 S = E H = E**2/Z = E**2 * eps**.5 / mu**.5 = E**2 * c * eps
 
@@ -1126,7 +1138,7 @@ class AmplitudeMonitorPlane():#{{{
         return t, result_wform 
          ## time, 
         ## TODO this will have to be modified in order to account for oblique incidence
-        ## TODO take into account the medium impedance (... divide the Hfield)
+        ## TODO take into account the medium impedance (... divide the Hfield) XXX should be done elsewhere
 #}}}
 
 

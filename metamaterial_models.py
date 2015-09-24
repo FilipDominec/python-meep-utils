@@ -238,6 +238,62 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
 
         return 0
 #}}}
+class HalfSpace(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=30e-15, resolution=10e-9, cellnumber=1, padding=1000e-9, cellsize = 200e-9,
+            epsilon=33.97):
+        """ This structure demonstrates that scatter.py can also be used for samples on a substrate with unlimited thickness. The back
+        side of the substrate is not simulated, and it is assumed there will be no coherent interferences between its sides.
 
-models = {'Slab':Slab, 'SphereArray':SphereArray, 'RodArray':RodArray, 'SRRArray':SRRArray, 'TMathieu_Grating':TMathieu_Grating}
+        To enable the simulations, the monitor planes are enabled to be placed also inside a dielectric. In which case the wave amplitude is 
+        adjusted so that the light intensity is maintained. The field amplitudes and phases have physical meaning only when both monitor planes are
+        in the same medium, though.
+
+        Besides, the example demonstrates that with the choice of permittivity of ((1+.5**.5)/(1-.5**.5))**2 ~ 33.97, the transmitted and reflected waves on a single interface
+        """
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
+
+        ## Constant parameters for the simulation
+        self.simulation_name = "HalfSpace"    
+        self.src_freq, self.src_width = 500e12, 2000e12    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (10e12, 1000e12)    # Which frequencies will be saved to disk
+        self.pml_thickness = 500e-9
+
+        self.size_x = resolution*1.8 
+        self.size_y = resolution*1.8
+        self.size_z = 2*padding + 2*self.pml_thickness + 6*resolution
+        self.monitor_z1, self.monitor_z2 = (-padding, padding)
+        self.register_locals(locals())          ## Remember the parameters
+
+        ## Define materials
+        self.materials = []  
+        if 'Au' in comment:         self.materials += [meep_materials.material_Au(where=self.where_m)]
+        elif 'Ag' in comment:       self.materials += [meep_materials.material_Ag(where=self.where_m)]
+        else:                       self.materials += [meep_materials.material_dielectric(where=self.where_m, eps=self.epsilon)]
+
+        for m in self.materials: 
+            self.fix_material_stability(m, f_c=3e15) ## rm all osc above the first one, to optimize for speed 
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        self.test_materials()
+
+    def where_m(self, r):
+        ## Just half-space
+        if r.z() > 0: return self.return_value
+
+        ## Smooth sine-like transition from air to dielectric: a broadband anti-reflex layer
+        #if r.z()<-self.padding*.9: return 0
+        #if r.z()> self.padding*.9: return self.return_value
+        #return self.return_value*(1.+np.sin(r.z()/0.9/self.padding*np.pi/2))/2
+
+        ## Single antireflex layer on substrate
+        #if r.z() < 0 and r.z() > -self.padding/2:
+            #return self.return_value**.5
+        #if r.z() > 0:
+            #return self.return_value
+        return 0
+#}}}
+
+models = {'Slab':Slab, 'SphereArray':SphereArray, 'RodArray':RodArray, 'SRRArray':SRRArray, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
 

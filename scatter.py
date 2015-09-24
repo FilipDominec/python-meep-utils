@@ -46,7 +46,7 @@ monitor2_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.mo
 
 slices = []
 slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
-#slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', min_timestep=1/model.src_freq, outputgif=True)]
+slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', min_timestep=1/model.src_freq, outputgif=True)]
 slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
 slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_t=np.inf, 
     name=('At%.3eHz'%sim_param['frequency']) if sim_param['frequency_domain'] else '', outputpng=True, outputvtk=False)]
@@ -72,13 +72,15 @@ else:                                       ## frequency-domain computation
 ## Get the reflection and transmission of the structure
 if meep.my_rank() == 0:
     freq, s11, s12, headerstring = meep_utils.get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, 
-            frequency_domain=sim_param['frequency_domain'], frequency=sim_param['frequency'], 
-            intf=getattr(model, 'interesting_frequencies', [0, model.src_freq+model.src_width]),
-            pad_zeros=1.0, Kx=sim_param.get('Ky', 0), Ky=sim_param.get('Ky', 0))
+            frequency_domain=sim_param['frequency_domain'], frequency=sim_param['frequency'],     ## procedure compatible with both FDTD and FDFD
+            intf=getattr(model, 'interesting_frequencies', [0, model.src_freq+model.src_width]),  ## clip the frequency range for plotting
+            pad_zeros=1.0,                                                                        ## speed-up FFT, and stabilize eff-param retrieval
+            Kx=sim_param.get('Ky', 0), Ky=sim_param.get('Ky', 0),                                 ## enable oblique incidence (works only if monitors in vacuum)
+            eps1=getattr(model, 'epsilon1', 1)), eps2=getattr(model, 'epsilon', 1))               ## enable monitors inside dielectrics
 
-    meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",
-            X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)), 
-            header=model.parameterstring + meep_utils.sim_param_string(sim_param) + headerstring)
+    meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",                            
+            X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)),                  ## Save 5 columns: freq, amplitude/phase for reflection/transmission
+            header=model.parameterstring+meep_utils.sim_param_string(sim_param)+headerstring)     ## Export header
 
     with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
 
