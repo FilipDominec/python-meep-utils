@@ -211,6 +211,7 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
         self.size_x = resolution*1.8 
         self.size_y = tdist
         self.size_z = ldist + 2*padding + 2*self.pml_thickness
+        meep.master_printf("number of voxels: %d", int(self.size_x*self.size_y*self.size_y/resolution**3))
         self.monitor_z1, self.monitor_z2 = (-(ldist/2)-padding, (ldist/2)+padding)
         cellsize = ldist+2*padding
 
@@ -239,8 +240,8 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class HalfSpace(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=30e-15, resolution=10e-9, cellnumber=1, padding=1000e-9, cellsize = 200e-9,
-            epsilon=33.97):
+    def __init__(self, comment="", simtime=100e-15, resolution=10e-9, cellnumber=1, padding=200e-9, cellsize = 200e-9,
+            epsilon=33.97, blend=0):
         """ This structure demonstrates that scatter.py can also be used for samples on a substrate with unlimited thickness. The back
         side of the substrate is not simulated, and it is assumed there will be no coherent interferences between its sides.
 
@@ -248,19 +249,20 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         adjusted so that the light intensity is maintained. The field amplitudes and phases have physical meaning only when both monitor planes are
         in the same medium, though.
 
-        Besides, the example demonstrates that with the choice of permittivity of ((1+.5**.5)/(1-.5**.5))**2 ~ 33.97, the transmitted and reflected waves on a single interface
+        Besides, the example demonstrates that with the choice of permittivity of ((1+.5**.5)/(1-.5**.5))**2 ~ 33.97 for a steep interface with air, 
+        the transmitted and reflected waves have exactly the same energy.
         """
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
         self.simulation_name = "HalfSpace"    
-        self.src_freq, self.src_width = 500e12, 2000e12    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.src_freq, self.src_width = 500e12, 100e12    # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (10e12, 1000e12)    # Which frequencies will be saved to disk
         self.pml_thickness = 500e-9
 
         self.size_x = resolution*1.8 
         self.size_y = resolution*1.8
-        self.size_z = 2*padding + 2*self.pml_thickness + 6*resolution
+        self.size_z = blend + 2*padding + 2*self.pml_thickness + 6*resolution
         self.monitor_z1, self.monitor_z2 = (-padding, padding)
         self.register_locals(locals())          ## Remember the parameters
         self.mon2eps = epsilon                  ## store what dielectric is the second monitor embedded in
@@ -269,6 +271,10 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         self.materials = []  
         if 'Au' in comment:         self.materials += [meep_materials.material_Au(where=self.where_m)]
         elif 'Ag' in comment:       self.materials += [meep_materials.material_Ag(where=self.where_m)]
+        elif 'metal' in comment:    
+            self.materials += [meep_materials.material_Au(where=self.where_m)]
+            self.materials[-1].pol[1:] = []
+            self.materials[-1].pol[0]['gamma'] = 0
         else:                       self.materials += [meep_materials.material_dielectric(where=self.where_m, eps=self.epsilon)]
 
         for m in self.materials: 
@@ -281,12 +287,12 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
 
     def where_m(self, r):
         ## Just half-space
-        if r.z() > 0: return self.return_value
+        #if r.z() > 0: return self.return_value
 
         ## Smooth sine-like transition from air to dielectric: a broadband anti-reflex layer
-        #if r.z()<-self.padding*.9: return 0
-        #if r.z()> self.padding*.9: return self.return_value
-        #return self.return_value*(1.+np.sin(r.z()/0.9/self.padding*np.pi/2))/2
+        if r.z()<-self.blend*.5: return 0
+        if r.z()> self.blend*.5 or self.blend==0: return self.return_value
+        return self.return_value*(1.+np.sin(r.z()/0.5/self.blend*np.pi/2))/2
 
         ## Single antireflex layer on substrate
         #if r.z() < 0 and r.z() > -self.padding/2:

@@ -206,14 +206,10 @@ class AbstractMeepModel(meep.Callback):
         self.parameterstring = ""
         ## First look up for the "VIP" parameters that should come first in the name:
         preferred_params = ['resolution', 'comment', 'frequency', 'simtime']
-        #for param in preferred_params:
-            #if params.get(param): 
-                #val = params.get(param)
-                #self.register_local(param, val)
-        ## Then add all remaining parameters of the model
         for (param_name, val) in params.iteritems():
             if param_name in preferred_params:
                 self.register_local(param_name, val)
+        ## Then add all remaining parameters of the model
         for (param_name, val) in params.iteritems():
             if (param_name not in preferred_params) and param_name != 'self':
                 self.register_local(param_name, val)
@@ -1021,7 +1017,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     ## Get the s-parameters 
     s11 = out1 / in1
     s12 = out2 / in1
-    if frequency_domain: meep.master_printf("Scattering parameters @ %.3e Hz: |s11|=%.3f, |s12|=%.3f" % (freq, np.abs(s11), np.abs(s12)))
+    if frequency_domain: meep.master_printf("Scattering parameters @ %.3e Hz: |s11|=%.3f, |s12|=%.3f\n" % (freq, np.abs(s11), np.abs(s12)))
 
     ## Return the S-parameters (i. e. complex reflection and transmission)
     return freq, s11, s12, "#x-column freq\n#column |r|\n#column r phase\n#column |t|\n#column t phase\n"
