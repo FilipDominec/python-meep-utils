@@ -1021,6 +1021,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     ## Get the s-parameters 
     s11 = out1 / in1
     s12 = out2 / in1
+    if frequency_domain: meep.master_printf("Scattering parameters @ %.3e Hz: |s11|=%.3f, |s12|=%.3f" % (freq, np.abs(s11), np.abs(s12)))
 
     ## Return the S-parameters (i. e. complex reflection and transmission)
     return freq, s11, s12, "#x-column freq\n#column |r|\n#column r phase\n#column |t|\n#column t phase\n"
