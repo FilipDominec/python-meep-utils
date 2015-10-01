@@ -39,7 +39,7 @@ brillouin_boundaries = 1    ## Plots thin lines where the N would exceed the all
                             ## range for 0-th Bloch mode
 
 savedat     = 1     ## created directory 'effparam' and saves all params to an ascii file with header
-plot_publi  = 0     ## prepares nice small graphs for publication
+plot_publi  = 1     ## prepares nice small graphs for publication
 plot_polar  = 0     ## plots results to polar graphs for diagnostics
 plot_bands  = 0     ## plots index of refraction as dispersion curves (k-omega)
 plot_expe   = 1     ## if 'r.dat', 't.dat', 'N.dat', 'Z.dat', 'eps.dat' or 'mu.dat' available, overlay them
@@ -775,11 +775,11 @@ if plot_bands and os.path.isdir("band"):
 #if plot_publi and not os.path.exists("publi"): os.mkdir("publi") TODO remove
 if plot_publi:
     if not os.path.exists("publi"): os.mkdir("publi")
-    #matplotlib.rc('text', usetex=True)
-    #matplotlib.rc('font', size=14)
-    #matplotlib.rc('text.latex', preamble = \
-            #'\usepackage{amsmath}, \usepackage{palatino},\usepackage{upgreek}')
-    #matplotlib.rc('font',**{'family':'serif','serif':['palatino, times']})  ## select fonts
+    matplotlib.rc('text', usetex=True)
+    matplotlib.rc('font', size=14)
+    matplotlib.rc('text.latex', preamble = \
+            '\usepackage{amsmath}, \usepackage{palatino},\usepackage{upgreek}')
+    matplotlib.rc('font',**{'family':'serif','serif':['palatino, times']})  ## select fonts
 
     fig = plt.figure(figsize=(12,10))
     fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.0, hspace=.0) ## XXX
@@ -964,7 +964,7 @@ if plot_polar and os.path.isdir("polar"):
         plt.xlim(lim); plt.ylim(lim); plt.grid(True); plt.title(plotlabel)
     ## Final plotting
     splitpath = os.path.split(last_simulation_name)
-    outfile = os.path.join(splitpath[0], "polar", splitpath[1]+"_polar.png")
+    outfile = os.path.join(splitpath[0], "polar", splitpath[1]+"_polar.pdf")
     plt.savefig(outfile, bbox_inches='tight')
 
 #}}}

@@ -98,14 +98,15 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class Slab(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=15e-15, resolution=4e-9, cellnumber=1, cellsize=50e-9, padding=20e-9):
+    def __init__(self, comment="", simtime=100e-12, resolution=2e-6, cellnumber=1, cellsize=100e-6, padding=50e-6,
+            fillfraction=0.5, epsilon=2):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
         self.simulation_name = "Slab"    
-        self.src_freq, self.src_width = 1000e12, 4000e12  # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (100e12, 2000e12)    # Which frequencies will be saved to disk
-        self.pml_thickness = 20e-9
+        self.src_freq, self.src_width = 1000e9, 4000e9  # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (10e9, 2000e9)    # Which frequencies will be saved to disk
+        self.pml_thickness = 0.1*c/self.src_freq
 
         self.size_x = resolution*2 
         self.size_y = resolution*2
@@ -116,16 +117,16 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
         self.register_locals(locals())          ## Remember the parameters
 
         ## Define materials
-        self.materials = []  
+        # note: for optical range, it was good to supply f_c=5e15 to fix_material_stability
         if 'Au' in comment:           
-             self.materials += [meep_materials.material_Au(where=self.where_metal)]
+            m = meep_materials.material_Au(where=self.where_metal)
+            self.fix_material_stability(m, verbose=0) ## rm all osc above the first one, to optimize for speed 
         elif 'Ag' in comment:           
-             self.materials += [meep_materials.material_Ag(where=self.where_metal)]
+            m = meep_materials.material_Ag(where=self.where_metal)
+            self.fix_material_stability(m, verbose=0) ## rm all osc above the first one, to optimize for speed 
         else:
-             self.materials += [meep_materials.material_Ag(where=self.where_metal)]
-
-        for m in self.materials: 
-            self.fix_material_stability(m, f_c=5e15, verbose=0) ## rm all osc above the first one, to optimize for speed 
+            m = meep_materials.material_dielectric(where=self.where_metal, loss=.0001)
+        self.materials = [m]
 
         ## Test the validity of the model
         meep_utils.plot_eps(self.materials, plot_conductivity=True, 
@@ -133,7 +134,7 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
         self.test_materials()
 
     def where_metal(self, r):
-        if in_zslab(r, d=self.cellsize, cz=0):
+        if in_zslab(r, d=self.cellsize*self.fillfraction, cz=0):
             return self.return_value             # (do not change this line)
         return 0
 #}}}
