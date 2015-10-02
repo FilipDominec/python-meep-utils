@@ -19,7 +19,7 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
         self.simulation_name = "SphereArray"    
         self.src_freq, self.src_width = 1000e9, 4000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (100e9, 2000e9)    # Which frequencies will be saved to disk
-        self.pml_thickness = 20e-6
+        self.pml_thickness = .1*c/self.src_freq
 
         self.size_x = cellsize 
         self.size_y = cellsize
@@ -39,11 +39,16 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
         else:           ## ...or define a custom dielectric if permittivity not specified
             tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=self.epsilon) 
 
-        self.fix_material_stability(tio2, f_c=2e13, verbose=0) ## rm all osc above the first one, to optimize for speed 
+        self.fix_material_stability(tio2, verbose=0) ##f_c=2e13,  rm all osc above the first one, to optimize for speed 
         self.materials.append(tio2)
 
         if wirethick > 0:
             au = meep_materials.material_Au(where=self.where_wire)
+            if 'diluted' in comment:  ## debug
+                print au.pol[0]['sigma']
+                meep.all_wait()
+                au.pol[0]['sigma'] /= 100
+                print au.pol[0]['sigma']
             self.fix_material_stability(au, verbose=0)
             self.materials.append(au)
 

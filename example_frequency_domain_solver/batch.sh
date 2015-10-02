@@ -2,10 +2,10 @@
 # Note: in multiprocessing environment, run this script e.g. as `mpirun -np 2 ./batch.sh'
 
 if [ -z $NP ] ; then NP=1 ; fi			 # number of processors
-COMMAND="mpirun -np $NP ../scatter.py model=SphereArray resolution=4u simtime=100p wirethick=10u"
+COMMAND="mpirun -np $NP ../scatter.py model=SphereArray resolution=4u simtime=100p wirethick=10u cellsize=50e-6 padding=20e-6 radius=13e-6"
 
 ## Generate frequency-domain results
-for ff in `seq 1000 10 1300`; do  
+for ff in `seq 1000 50 1300`; do  
      $COMMAND frequency=${ff}e9
 done
 
