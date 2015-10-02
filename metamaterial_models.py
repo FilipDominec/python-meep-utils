@@ -12,7 +12,7 @@ import meep_mpi as meep
 
 class SphereArray(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=50e-6, cellnumber=1, padding=20e-6, 
-            radius=13e-6, wirethick=0, loss=1, epsilon=-1):
+            radius=13e-6, wirethick=0, loss=1, epsilon=-1, courant=0.5):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -28,6 +28,9 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
         self.register_locals(locals())          ## Remember the parameters
+        if courant != 0.5:
+            meep.use_Courant(self.courant) 
+            meep.master_printf("meep.use_Courant(%f)" % courant)
         print self.comment
 
         ## Define materials (with manual Lorentzian clipping) 
