@@ -514,7 +514,11 @@ def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y
                 arrowprops  = arrowprops,       # comment out to disable arrow
                 )
 #}}}
-def plot_eps(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range=(1e10, 1e18), mark_freq=[], draw_instability_area=None):#{{{
+def plot_eps(*args, **kwargs):#{{{
+    try: plot_eps_(*args, **kwargs)
+    except: meep.master_printf("Could not plot the material permittivity spectra, probably matplotlib bug. Skipping it...")
+    #}}}
+def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range=(1e10, 1e18), mark_freq=[], draw_instability_area=None):#{{{
     """ Plots complex permittivity of the materials to a PNG file
 
     Accepts list of materials
