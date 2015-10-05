@@ -63,10 +63,6 @@ if not sim_param['frequency_domain']:       ## time-domain computation
     for slice_ in slices: slice_.finalize()
     meep_utils.notify(model.simulation_name, run_time=timer.get_time())
 else:                                       ## frequency-domain computation
-    #meep.use_Courant(0.5)
-    #while (f.time()/c < 100/sim_param['frequency']):     # timestepping cycle
-        #f.step()
-    meep.use_Courant(0.001) ## TODO test difference
     f.solve_cw(sim_param['MaxTol'], sim_param['MaxIter'], sim_param['BiCGStab']) 
     for monitor in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy): monitor.record(field=f)
     for slice_ in slices: slice_.finalize()
