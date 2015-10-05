@@ -40,7 +40,8 @@ parser.add_argument('--plim2',      type=str,   default='', help='end for the pl
 parser.add_argument('--xlabel',     type=str,   default='', help='label of the x-axis (can use LaTeX)')
 parser.add_argument('--ylabel',     type=str,   default='', help='label of the y-axis (use LaTeX)')
 parser.add_argument('--output',     type=str,   default='output.png', help='output file (e.g. output.png or output.pdf)')
-parser.add_argument('--colormap',   type=str,   default='hsv', help='matplotlib colormap, available are: hsv (default), jet, gist_earth, greys, dark2, brg...')
+parser.add_argument('--colormap',   type=str,   default='default', help='matplotlib colormap, available are: hsv (default for lines), \n" + \
+        "gist_earth (default for contours), jet, greys, dark2, brg...')
 parser.add_argument('--usetex',    type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
 parser.add_argument('--contours',    type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
 parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
@@ -56,7 +57,8 @@ args = parser.parse_args()
 
 ## Options 
 if args.colormap == 'default': 
-    args.colormap == 'gist_earth' if (args.contours=='yes') else 'hsv'
+    cmap = matplotlib.cm.gist_earth if (args.contours=='yes') else matplotlib.cm.hsv
+    print cmap
 else:
     cmap = getattr(matplotlib.cm, args.colormap)  
 
