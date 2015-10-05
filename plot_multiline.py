@@ -58,7 +58,6 @@ args = parser.parse_args()
 ## Options 
 if args.colormap == 'default': 
     cmap = matplotlib.cm.gist_earth if (args.contours=='yes') else matplotlib.cm.hsv
-    print cmap
 else:
     cmap = getattr(matplotlib.cm, args.colormap)  
 
@@ -156,22 +155,26 @@ if args.contours == 'yes':
     levels = np.linspace(np.min(yi), np.max(yi), 100)
     contours = plt.contourf(xi, paramsi, yi, cmap=cmap, levels=levels, extend='both')  
     for contour in contours.collections: contour.set_antialiased(False) ## fix aliasing for old Matplotlib
-    plt.colorbar() #.set_ticks(list(range(0, int(np.max(levels)+1))))   # TODO set the palette range by YLIM!
 
 if args.xlim1 != "": plt.xlim(left=float(args.xlim1))
 if args.xlim2 != "": plt.xlim(right=float(args.xlim2))
+plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
 
 if args.contours == 'yes':
     if args.plim1 != "": plt.ylim(left=float(args.plim1))
     if args.plim2 != "": plt.ylim(right=float(args.plim2))
+
     #if args.ylim1 != "": plt.ylim(left=float(args.ylim1))  # TODO set the palette range!
     #if args.ylim2 != "": plt.ylim(right=float(args.ylim2)) # TODO set the palette!
+    plt.colorbar() #.set_ticks(list(range(0, int(np.max(levels)+1))))   # TODO set the palette range by YLIM!
+
+    plt.ylabel(args.paramname if args.ylabel == '' else args.ylabel) ## TODO contours ==>  ylabel changes with plabel 
+    plt.title(args.title if args.title else ycolname) 
 else:
     if args.ylim1 != "": plt.ylim(left=float(args.ylim1)) 
     if args.ylim2 != "": plt.ylim(right=float(args.ylim2))
-if args.title: plt.title(args.title)
-plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
-plt.ylabel(ycolname if args.ylabel == '' else args.ylabel) ## TODO contours ==>  ylabel changes with plabel 
+    plt.ylabel(ycolname if args.ylabel == '' else args.ylabel) ## TODO contours ==>  ylabel changes with plabel 
+    if args.title: plt.title(args.title)
 plt.grid()
 if not args.contours == 'yes': plt.legend(prop={'size':12}, loc='upper left').draw_frame(False)
 
