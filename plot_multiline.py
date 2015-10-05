@@ -54,22 +54,9 @@ parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be
 
 args = parser.parse_args()
 
-
-## XXX <<<<<<<<<<<
-frequnit = 1e9
-yunit =  1
-minf, maxf  = 0, 7e9           # span of the horizontal axis to be plot
-xlim        = (minf/frequnit, maxf/frequnit)
-ylim = (0, .02)
-interp_anisotropy = 1       # value lower than 1. interpolates rather vertically; optimize if plot disintegrates
-def y_function(y):
-    return (2*parameters['radius']/y)**2 
-## XXX >>>>>>>>>>>>>>
-
-
 ## Options 
 if args.colormap == 'default': 
-    args.contours == 'gist_earth' if (args.contours=='yes') else 'hsv'
+    args.colormap == 'gist_earth' if (args.contours=='yes') else 'hsv'
 else:
     cmap = getattr(matplotlib.cm, args.colormap)  
 
@@ -160,6 +147,7 @@ if args.contours == 'yes':
     from matplotlib.mlab import griddata
     xi      = np.linspace(min(xs),       max(xs),        200)
     paramsi = np.linspace(min(params),   max(params),    200)
+    interp_anisotropy = 1       # value lower than 1. interpolates rather vertically; optimize if plot disintegrates
     yi      = griddata(xs, params*interp_anisotropy, ys, xi, paramsi*interp_anisotropy, interp='linear')
 
     # Standard contour plot
