@@ -1,17 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
-#                                                                                                       
-#           ^                             +---------------------+                                       
-#        y  |                          p  |                     |                                       
-#           |                          a  |                     |                                       
-#           |                          r  |          y          |                                       
-#           |                          a  |                     |                                       
-#           |                          m  |                     |                                       
-#           +------------------>          +---------------------+                                       
-#                           x                               x                                           
-
-
 ## Import common moduli
 import matplotlib, sys, os, time
 import matplotlib.pyplot as plt
@@ -33,45 +22,21 @@ parser.add_argument('--yeval',      type=str,   default='y', help='any python ex
 parser.add_argument('--parameval',  type=str,   default='param', help='any python expression to preprocess the `param`-values, e.g. `param/1e-9` to convert it to nanometers') 
 parser.add_argument('--xlim1',      type=str,   default='', help='start for the x-axis range')
 parser.add_argument('--xlim2',      type=str,   default='', help='end for the x-axis range')
-parser.add_argument('--ylim1',      type=str,   default='', help='start for the plotted value range')
-parser.add_argument('--ylim2',      type=str,   default='', help='end for the plotteld value range')
-parser.add_argument('--plim1',      type=str,   default='', help='start for the plotted parameter range')
-parser.add_argument('--plim2',      type=str,   default='', help='end for the plotted parameter range')
+parser.add_argument('--ylim1',      type=str,   default='', help='start for the y-axis range')
+parser.add_argument('--ylim2',      type=str,   default='', help='end for the y-axis range')
 parser.add_argument('--xlabel',     type=str,   default='', help='label of the x-axis (can use LaTeX)')
 parser.add_argument('--ylabel',     type=str,   default='', help='label of the y-axis (use LaTeX)')
 parser.add_argument('--output',     type=str,   default='output.png', help='output file (e.g. output.png or output.pdf)')
 parser.add_argument('--colormap',   type=str,   default='hsv', help='matplotlib colormap, available are: hsv (default), jet, gist_earth, greys, dark2, brg...')
 parser.add_argument('--usetex',    type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
-parser.add_argument('--contours',    type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
 parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
-## (todo optional: remove arument: paramunit)
-## (todo) optional: Load data from multiple files
-                    #if len(sys.argv) > 1:
-                        #filenames = sys.argv[1:]
-                    #else: 
-                        #filenames = [x for x in os.listdir(os.getcwd())   if '.dat' in x]
-
-
 args = parser.parse_args()
 
 
-## XXX <<<<<<<<<<<
-frequnit = 1e9
-yunit =  1
-minf, maxf  = 0, 7e9           # span of the horizontal axis to be plot
-xlim        = (minf/frequnit, maxf/frequnit)
-ylim = (0, .02)
-interp_anisotropy = 1       # value lower than 1. interpolates rather vertically; optimize if plot disintegrates
-def y_function(y):
-    return (2*parameters['radius']/y)**2 
-## XXX >>>>>>>>>>>>>>
-
-
 ## Options 
-if args.colormap == 'default': 
-    args.contours == 'gist_earth' if (args.contours=='yes') else 'hsv'
-else:
-    cmap = getattr(matplotlib.cm, args.colormap)  
+#cmap = matplotlib.cm.gist_earth
+cmap = getattr(matplotlib.cm, args.colormap)
+
 
 ## Use LaTeX
 if args.usetex == 'yes':
@@ -130,8 +95,6 @@ datasets = zip(colors, *zip(*datasets))
 ax = plt.subplot(111, axisbg='w')
 
 ## Cycle through all files
-if args.contours == 'yes': 
-    xs, ys, params  = [np.array([]) for _ in range(3)] ## three empty arrays
 for color, param, filename in datasets:
     # identify the x,y columns by its number or by its name, load them and optionally process them with an expression
     xcol, xcolname = get_col_index(args.xcol, filename) 
@@ -146,45 +109,17 @@ for color, param, filename in datasets:
         label = (args.paramlabel % (param/args.paramunit)) if args.paramlabel else ("%s = %.3g" % (args.paramname, (param/args.paramunit)))
     else:
         label = (args.paramlabel % (param)) if args.paramlabel else ("%s = %s" % (args.paramname, param))
-
-    if not args.contours == 'yes':
-        plt.plot(x, y, color=color, label=label)
-    else:
-        ## Store the points
-        xs      = np.append(xs, x)
-        ys      = np.append(ys, y)
-        params  = np.append(params, np.ones_like(x)*param/args.paramunit) # (fixme: fails if param is string)
-
-if args.contours == 'yes':
-    # Grid the data, produce interpolated quantities:
-    from matplotlib.mlab import griddata
-    xi      = np.linspace(min(xs),       max(xs),        200)
-    paramsi = np.linspace(min(params),   max(params),    200)
-    yi      = griddata(xs, params*interp_anisotropy, ys, xi, paramsi*interp_anisotropy, interp='linear')
-
-    # Standard contour plot
-    levels = np.linspace(np.min(yi), np.max(yi), 100)
-    contours = plt.contourf(xi, paramsi, yi, cmap=cmap, levels=levels, extend='both')  
-    for contour in contours.collections: contour.set_antialiased(False) ## fix aliasing for old Matplotlib
-    plt.colorbar().set_ticks(list(range(0, int(np.max(levels)+1))))   # TODO set the palette range by YLIM!
+    plt.plot(x, y, color=color, label=label)
 
 if args.xlim1 != "": plt.xlim(left=float(args.xlim1))
 if args.xlim2 != "": plt.xlim(right=float(args.xlim2))
-
-if args.contours == 'yes':
-    if args.plim1 != "": plt.ylim(left=float(args.plim1))
-    if args.plim2 != "": plt.ylim(right=float(args.plim2))
-    #if args.ylim1 != "": plt.ylim(left=float(args.ylim1))  # TODO set the palette range!
-    #if args.ylim2 != "": plt.ylim(right=float(args.ylim2)) # TODO set the palette!
-else:
-    if args.ylim1 != "": plt.ylim(left=float(args.ylim1)) 
-    if args.ylim2 != "": plt.ylim(right=float(args.ylim2))
+if args.ylim1 != "": plt.ylim(left=float(args.ylim1))
+if args.ylim2 != "": plt.ylim(right=float(args.ylim2))
 if args.title: plt.title(args.title)
 plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
-plt.ylabel(ycolname if args.ylabel == '' else args.ylabel) ## TODO contours ==>  ylabel changes with plabel 
+plt.ylabel(ycolname if args.ylabel == '' else args.ylabel)
 plt.grid()
-if not args.contours == 'yes': plt.legend(prop={'size':12}, loc='upper left').draw_frame(False)
+plt.legend(prop={'size':12}, loc='upper left').draw_frame(False)
 
 ## ==== Outputting ====
 plt.savefig(args.output, bbox_inches='tight')
-# (todo) optional: plt.savefig('%s_%s.png' % (quantity, os.path.split(os.path.dirname(os.getcwd()))[1]), bbox_inches='tight')
