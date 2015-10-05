@@ -156,7 +156,7 @@ if args.contours == 'yes':
     levels = np.linspace(np.min(yi), np.max(yi), 100)
     contours = plt.contourf(xi, paramsi, yi, cmap=cmap, levels=levels, extend='both')  
     for contour in contours.collections: contour.set_antialiased(False) ## fix aliasing for old Matplotlib
-    plt.colorbar().set_ticks(list(range(0, int(np.max(levels)+1))))   # TODO set the palette range by YLIM!
+    plt.colorbar() #.set_ticks(list(range(0, int(np.max(levels)+1))))   # TODO set the palette range by YLIM!
 
 if args.xlim1 != "": plt.xlim(left=float(args.xlim1))
 if args.xlim2 != "": plt.xlim(right=float(args.xlim2))
