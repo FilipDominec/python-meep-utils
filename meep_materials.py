@@ -603,11 +603,8 @@ class material_Au(): #{{{
 class material_Ag():#{{{
     """ Drude-Lorentz model for silver """
     def __init__(self, where=None, resistivity=0., eps=0.):
-        #self.eps = 1. 
         self.eps = 1. 
         omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
-
-        #Drude_sigma = 
         self.pol = [
                 {'omega': omega0, 'gamma': 1e6*c* 0.038715 , 'sigma': 4.4625e+41 * 1e-20**2 * (1e6*c)**2 / omega0**2},  ## Drude term
                 {'omega': 1e6*c*0.6581, 'gamma': 1e6*c*3.1343  , 'sigma':7.9247},
@@ -621,6 +618,21 @@ class material_Ag():#{{{
         self.where = where
 #}}}
 
+class material_Ti():#{{{
+    """ Drude-Lorentz model for titanium, edited from Rakic et al., Appl. Opt. 1998 """
+    def __init__(self, where=None, resistivity=0., eps=0.):
+        self.eps = 1. 
+        omega0 = 1e6*c*1e-20           ## arbitrary low frequency that makes Lorentz model behave as Drude model
+        self.pol = [
+                {'omega': omega0,       'gamma': 1e6*c*0.066137, 'sigma': 5.1166e+40 * 1e-20**2 * (1e6*c)**2 / omega0**2},  ## Drude term
+                {'omega': 1e6*c*0.62669,'gamma': 1e6*c*1.8357,   'sigma': 79.136},
+                {'omega': 1e6*c*1.2461, 'gamma': 1e6*c*2.0309,   'sigma': 8.7496},
+                {'omega': 1e6*c*2.0236, 'gamma': 1e6*c*1.3413,   'sigma': 1.5787},
+                {'omega': 1e6*c*1.5671, 'gamma': 1e6*c*1.4211,   'sigma': 0.014077},
+                ]
+        self.name, self.shortname = "Titanium", "Ti"
+        self.where = where
+#}}}
 
 ## -- Obsoleted or experimental -- 
 class material_DrudeMetal_old():#{{{
