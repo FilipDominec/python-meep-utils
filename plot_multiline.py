@@ -128,17 +128,19 @@ for color, param, filename in datasets:
     x = eval(args.xeval)
     y = eval(args.yeval)
 
-    # if the legend format is not supplied by user, generate it from the parameter name 
-    if type(param) in (float, int):
-        param = eval(args.parameval)
-        label = (args.paramlabel % (param/args.paramunit)) if args.paramlabel else ("%s = %.3g" % (args.paramname, (param/args.paramunit)))
-    else:
-        label = (args.paramlabel % (param)) if args.paramlabel else ("%s = %s" % (args.paramname, param))
 
     if not args.contours == 'yes':
+        # if the legend format is not supplied by user, generate it from the parameter name 
+        if type(param) in (float, int):
+            param = eval(args.parameval)
+            label = (args.paramlabel % (param/args.paramunit)) if args.paramlabel else ("%s = %.3g" % (args.paramname, (param/args.paramunit)))
+        else:
+            label = (args.paramlabel % (param)) if args.paramlabel else ("%s = %s" % (args.paramname, param))
+
+        ## Plot curves
         plt.plot(x, y, color=color, label=label)
     else:
-        ## Store the points
+        ## Store the points for later interpolation and contour plot
         xs      = np.append(xs, x)
         ys      = np.append(ys, y)
         params  = np.append(params, np.ones_like(x)*param/args.paramunit) # (fixme: fails if param is string)
