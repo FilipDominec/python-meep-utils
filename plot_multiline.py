@@ -185,21 +185,22 @@ if args.contours == 'yes':
     yi      = griddata(xs, params*interp_anisotropy, ys, xi, paramsi*interp_anisotropy, interp='linear')
 
     # Standard contour plot
-    levels = np.linspace(np.min(yi), np.max(yi), 100)
+    cmaprange1 = float(args.ylim1) if (args.ylim1 != "") else np.min(yi) 
+    cmaprange2 = float(args.ylim2) if (args.ylim2 != "") else np.max(yi) 
+    levels = np.linspace(cmaprange1, cmaprange2, 50)
     contours = plt.contourf(xi, paramsi, yi, cmap=cmap, levels=levels, extend='both')  
     for contour in contours.collections: contour.set_antialiased(False) ## fix aliasing for old Matplotlib
+    plt.colorbar().set_ticks(reasonable_ticks(cmaprange1, cmaprange2, density=.8)) 
+
+    if args.plim1 != "": plt.ylim(ymin=float(args.plim1))
+    if args.plim2 != "": plt.ylim(ymax=float(args.plim2))
 
 if args.xlim1 != "": plt.xlim(left=float(args.xlim1))
 if args.xlim2 != "": plt.xlim(right=float(args.xlim2))
 plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
 
 if args.contours == 'yes':
-    if args.plim1 != "": plt.ylim(ymin=float(args.plim1))
-    if args.plim2 != "": plt.ylim(ymax=float(args.plim2))
 
-    cmaprange1 = float(args.ylim1) if (args.ylim1 != "") else np.min(yi) 
-    cmaprange2 = float(args.ylim2) if (args.ylim2 != "") else np.max(yi) 
-    plt.colorbar().set_ticks(reasonable_ticks(cmaprange1, cmaprange2, density=.8)) 
 
     plt.ylabel(args.paramname if args.paramlabel == '' else args.paramlabel) 
     plt.title(args.title if args.title else ycolname) 
