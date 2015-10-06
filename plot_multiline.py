@@ -52,21 +52,18 @@ parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be
                     #else: 
                         #filenames = [x for x in os.listdir(os.getcwd())   if '.dat' in x]
 
-
 args = parser.parse_args()
 
-## Options 
+## Plotting style
+if args.usetex.lower() in ('yes', 'true'): 
+    matplotlib.rc('text', usetex=True)
+    matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, \usepackage{upgreek}') #, \usepackage{palatino} \usepackage{lmodern}, 
+matplotlib.rc('font', size=12)
+matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
 if args.colormap == 'default': 
     cmap = matplotlib.cm.gist_earth if (args.contours=='yes') else matplotlib.cm.hsv
 else:
     cmap = getattr(matplotlib.cm, args.colormap)  
-
-## Use LaTeX
-if args.usetex == 'yes':
-    matplotlib.rc('text', usetex=True)
-matplotlib.rc('font', size=12)
-matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, \usepackage{upgreek}') #, \usepackage{palatino} \usepackage{lmodern}, 
-matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
 
 def get_param(filename):             ## Load header to the 'parameters' dictionary#{{{
     parameters = {}
@@ -80,6 +77,34 @@ def get_param(filename):             ## Load header to the 'parameters' dictiona
             except: pass                ## otherwise keep as string
             parameters[key] = value
     return parameters
+#}}}
+def reasonable_ticks(lim1, lim2, density=1, extend_to_lims=False): #{{{
+    """ 
+    Aims to improve the numbering of the axis or colormap in matplotlib plots.
+
+    By default, about 7 to 14 human-friendly intermediate values are generated between lim1 and lim2. 
+    Their mantissa increases by 1, 2, or 5 as usual in hand-made plots. Their total number can be adjusted by 
+    the `density' parameter.
+
+    If the value of lim1 or lim2 is nice enough, it is included in the range, too. 
+    This behaviour can be forced by setting `extend_to_lims' is set to True, in which case the first and last 
+    ticks are just set to the limits.
+
+    >>> reasonable_ticks(2.4242, 4.4242)
+    array([ 2.6,  2.8,  3. ,  3.2,  3.4,  3.6,  3.8,  4. ,  4.2,  4.4,  4.6])
+
+    >>> reasonable_ticks(2.4242, 4.4242, density=.6)
+    array([ 2.5,  3. ,  3.5,  4. ])
+
+    >>> reasonable_ticks(2.4242, 4.4242, density=.6, extend_to_lims=True)
+    array([ 2.4242,  3.    ,  3.5   ,  4.4242])
+    """
+    diff = float(lim2-lim1)
+    decimal = 10**np.floor(np.log10(diff/(density*4)))                                 # get the order of magnitude 
+    step = (decimal, 2*decimal, 5*decimal)[np.int(3*diff/(density*4)/decimal/10)]      # select the correct step
+    newrange = np.arange(np.ceil(lim1/step-1e-6)*step, (np.ceil(lim2/step+1e-6))*step, step)         # generate the tick positions, including end points if rounded
+    if extend_to_lims: newrange = np.hstack([lim1, newrange[1:-1], lim2])                          # optionally, force including the end points
+    return newrange
 #}}}
 
 ## Start figure + subplot 
@@ -128,16 +153,22 @@ for color, param, filename in datasets:
     x = eval(args.xeval)
     y = eval(args.yeval)
 
+    # if the legend format is not supplied by user, generate it from the parameter name 
+    if type(param) in (float, int):
+        param = eval(args.parameval)
+    else:
+        if args.contours == 'yes': raise ValueError("Parameter must be a number for contour plot, since it is used at the vertical axis")
 
     if not args.contours == 'yes':
-        # if the legend format is not supplied by user, generate it from the parameter name 
-        if type(param) in (float, int):
-            param = eval(args.parameval)
-            label = (args.paramlabel % (param/args.paramunit)) if args.paramlabel else ("%s = %.3g" % (args.paramname, (param/args.paramunit)))
+        ## Plot a curve with a nice label, generated from the parameter
+        if args.paramlabel:
+            if '\%' in args.paramlabel:
+                label = (args.paramlabel % param)           # manually formatted label
+            else:
+                label = (args.paramlabel+" = %s" % param)           # manual label with parameter value appended
         else:
-            label = (args.paramlabel % (param)) if args.paramlabel else ("%s = %s" % (args.paramname, param))
+            param = ("%s = %s" % (args.paramname, param))   # automatic formatted label
 
-        ## Plot curves
         plt.plot(x, y, color=color, label=label)
     else:
         ## Store the points for later interpolation and contour plot
@@ -163,19 +194,19 @@ if args.xlim2 != "": plt.xlim(right=float(args.xlim2))
 plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
 
 if args.contours == 'yes':
-    if args.plim1 != "": plt.ylim(left=float(args.plim1))
-    if args.plim2 != "": plt.ylim(right=float(args.plim2))
+    if args.plim1 != "": plt.ylim(ymin=float(args.plim1))
+    if args.plim2 != "": plt.ylim(ymax=float(args.plim2))
 
-    #if args.ylim1 != "": plt.ylim(left=float(args.ylim1))  # TODO set the palette range!
-    #if args.ylim2 != "": plt.ylim(right=float(args.ylim2)) # TODO set the palette!
-    plt.colorbar() #.set_ticks(list(range(0, int(np.max(levels)+1))))   # TODO set the palette range by YLIM!
+    cmaprange1 = float(args.ylim1) if (args.ylim1 != "") else np.min(yi) 
+    cmaprange2 = float(args.ylim2) if (args.ylim2 != "") else np.max(yi) 
+    plt.colorbar().set_ticks(reasonable_ticks(cmaprange1, cmaprange2, density=.8)) 
 
-    plt.ylabel(args.paramname if args.ylabel == '' else args.ylabel) ## TODO contours ==>  ylabel changes with plabel 
+    plt.ylabel(args.paramname if args.paramlabel == '' else args.paramlabel) 
     plt.title(args.title if args.title else ycolname) 
 else:
-    if args.ylim1 != "": plt.ylim(left=float(args.ylim1)) 
-    if args.ylim2 != "": plt.ylim(right=float(args.ylim2))
-    plt.ylabel(ycolname if args.ylabel == '' else args.ylabel) ## TODO contours ==>  ylabel changes with plabel 
+    if args.ylim1 != "": plt.ylim(ymin=float(args.ylim1)) 
+    if args.ylim2 != "": plt.ylim(ymax=float(args.ylim2))
+    plt.ylabel(ycolname if args.ylabel == '' else args.ylabel) 
     if args.title: plt.title(args.title)
 plt.grid()
 if not args.contours == 'yes': plt.legend(prop={'size':12}, loc='upper left').draw_frame(False)
