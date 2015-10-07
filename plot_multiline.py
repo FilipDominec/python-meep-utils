@@ -21,7 +21,6 @@ from scipy.constants import c, hbar, pi
 
 parser = argparse.ArgumentParser(description='Plot a selected column from each of multiple files into a single comparison plot. ')
 parser.add_argument('--paramname',  type=str,               help='parameter by which the lines are sorted')
-parser.add_argument('--paramunit',  type=float, default=1., help='prescaling of the parameter (if it is a number)')
 parser.add_argument('--title',      type=str, default='', help='plot title')
 # todo: remove the --xunit --yunit
 parser.add_argument('--yunit',      type=float, default=1., help='prescaling of the y-axis')
@@ -45,7 +44,6 @@ parser.add_argument('--colormap',   type=str,   default='default', help='matplot
 parser.add_argument('--usetex',    type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
 parser.add_argument('--contours',    type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
 parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
-## (todo optional: remove arument: paramunit)
 ## (todo) optional: Load data from multiple files
                     #if len(sys.argv) > 1:
                         #filenames = sys.argv[1:]
@@ -179,7 +177,7 @@ for color, param, filename in datasets:
         ## Store the points for later interpolation and contour plot
         xs      = np.append(xs, x)
         ys      = np.append(ys, y)
-        params  = np.append(params, np.ones_like(x)*param/args.paramunit) # (fixme: fails if param is string)
+        params  = np.append(params, np.ones_like(x)*param) # (fixme: fails if param is string)
 
 if args.contours == 'yes':
     # Grid the data, produce interpolated quantities:
