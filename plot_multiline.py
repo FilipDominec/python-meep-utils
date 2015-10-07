@@ -64,7 +64,7 @@ if args.colormap == 'default':
 else:
     if (args.colormap[-2:] == '/2'):        ## allow palette halving,  (c) unutbu, stackoverflow:18926031
         cmap = getattr(matplotlib.cm, args.colormap[:-2])
-        cmap = matplotlib.colors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=.0, b=.5), cmap(np.linspace(.0, .5, 100)))
+        cmap = matplotlib.colors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=.0, b=.45), cmap(np.linspace(.0, .45, 100)))
     else: 
         cmap.getattr(matplotlib.cm, args.colormap)  
 
@@ -168,7 +168,7 @@ for color, param, filename in datasets:
             if '\%' in args.paramlabel:
                 label = (args.paramlabel % param)           # manually formatted label
             else:
-                label = (args.paramlabel+" = %s" % param)           # manual label with parameter value appended
+                label = (args.paramlabel+(" = %s" % param))           # manual label with parameter value appended
         else:
             param = ("%s = %s" % (args.paramname, param))   # automatic formatted label
 
