@@ -60,10 +60,15 @@ if args.usetex.lower() in ('yes', 'true'):
     matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, \usepackage{upgreek}') #, \usepackage{palatino} \usepackage{lmodern}, 
 matplotlib.rc('font', size=12)
 matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
+
 if args.colormap == 'default': 
     cmap = matplotlib.cm.gist_earth if (args.contours=='yes') else matplotlib.cm.hsv
 else:
-    cmap = getattr(matplotlib.cm, args.colormap)  
+    if (args.colormap[-2:] == '/2'):        ## allow palette halving,  (c) unutbu, stackoverflow:18926031
+        cmap = getattr(matplotlib.cm, args.colormap[:-2])
+        cmap = matplotlib.colors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=.0, b=.5), cmap(np.linspace(.0, .5, 100)))
+    else: 
+        cmap.getattr(matplotlib.cm, args.colormap)  
 
 def get_param(filename):             ## Load header to the 'parameters' dictionary#{{{
     parameters = {}
@@ -187,11 +192,10 @@ if args.contours == 'yes':
     # Standard contour plot
     cmaprange1 = float(args.ylim1) if (args.ylim1 != "") else np.min(yi) 
     cmaprange2 = float(args.ylim2) if (args.ylim2 != "") else np.max(yi) 
-    levels = np.linspace(cmaprange1, cmaprange2, 50)
+    levels = np.linspace(cmaprange1, cmaprange2, 50) 
     contours = plt.contourf(xi, paramsi, yi, cmap=cmap, levels=levels, extend='both')  
     for contour in contours.collections: contour.set_antialiased(False) ## fix aliasing for old Matplotlib
-    plt.colorbar().set_ticks(reasonable_ticks(cmaprange1, cmaprange2, density=.8)) 
-
+    cb=plt.colorbar().set_ticks(reasonable_ticks(cmaprange1, cmaprange2, density=.8)) 
     if args.plim1 != "": plt.ylim(ymin=float(args.plim1))
     if args.plim2 != "": plt.ylim(ymax=float(args.plim2))
 
