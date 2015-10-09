@@ -1056,14 +1056,14 @@ class AmplitudeMonitorPlane():#{{{
     def average_field(self, field):
         """
         Average field component in some plane, return amplitudes 
-        This function is ineffective - it should be implemented in C++ in meep itself
+        This function is inefficient - it should be implemented in C++ in meep itself
 
         5x5 grid is usually optimal (no visible difference between 10x10 grid and 5x5 grid)
 
         TODO:  This class implements a workaround for unavailable amplitude averaging in python-meep.
-        This implementation is ineffective and inflexible, but one would have to edit the MEEP source otherwise.
+        This implementation is inefficient and inflexible, but one would have to edit the MEEP source otherwise.
         """
-        xcount, ycount = (3, 3)
+        xcount, ycount = (7, 7)
         field_sum = 0 
         # The mode function has the form of an oblique plane wave
         #for x in [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]:
