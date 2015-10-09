@@ -781,10 +781,10 @@ if plot_publi:
             '\usepackage{amsmath}, \usepackage{palatino},\usepackage{upgreek}')
     matplotlib.rc('font',**{'family':'serif','serif':['palatino, times']})  ## select fonts
 
-    fig = plt.figure(figsize=(12,10))
+    fig = plt.figure(figsize=(7,4))
     fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.0, hspace=.0) ## XXX
 
-    publi_toplot = {'rt':1, 'N':1, 'eps':1, 'mu':1, 'Z':0} ## select parameters by setting 1 or 0
+    publi_toplot = {'rt':1, 'N':0, 'eps':0, 'mu':0, 'Z':0} ## select parameters by setting 1 or 0
     publi_plot_Brillouin = True
     publi_use_grid = False
 
@@ -795,18 +795,21 @@ if plot_publi:
         ax= plt.subplot(subplot_count, 1, subplot_index)
         #plt.title(u"Dielectric spheres $r=%d\\;\\upmu$m" % 25) 
         #plt.title(u"Dielectric spheres in wire mesh") 
-        plt.title(u"Wire mesh") 
+        #plt.title(u"") 
         ax.label_outer()
         plt.grid(publi_use_grid)
         plt.plot(freq, s11amp, marker=marker, color="#880000", label=u'$|r|$', lw=1)
         plt.plot(freq, s12amp, marker=marker, color="#0088ff", label=u'$|t|$', lw=1)
         plt.ylabel(u"Amplitude"); 
+        if plot_expe and os.path.exists('r.dat'):
+            tf, ty = np.loadtxt('r.dat', usecols=list(range(2)), unpack=True)
+            plt.plot(tf, ty, lw=0, color='r', marker='o', ms=3, label=u'$|r|$ frequency-domain')        ## NOTE: may need tf*frequnit
         if plot_expe and os.path.exists('t.dat'):
             tf, ty = np.loadtxt('t.dat', usecols=list(range(2)), unpack=True)
-            plt.plot(tf*frequnit, ty, lw=0, color='#004AAA', marker='o', ms=2, label=u'$|t|$ exp') 
+            plt.plot(tf, ty, lw=0, color='b', marker='s', ms=3, label=u'$|t|$ frequency-domain')        ## NOTE: may need tf*frequnit
         subplot_index += 1
         plt.xticks(xticks, xnumbers); plt.minorticks_on(); 
-        plt.xlim((plot_freq_min, plot_freq_max)); plt.ylim((0,1.)); plt.legend(loc='lower left');
+        plt.xlim((plot_freq_min, plot_freq_max)); plt.ylim((0,1.)); plt.legend(loc='lower left').draw_frame(False)
 
     ## Todo allow plotting phase! (And in the 'cartesian' plot, too)
 
