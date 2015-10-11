@@ -1,16 +1,38 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
+# 
+"""
+plot_multiline.py  --  a script for ready-to-publish presentation of multiple data files in one plot
+                                                                                                       
+The data, stored as the `y' value depending on the `x' coordinate in each file, can be either plotted 
+as multiple lines in the x-y plot, which is the default behaviour. Each line is distinguished by the different
+value of the `param'.
 
-#                                                                                                       
-#           ^                             +---------------------+                                       
-#        y  |                          p  |                     |                                       
-#           |                          a  |                     |                                       
-#           |                          r  |          y          |                                       
-#           |                          a  |                     |                                       
-#           |                          m  |                     |                                       
-#           +------------------>          +---------------------+                                       
-#                           x                               x                                           
+Or, if the number of files is over 10 or 20, it may be preferable to plot their `y' values as a 2-D contour plot,
+where the `y' value still represents the horizontal coordinate, but the `param' value now serves as the vertical one. 
+The `--xeval' or `--parameval' expressions should return similar order of magnitude so that the data can be triangulated.
 
+        1) --contours no              2) --contours yes
+               (default)
+           ^                             +---------------------+                                       
+        y  |                          p  |                     |                                       
+           |                          a  |                     |                                       
+           |                          r  |          y          |                                       
+           |                          a  |                     |                                       
+           |                          m  |                     |                                       
+           +------------------>          +---------------------+                                       
+                           x                               x                                           
+
+example use:
+    ./plot_multiline.py *.dat    --paramname depth[nm] --contours yes  \\
+                    --yeval 'np.abs(y)**2' --ylim1 0 \\
+                    --xlabel 'Normalized grating period $\Lambda/\lambda$' --xeval x*1e-9/0.8e-6 --xlim1=0    \\
+                    --paramlabel 'Grating depth $h$ ($\muup$m)' --parameval param*1e-9/1e-6  \\
+                    --title "Reflectance $|r|^2$ of the grating at $\\\\lambda$=800 nm)" \\
+                    --usetex yes --colormap 'Paired/2' \\
+                    --output results_R_${PWD##*/}.png    
+
+"""
 
 ## Import common moduli
 import matplotlib, sys, os, time
@@ -19,15 +41,15 @@ import numpy as np
 import argparse
 from scipy.constants import c, hbar, pi
 
-parser = argparse.ArgumentParser(description='Plot a selected column from each of multiple files into a single comparison plot. ')
-parser.add_argument('--paramname',  type=str,               help='parameter by which the lines are sorted')
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+parser.add_argument('--paramname',  type=str,               help='(compulsory) parameter by which the lines are sorted')
 parser.add_argument('--title',      type=str, default='', help='plot title')
 # todo: remove the --xunit --yunit
 parser.add_argument('--yunit',      type=float, default=1., help='prescaling of the y-axis')
 parser.add_argument('--paramlabel', type=str,   default='', help='line label (use standard "printf percent substitutes" to format the parameter, use LaTeX for typesetting)')
 parser.add_argument('--xcol',       type=str,   default='0', help='number or exact name of the x-axis column') ## TODO or -- if it is to be generated
 parser.add_argument('--ycol',       type=str,   default='1', help='number or exact name of the y-axis column')
-parser.add_argument('--xeval',      type=str,   default='x', help='any python expression to preprocess the `x`-values, e.g. `1e6*c/x` to convert Hertz to micrometers') 
+parser.add_argument('--xeval',      type=str,   default='x', help='any python expression to preprocess the `x`-values, e.g. `1e6*c/x` to convert Hertz to the wavelength in micrometers') 
 parser.add_argument('--yeval',      type=str,   default='y', help='any python expression to preprocess the `y`-values, e.g. `y/x` to normalize against newly computed x') 
 parser.add_argument('--parameval',  type=str,   default='param', help='any python expression to preprocess the `param`-values, e.g. `param/1e-9` to convert it to nanometers') 
 parser.add_argument('--xlim1',      type=str,   default='', help='start for the x-axis range')
@@ -39,11 +61,11 @@ parser.add_argument('--plim2',      type=str,   default='', help='end for the pl
 parser.add_argument('--xlabel',     type=str,   default='', help='label of the x-axis (can use LaTeX)')
 parser.add_argument('--ylabel',     type=str,   default='', help='label of the y-axis (use LaTeX)')
 parser.add_argument('--output',     type=str,   default='output.png', help='output file (e.g. output.png or output.pdf)')
-parser.add_argument('--colormap',   type=str,   default='default', help='matplotlib colormap, available are: hsv (default for lines), \n" + \
-        "gist_earth (default for contours), jet, greys, dark2, brg...')
+parser.add_argument('--colormap',   type=str,   default='default', help='matplotlib colormap, available are: hsv (default for lines), gist_earth (default for contours), jet, greys, dark2, brg...')
 parser.add_argument('--usetex',    type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
 parser.add_argument('--contours',    type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
 parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
+#if len(sys.argv)==1: parser.print_help(); sys.exit(1)
 ## (todo) optional: Load data from multiple files
                     #if len(sys.argv) > 1:
                         #filenames = sys.argv[1:]
