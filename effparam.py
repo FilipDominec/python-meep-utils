@@ -38,14 +38,6 @@ parser.add_argument('--savedat',                        type=int,   default=1, h
 parser.add_argument('--find_plasma_frequency',          type=int,   default=0, help='find frequencies where epsilon crosses zero')
 parser.add_argument('--detect_loss_maxima',             type=int,   default=0, help='')
 ## Plotting mode choice
-parser.add_argument('--plot_publi',                     type=int,   default=1, help='prepares nice small graphs for publication')
-parser.add_argument('--plot_publi_rt',                  type=int,   default=1, help='... include reflection and transmission plot')
-parser.add_argument('--plot_publi_n',                   type=int,   default=1, help='... include reflective index plot')
-parser.add_argument('--plot_publi_z',                   type=int,   default=0, help='... include impedance plot')
-parser.add_argument('--plot_publi_eps',                 type=int,   default=0, help='... include effective permittivity plot')
-parser.add_argument('--plot_publi_mu',                  type=int,   default=0, help='... include effective permeability plot')
-parser.add_argument('--plot_publi_overlay_Brillouin',   type=int,   default=1, help='')
-parser.add_argument('--plot_publi_overlay_grid',        type=int,   default=0, help='')
 parser.add_argument('--plot_polar',                     type=int,   default=0, help='plots results to polar graphs for diagnostics')
 parser.add_argument('--plot_bands',                     type=int,   default=0, help='plots index of refraction as dispersion curves (k-omega)')
 ## Plotting tuning
@@ -487,146 +479,11 @@ plt.ylabel(u"Amplitude"); plt.ylim((-0.1,1.1)); plt.xlim((args.plot_freq_min, ar
 plt.xticks(xticks, xnumbers); plt.minorticks_on();  plt.grid(True)
 if args.legend_enable: plt.legend(loc="upper right"); 
 
-
-#print '*********************************************'
-#print 'R', s11amp[10]
-#print 'T', s12amp[10]
-#print 'L', 1-s11amp[10]**2-s12amp[10]**2
-#print '*********************************************'
-
-#for lm in loss_maxima: plt.axvspan(lm,lm+1e8, color='r')
-
-
 ## Plot r and t phase
-# (Note: phase decreases with frequency, because meep uses the E=E0*exp(-i omega t) convention )
 plt.subplot(subplot_number, 1, 2)
 plt.plot(freq, np.unwrap(np.angle(s11))/pi, marker=marker, color="#AA4A00", label=u'$\\phi(s_{11})/\\pi$')
 plt.plot(freq, np.unwrap(np.angle(s12))/pi, marker=marker, color="#004AAA", label=u'$\\phi(s_{12})/\\pi$')
-#
-#plt.plot(freq, np.unwrap(np.angle(s12))/pi + np.unwrap(np.angle(s11))/pi, marker=marker, color="#888AAA", label=u'$(\\phi(s_{11})+\\phi(s_{11}))/\\pi$')
-#plt.plot(freq, np.unwrap(np.angle(s12))/pi - np.unwrap(np.angle(s11))/pi, marker=marker, color="#AA8A88", label=u'$(\\phi(s_{11})-\\phi(s_{11}))/\\pi$')
-#plt.plot(freq, 2*np.unwrap(np.angle(s12))/pi + np.unwrap(np.angle(s11))/pi, marker=marker, color="#8A88AA", label=u'$(2\\phi(s_{11})+\\phi(s_{11}))/\\pi$')
-#plt.plot(freq, 2*np.unwrap(np.angle(s12))/pi - np.unwrap(np.angle(s11))/pi, marker=marker, color="#8AAA88", label=u'$(2\\phi(s_{11})-\\phi(s_{11}))/\\pi$')
-#plt.plot(freq, np.unwrap(np.angle(s12))/pi + 2*np.unwrap(np.angle(s11))/pi, marker=marker, color="#88AA8A", label=u'$(\\phi(s_{11})+2\\phi(s_{11}))/\\pi$')
-#plt.plot(freq, np.unwrap(np.angle(s12))/pi - 2*np.unwrap(np.angle(s11))/pi, marker=marker, color="#AA888A", label=u'$(\\phi(s_{11})-2\\phi(s_{11}))/\\pi$')
-
-# Optional: debugging curves(branch, sign, arg, anr, anl)
-if len(freq)>2:
-    #plt.plot(freq, N_debug[0]*.95, color="#dd0000", label=u"$br$", lw=1.6) 
-    #plt.plot(freq, N_debug[1]*.90, color="#dd8800", label=u"$si$", lw=1.6) 
-    #plt.plot(freq, N_debug[2].real, color="#00dd00", label=u"$arg^'$", lw=.6, ls='-') 
-    #plt.plot(freq, N_debug[2].imag, color="#00dd00", label=u"$arg^{''}$", lw=.6, ls='--') 
-    #plt.plot(freq, np.sign(N_debug[2].imag), color="#008800", label=u"sign$arg^{''}$", lw=.3, ls='-') 
-
-    #plt.plot(freq, np.arccos(N_debug[2]).real, color="#0000dd", label=u"arccos$arg^'$", lw=1.6, ls='-') 
-    #plt.plot(freq, np.log10(pi-np.arccos(N_debug[2]).real), color="#0000dd", label=u"arccos$arg^'$", lw=.6, ls='-') 
-    #plt.plot(freq, np.arccos(N_debug[2]).imag, color="#0000dd", label=u"arccos$arg^{''}$", lw=1.6, ls='--') 
-    #plt.plot(freq, np.log10(abs(N_debug[2].imag)), color="#000000", label=u"log$arg^{''}$", lw=.6, ls='--') 
-    #plt.plot(freq, abs(N_debug[2] - (1+0j)), color="#0088dd", label=u"$|arg-1|$", lw=2, ls='-') 
-    #plt.plot(freq, abs(N_debug[2] + (1+0j)), color="#8800dd", label=u"$|arg+1|$", lw=2, ls='-') 
-    #plt.plot(freq, np.log10(abs(N_debug[2] - (1+0j))), color="#0088dd", label=u"", lw=1, ls='-') 
-    #plt.plot(freq, np.log10(abs(N_debug[2] + (1+0j))), color="#8800dd", label=u"", lw=1, ls='-') 
-    #plt.plot(freq, np.sign(N_debug[2].imag), color="#00dd00", label=u"$sgn arg^{''}$", lw=.6, ls=':') 
-    plt.plot(freq, -np.ones_like(freq), color="k", label=u"", lw=.3, ls='-') 
-    plt.plot(freq, np.ones_like(freq), color="k", label=u"", lw=.3, ls='-') 
-
-    if args.autobranch:          ## EXPERIMENTAL
-        # Detection of key points in the spectrum (PBG boundaries, branch skips etc.)
-        def find_maxima(x, y, minimum_value=.1):
-            """ 
-            Returns the x points where 
-            1) y has a local maximum (i. e. dx/dy goes negative) AND 
-            2) where y is above minimum_value 
-            """
-            d = y[1:-1] - y[0:-2]   ## naïve first derivative
-            maxima = x[1:][np.sign(d[0:-2])-np.sign(d[1:-1]) + np.sign(y[2:-2]-minimum_value)==3]
-            return maxima 
-        def find_maxima_indices(x, y, minimum_value=.1):
-            """ 
-            Returns the x points where 
-            1) y has a local maximum (i. e. dx/dy goes negative) AND 
-            2) where y is above minimum_value 
-            """
-            d = y[1:-1] - y[0:-2]   ## naïve first derivative
-            maximai = np.arange(1,len(x), dtype=np.dtype(np.int16))[np.sign(d[0:-2])-np.sign(d[1:-1]) + np.sign(y[2:-2]-minimum_value)==3]
-            return maximai
-        argPmin = find_maxima_indices(freq, -abs(N_debug[2] - (1+0j)), minimum_value=-np.inf)
-        argNmin = find_maxima_indices(freq, -abs(N_debug[2] + (1+0j)), minimum_value=-np.inf)
-
-        ## (todo) check: maybe required, maybe not
-        #argNmax = find_maxima_indices(freq,  abs(N_debug[2] + (1+0j)), minimum_value=-np.inf)
-        #plt.plot(freq[argNmax], np.zeros_like(argNmax), marker='o', color="#dd0000")
-        #allindices = np.hstack([np.array([0]), argPmin, argNmin, argNmax])
-
-        ## Concatenate &  sort all indices of interesting points
-        allindices = np.hstack([np.array([0]), argPmin, argNmin])
-        allindices.sort()
-        ## Remove duplicate indices
-
-        allindices = np.hstack([allindices[0], [x[0] for x in zip(allindices[1:],allindices[:-1]) if x[0]!=x[1]]])
-        plt.plot(freq[allindices], np.zeros_like(allindices), marker='x', color="k")
-
-        ## Scan through all photonic bands/bandgaps, seleting the correct N branch
-        #print 'allindices', allindices
-        #N_init_branch = 0
-        #print 'args.N_init_sign', args.N_init_sign
-        #args.N_init_sign = -1 
-        #pN_uo = [0,0,0,0]
-        pN_uo = [2*pi,2*pi,2*pi,0]
-        det_branch = 0
-        #for i in [0]:                           ## whole spectrum
-                #i1 = 0
-                #i2 = len(freq)-1
-        for i in range(len(allindices)-1):     ## spectrum by chunks
-            for q in (0,1):
-                if q==0:
-                    print 'LONG ',
-                    i1 = allindices[i]
-                    i2 = allindices[i+1]-1
-                    #i2 = allindices[i+1]+1     ## .. works for 'q in [0]'
-                else:
-                    print 'SHORT',
-                    i1 = allindices[i+1]-1
-                    i2 = allindices[i+1]+1
-
-                if i1>=i2: continue
-
-                pfreq   = freq[i1:i2]
-                if not q and pfreq[0] > 600e9: break
-                pts = np.arange(10000)[i1:i2]; print pts[0], pts[-1],; print pfreq[0]/1e9,
-                ps11    = s11[i1:i2]
-                ps12    = s12[i1:i2]
-                print 'start=', np.array(pN_uo)/pi,
-
-                ## Plot oldschool N
-                pN_uo_old = pN_uo
-                pN, pN_uo, pN_debug    = rt2n(pfreq, ps11, ps12, d, init_branch=args.N_init_branch, init_sign=args.N_init_sign, uo=pN_uo)
-                #if q!=0: pN_uo = pN_uo_old
-
-                #print 'end=', np.array(pN_uo)/pi
-                if i == 0:
-                    try:
-                        #print len(pN)
-                        ii = 0
-                        det_branch = np.round(2*np.real(pN[ii]*freq[ii]/c*d))
-                        #print 'det_branch', det_branch
-                    except:
-                        pass
-                    #print "N before correction", N[0:10]
-                pN -= det_branch / (pfreq/c*d)/2
-                plt.plot(pfreq, pN.real, lw=1.2, marker='o', markersize=2)
-                #plt.plot(pfreq, pN.imag, lw=.8, ls='--')
-
-                ## Plot oldschool UO
-                #plt.plot(pfreq, np.ones_like(3pfreq)*pN_uo_old[0]/10, lw=3, c='#8888ff')
-                #plt.plot(pfreq, np.ones_like(pfreq)*pN_uo_old[1]/10, lw=3, c='#88ff88', ls='-')
-                #plt.plot(pfreq, np.ones_like(pfreq)*pN_uo_old[2]/10, lw=3, c='#ff8888', ls='-')
-                #plt.plot(pfreq, np.ones_like(pfreq)*pN_uo_old[3]/10, lw=3, c='#88ffff', ls='-')
-
-
-
-
-plt.ylabel(u"Phase"); None
+plt.ylabel(u"Phase")
 plt.ylim((-15,15))
 plt.xlim((args.plot_freq_min, args.plot_freq_max)) # XXX
 #plt.xlim((00e9, 440e9))
@@ -657,11 +514,6 @@ if args.check_hilbert and len(freq)>1:
     #plt.plot(freq, np.imag(Z_KK), color="#4499FF", label=u'$Z^{''}_{KK}$', ls='--', alpha=.3)
     DZr = np.real(Z_KK)-np.real(Z)
     DZi = np.imag(Z_KK)-np.imag(Z)
-    #plt.plot(freq, DZr, color="#DDDD00", label=u"$\\Delta Z^{'}_{KK}$", alpha=.3)
-    #plt.plot(freq, DZi, color="#DDDD44", label=u'$\\Delta Z^{''}_{KK}$', ls='--', alpha=.3)
-    #plt.plot(freq[1:], (DZr[1:]+DZr[:-1])/2, color="#DDDD00", label=u"$\\Delta Z^{'}_{KK}$", alpha=.31)
-    #plt.plot(freq[1:], (DZi[1:]+DZi[:-1])/2, color="#DDDD44", label=u'$\\Delta Z^{''}_{KK}$', ls='--', alpha=.31)
-
 
 plt.plot(freq, np.real(N), color="#33AA00", label=u"$N$'")
 plt.plot(freq, np.imag(N), color="#33AA33", label=u'$N$"', ls='--')
@@ -767,120 +619,6 @@ if args.plot_bands and os.path.isdir("band"):
     outfile = os.path.join(splitpath[0], "band", splitpath[1]+"_band.png")
     plt.savefig(outfile, bbox_inches='tight')
 #}}}
-## --- Nice plotting to PDF ----------------------------------------------------------------------------------#{{{
-if args.plot_publi:
-    if not os.path.exists("publi"): os.mkdir("publi")
-    matplotlib.rc('text', usetex=True)
-    matplotlib.rc('font', size=14)
-    matplotlib.rc('text.latex', preamble = \
-            '\usepackage{amsmath}, \usepackage{palatino},\usepackage{upgreek}')
-    matplotlib.rc('font',**{'family':'serif','serif':['palatino, times']})  ## select fonts
-
-    subplot_index = 1
-    subplot_count = sum([(1 if x else 0) for x in (args.plot_publi_rt, args.plot_publi_n, args.plot_publi_z, args.plot_publi_eps, args.plot_publi_mu)])
-    fig = plt.figure(figsize=(7,1+3*subplot_count))
-    fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.0, hspace=.0) ## XXX
-    print 'subplot_count', subplot_count
-
-
-    if args.plot_publi_rt:
-        ax= plt.subplot(subplot_count, 1, subplot_index)
-        ax.label_outer()
-        plt.grid(args.plot_publi_overlay_grid)
-        plt.plot(freq/args.frequnit, s11amp, marker=marker, color="#880000", label=u'$|r|$', lw=1)
-        plt.plot(freq/args.frequnit, s12amp, marker=marker, color="#0088ff", label=u'$|t|$', lw=1)
-        plt.ylabel(u"Amplitude"); 
-        if args.plot_expe and os.path.exists('r.dat'):
-            rf, ry = np.loadtxt('r.dat', usecols=list(range(2)), unpack=True)
-            plt.plot(rf, ry, lw=0, color='r', marker='o' if len(rf)<20 else '', ms=3, label=u'$|r|$')        ## NOTE: may need tf*args.frequnit
-        if args.plot_expe and os.path.exists('t.dat'):
-            tf, ty = np.loadtxt('t.dat', usecols=list(range(2)), unpack=True)
-            plt.plot(tf, ty, lw=0, color='b', marker='s' if len(rf)<20 else '', ms=3, label=u'$|t|$')        ## NOTE: may need tf*args.frequnit
-        plt.xticks(xticks, xnumbers); plt.minorticks_on(); 
-        plt.xlim((plot_freq_min/args.frequnit, plot_freq_max/args.frequnit))
-        print freq
-        print plot_freq_min/args.frequnit, plot_freq_max/args.frequnit
-        plt.ylim((0,1.)); 
-        plt.legend(loc='lower left').draw_frame(False)
-        subplot_index += 1
-
-    ## ---- N -----
-    if args.plot_publi_n:
-        ax = plt.subplot(subplot_count, 1, subplot_index)
-        ax.label_outer()
-        plt.grid(args.plot_publi_overlay_grid)
-        plt.ylabel(u"Index of refraction"); 
-
-        if args.plot_publi_overlay_Brillouin:
-            for ii in np.arange(-10, 10):
-                plt.plot(freq, ii*c/freq/d, color="#000000", label=u"", lw=.2)
-                plt.plot(freq, (ii+.5)*c/freq/d, color="#777777", label=u"", lw=.2)
-
-        #TODO if args.plot_expe and os.path.exists('k.dat'):
-            #tf, ty = np.loadtxt('t.dat', usecols=list(range(2)), unpack=True)
-            #plt.plot(tf*args.frequnit, ty, lw=0, color='#004AAA', marker='o', ms=2, label=u'$|t|$ exp') 
-
-        plt.plot(freq/args.frequnit, np.real(N), color="#448800", label=u"$N_{\\text{eff}}'$")
-        plt.plot(freq/args.frequnit, np.imag(N), color="#448800", label=u"$N_{\\text{eff}}''$", ls='--')
-        if args.check_hilbert and len(freq)>1:
-            plt.plot(freq/args.frequnit, np.real(N_KK), color="#dd88aa", label=u"")
-            plt.plot(freq/args.frequnit, np.imag(N_KK), color="#dd88aa", label=u"", ls='--')
-        plt.xticks(xticks, xnumbers); plt.minorticks_on()
-        plt.xlim((args.plot_freq_min, args.plot_freq_max))
-        plt.ylim((-5,5))
-        plt.legend(loc='lower left').draw_frame(False) 
-        subplot_index += 1
-
-    ### ----- Z -----
-    if args.plot_publi_z:
-        ax = plt.subplot(subplot_number, 1, subplot_index)
-        ax.label_outer()
-        plt.grid(args.plot_publi_overlay_grid)
-        plt.ylabel(u"Impedance"); plt.ylim((-2.,4.))
-        plt.plot(freq/args.frequnit, np.real(Z), color="#004488", label=u"$Z_{\\text{eff}}'$")
-        plt.plot(freq/args.frequnit, np.imag(Z), color="#004488", label=u"$Z_{\\text{eff}}''$", ls='--')
-        plt.xticks(xticks, xnumbers); plt.minorticks_on(); 
-        plt.xlim((args.plot_freq_min, args.plot_freq_max))
-        plt.legend(loc=(.03,.6));
-        subplot_index += 1
-
-    ## ----- EPS -----
-    if args.plot_publi_eps:
-        ax = plt.subplot(subplot_count, 1, subplot_index)
-        ax.label_outer()
-        plt.grid(args.plot_publi_overlay_grid)
-        plt.ylabel(u"Permittivity $\\varepsilon_{\\text{eff}}$") 
-        plt.plot(freq/args.frequnit, np.real(eps), color="#660044", label=u"$\\varepsilon'$")
-        plt.plot(freq/args.frequnit, np.imag(eps), color="#660044", label=u"$\\varepsilon''$", ls='--')
-
-        ## optional: Drude model
-        #plt.plot(freq, 1-(1100e9/freq)**2,       color="#888888", label=u"$1-\\frac{f_p^2}{f^2}$", ls='-') 
-
-        plt.xticks(xticks, xnumbers); plt.minorticks_on()
-        plt.xlim((args.plot_freq_min, args.plot_freq_max))
-        plt.ylim((-5.,5.))
-        plt.legend(loc='lower left'); 
-        subplot_index += 1
-
-    ## ----- MU -----
-    if args.plot_publi_mu:
-        ax = plt.subplot(subplot_count, 1, subplot_index)
-        ax.label_outer()
-        plt.grid(args.plot_publi_overlay_grid)
-        plt.ylabel(u"Permeability $\\mu_{\\text{eff}}$"); 
-        plt.plot(freq/args.frequnit, np.real(mu), color="#663300", label=u"$\\mu'$")
-        plt.plot(freq/args.frequnit, np.imag(mu), color="#663300", label=u"$\\mu''$", ls='--')
-        plt.xticks(xticks, xnumbers); plt.minorticks_on(); 
-        plt.xlim((args.plot_freq_min, args.plot_freq_max)); 
-        plt.ylim((-5.,5.)); 
-        plt.legend(loc='lower left'); 
-        subplot_index += 1
-
-    plt.xlabel(u"Frequency [%s]" % args.frequnitname) 
-    splitpath = os.path.split(last_simulation_name)
-    outfile = os.path.join(splitpath[0], "publi", splitpath[1]+"_publi.pdf")
-    plt.savefig(outfile, bbox_inches='tight')
-    #}}}
 
 ## --- Save data to effparam.dat (to ./effparam/*dat) ------------------------------------------#{{{
 if args.savedat:
