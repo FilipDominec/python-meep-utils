@@ -18,41 +18,50 @@ TODOs:
 
 """
 import numpy as np
-import sys, os, re, matplotlib 
+import sys, os, re, matplotlib, argparse
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve, fmin
 from scipy.constants import pi, c
 
 ## == User settings for postprocessing and plotting == 
-frequnit, frequnitname = 1e12, "THz"
-
-N_init_branch   =   0
-N_init_sign     =   1
-Z_init_sign     =   -1
-autocorrect_signs = True
-autobranch_sampler_position = 0.05
-autobranch      =   0    ## experimental
-
-check_hilbert   =   0       ## Verifies if Kramers-Kronig relations hold for N  ###XXX
-legend_enable   =   1      
-brillouin_boundaries = 1    ## Plots thin lines where the N would exceed the allowed 
-                            ## range for 0-th Bloch mode
-
-savedat     = 1     ## created directory 'effparam' and saves all params to an ascii file with header
-plot_publi  = 1     ## prepares nice small graphs for publication
-plot_polar  = 0     ## plots results to polar graphs for diagnostics
-plot_bands  = 0     ## plots index of refraction as dispersion curves (k-omega)
-plot_expe   = 1     ## if 'r.dat', 't.dat', 'N.dat', 'Z.dat', 'eps.dat' or 'mu.dat' available, overlay them
-find_plasma_frequency = 0 ## find frequencies where epsilon crosses zero
-
-plot_freq_min = 0
-plot_freq_max = None  ## if None, decide from the input file header
-#plot_freq_max = 2.5e12
-plot_weak_transmission = False
-padding = None
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+## Effective parameter retrieval options
+parser.add_argument('--N_init_sign',                    type=int,   default=1)
+parser.add_argument('--N_init_branch',                  type=int,   default=0)
+parser.add_argument('--Z_init_sign',                    type=int,   default=-1)
+parser.add_argument('--padding',                        type=float, default=0., help='')
+parser.add_argument('--autocorrect_signs',              type=int,   default=1, help='shall enforce the positive value of imag N?')
+parser.add_argument('--autobranch_sampler_position',    type=float, default=0.05)
+parser.add_argument('--autobranch',                     type=int,   default=0, help='automatepsic selection of the branch')
+parser.add_argument('--savedat',                        type=int,   default=1, help='created directory "effparam" and saves all params to an ascii file with header')
+## Postprocessing
+parser.add_argument('--find_plasma_frequency',          type=int,   default=0, help='find frequencies where epsilon crosses zero')
+parser.add_argument('--detect_loss_maxima',             type=int,   default=0, help='')
+## Plotting mode choice
+parser.add_argument('--plot_publi',                     type=int,   default=1, help='prepares nice small graphs for publication')
+parser.add_argument('--plot_publi_rt',                  type=int,   default=1, help='... include reflection and transmission plot')
+parser.add_argument('--plot_publi_n',                   type=int,   default=1, help='... include reflective index plot')
+parser.add_argument('--plot_publi_z',                   type=int,   default=0, help='... include impedance plot')
+parser.add_argument('--plot_publi_eps',                 type=int,   default=0, help='... include effective permittivity plot')
+parser.add_argument('--plot_publi_mu',                  type=int,   default=0, help='... include effective permeability plot')
+parser.add_argument('--plot_publi_overlay_Brillouin',   type=int,   default=1, help='')
+parser.add_argument('--plot_publi_overlay_grid',        type=int,   default=0, help='')
+parser.add_argument('--plot_polar',                     type=int,   default=0, help='plots results to polar graphs for diagnostics')
+parser.add_argument('--plot_bands',                     type=int,   default=0, help='plots index of refraction as dispersion curves (k-omega)')
+## Plotting tuning
+parser.add_argument('--frequnit',                       type=int,   default=1e12)
+parser.add_argument('--frequnitname',                   type=str,   default='THz')
+parser.add_argument('--check_hilbert',                  type=int,   default=0, help='Verifies if Kramers-Kronig relations hold for N')  ###XXX?
+parser.add_argument('--legend_enable',                  type=int,   default=1, help='show legend in the plot')
+parser.add_argument('--brillouin_boundaries',           type=int,   default=1, help='Plots thin lines where the N would exceed the allowed range for 0-th Bloch mode')
+parser.add_argument('--plot_expe',                      type=int,   default=1, help='if "r.dat", "t.dat", "N.dat", "Z.dat", "eps.dat" or "mu.dat" available, overlay them')
+parser.add_argument('--plot_freq_min',                  type=float, default=np.nan, help='')
+parser.add_argument('--plot_freq_max',                  type=float, default=np.nan, help='if None, decide from the input file header')
+parser.add_argument('--plot_weak_transmission',         type=int,   default=0)
+args = parser.parse_args()
 
 np.seterr(all='ignore')      ## do not print warnings for negative-number logarithms etc.
-## == </user settings> == 
+
 
 ## == Auxiliary functions ==
 def get_simulation_name(argindex=1): #{{{
@@ -66,24 +75,14 @@ def get_simulation_name(argindex=1): #{{{
     elif os.path.exists(os.path.join(cwd, 'last_simulation_name.dat')):
         print "Loading from", os.path.join(cwd, 'last_simulation_name.dat')
         last_simulation_name = os.path.join(cwd, open(os.path.join(cwd, 'last_simulation_name.dat'),'r').read().strip())
+        print 'last_simulation_name',last_simulation_name
     else:
         print "Error: No input file provided and 'last_simulation_name.dat' not found!"
         last_simulation_name = cwd
     if (last_simulation_name[-4:] == ".dat"): last_simulation_name = last_simulation_name[:-4] # strip the .dat extension
     return  last_simulation_name
 #}}}
-def get_cmdline_parameters():#{{{ (unused)
-    # (optional) Manual N branch override
-    if len(sys.argv)>2 and sys.argv[2] != "-"  and __name__ == "__main__": 
-        print "Setting branch:", sys.argv[2]
-        branch_offset = np.ones(len(freq))*int(sys.argv[2])
-        last_simulation_name += "_BRANCH=%s" % sys.argv[2]
-    if len(sys.argv)>3 and sys.argv[3] != "-"  and __name__ == "__main__": 
-        print "Setting branch sign:", sys.argv[3]
-        Nsign = np.ones(len(freq))*int(sys.argv[3])
-        last_simulation_name += "_SIGN=%s" % sys.argv[3]
-    return branch_offset, Nsign#}}}
-def load_rt(filename, cellsize=None, cellnumber=1, plot_freq_min=None, plot_freq_max=None, truncate=True, padding=None): #{{{
+def load_rt(filename): #{{{
     """ Loads the reflection and transmission spectra and simulation settings 
 
     Returns:
@@ -97,30 +96,39 @@ def load_rt(filename, cellsize=None, cellnumber=1, plot_freq_min=None, plot_freq
     Expects polar data with columns: frequency, s11 ampli, s11 phase, s12 ampli, s12 phase
     """
     ## Extract relevant parameters
-    with open(filename+'.dat') as datafile:
-        for line in datafile:
-            if line[0:1] in "0123456789": break         # end of file header
-            value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
-            if ("cellsize" in line) and (cellsize == None): cellsize = float(value)
-            if ("cellnumber" in line): cellnumber = float(value)
-            if ("plot_freq_min" in line) and (plot_freq_min == None): plot_freq_min = float(value)
-            if ("plot_freq_max" in line) and (plot_freq_max == None): plot_freq_max = float(value)
-            if ("param padding" in line) and (padding == None): padding = float(value)
+    #with open(filename+'.dat') as datafile:
+        #for line in datafile:
+            #if line[0:1] in "0123456789": break         # end of file header
+            #value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
+            #if ("cellsize" in line) and (cellsize == None): cellsize = float(value)
+            #if ("cellnumber" in line): cellnumber = float(value)
+            #if ("plot_freq_min" in line) and (plot_freq_min == 0): plot_freq_min = float(value)
+            #if ("plot_freq_max" in line) and (plot_freq_max == np.infty): plot_freq_max = float(value)
+            #if ("param padding" in line) and (padding == None): padding = float(value)
 
     ## Load data columns
     (freq, s11amp, s11phase, s12amp, s12phase) = \
             map(lambda a: np.array(a, ndmin=1), np.loadtxt(filename+".dat", unpack=True)) 
     
-    ## If not specified, guess the plot frequency range
-    if plot_freq_min == None: plot_freq_min = np.min(freq)
-    if plot_freq_max == None: plot_freq_max = np.max(freq)
-
     ## Limit the frequency range to what will be plotted (recommended) TODO wrong approach
-    if truncate and len(freq)>1:
-        (d0,d1) = np.interp((plot_freq_min, plot_freq_max), freq, range(len(freq)))
-        (freq, s11amp, s11phase, s12amp, s12phase) = \
-                map(lambda a: a[int(d0):int(d1)], (freq, s11amp, s11phase, s12amp, s12phase))
-    return freq, s11amp, s11phase, s12amp, s12phase, cellsize, plot_freq_min, plot_freq_max, padding, cellnumber
+    #XXX RM if truncate and len(freq)>1:
+        #(d0,d1) = np.interp((plot_freq_min, plot_freq_max), freq, range(len(freq)))
+        #(freq, s11amp, s11phase, s12amp, s12phase) = \
+                #map(lambda a: a[int(d0):int(d1)], (freq, s11amp, s11phase, s12amp, s12phase))
+    return freq, s11amp, s11phase, s12amp, s12phase
+#}}}
+def get_param(filename):             ## Load header to the 'parameters' dictionary#{{{
+    parameters = {}
+    with open(filename) as datafile:
+        for line in datafile:
+            if (line[0:1] in '0123456789') or ('column' in line.lower()): break    # end of parameter list
+            ## key-value separator is either ',' or '='; take the left word from it as the param name, and everything on the right as the param value
+            left, value = line.replace(',', '=').strip().split('=', 1)
+            key = left.split()[-1]
+            try: value = float(value) ## Try to convert to float, if possible
+            except: pass                ## otherwise keep as string
+            parameters[key] = value
+    return parameters
 #}}}
 def shiftmp(freq, s11, shiftplanes):#{{{
     """ Adjusts the reflection phase like if the monitor planes were not centered.
@@ -158,7 +166,7 @@ def reasonable_ticks(a, density=.6): #{{{
     return (decimal, 2*decimal, 5*decimal)[np.int(3*y)]
 #}}}
 
-## == Homogenisation functions (processing whole np.array at once) ==
+## == Homogenisation functions (efficient processing whole np.array at once) ==
 def polar2complex(amp, phase): return amp*np.exp(1j*phase)  #{{{
 #}}}
 def unwrap_ofs(p, ofs):#{{{
@@ -357,61 +365,53 @@ def nz2rt(freq, N, Z, d):#{{{
     """
 #}}}
 
-## == Auxiliary functions for monitor-plane fitting == 
-def error_func(N1,Z1,N2,Z2,lastdif=0,p0=[0]):#{{{
-    """ Used for optimization: tries to match N1,N2 and Z1,Z2, avoiding forbidden values """
-    return abs(N1-N2) + abs(Z1-Z2) + \
-                lastdif + (abs(p0[0])*1e4)**2 +\
-                (abs(np.imag(N1))-np.imag(N1))*100 + (abs(np.imag(N2))-np.imag(N2))*100 + \
-                (abs(np.real(Z1))-np.real(Z1))*100 + (abs(np.real(Z2))-np.real(Z2))*100
-                #}}}
-def eval_point(p0):#{{{
-    freq_p = freq[i-1:i+1]
-
-    s11p1   = shiftmp(freq[i-1:i+1], s11[i-1:i+1], p0[0])
-    s12p1   = s11[i-1:i+1] 
-    new_N1, Nuo1x = rt2n(freq_p, s11p1, s12p1, d, init_branch=0, uo=Nuo1)[0:2]
-    new_Z1, Zuo1x = rt2z(s11p1, s12[i-1:i+1], uo=Zuo1)
-
-    s11p2   = shiftmp(freq[i-1:i+1], s11_2[i-1:i+1], p0[0])
-    s12p2   = s11_2[i-1:i+1] 
-    new_N2, Nuo2x = rt2n(freq_p, s11p2, s12p2, d2, init_branch=0, uo=Nuo2)[0:2]
-    new_Z2, Zuo2x = rt2z(s11p2, s12[i-1:i+1], uo=Zuo2)
-
-    lastdif = abs(p0s[-1]-p0[0])*1e5 if (p0s[-1] != np.NaN) else 0
-    return error_func(new_N1[1], new_Z1[1], new_N2[1], new_Z2[1], lastdif=lastdif)
-#}}}
-
-
-## --- Calculation -------------------------------------------- 
-## Get reflection and transmission data
+## --- Preparation of data ------------------------------------ # {{{
+## Get reflection and transmission data, prepare its parameters
 last_simulation_name = get_simulation_name()
-freq, s11amp, s11phase, s12amp, s12phase, cellsize, plot_freq_min, plot_freq_max, padding, cellnumber = \
-        load_rt(last_simulation_name, plot_freq_min=plot_freq_min, plot_freq_max=plot_freq_max, truncate=False, padding=padding)
+freq, s11amp, s11phase, s12amp, s12phase = load_rt(last_simulation_name)
+params  = get_param('/'+last_simulation_name.strip('/')+'.dat')
 
-d = cellsize * cellnumber
+if 'cellsize' in params.keys():   cellsize = params['cellsize']
+else:                             print "Warning, `cellsize' parameter not specified, effparam retrieval wrong"; cellsize = 1 
 
-## Convert to complex numbers and compensate for the additional padding of the monitor planes
-s11 = shiftmp(freq, polar2complex(s11amp, s11phase), padding*np.ones_like(freq))
-s12 = shiftmp(freq, polar2complex(s12amp, s12phase), padding*np.ones_like(freq))
+if 'cellnumber' in params.keys(): cellnumber = params['cellnumber']
+else:                             print "Warning, `cellnumber' parameter not specified, defaulting to 1"; cellnumber = 1 
+
+d = cellsize * cellnumber         ## total thickness of the structure
+
+if 'padding' in params.keys():    padding = params['padding']
+else:                             print "Warning, `padding' parameter not specified, defaulting to 0"; padding = 1 
+
+if not args.plot_freq_min is np.nan: plot_freq_min = args.plot_freq_min
+elif 'plot_freq_min' in params:      plot_freq_min = params['plot_freq_min']
+else:                                plot_freq_min = np.min(freq)
+
+if not args.plot_freq_max is np.nan: plot_freq_max = args.plot_freq_max
+elif 'plot_freq_max' in params:      plot_freq_max = params['plot_freq_max']
+else:                                plot_freq_max = np.max(freq)
+# }}}
+## --- Calculation of effective parameters -------------------- # {{{
+## Convert to complex numbers and compensate for the additional args.padding of the monitor planes
+s11 = shiftmp(freq, polar2complex(s11amp, s11phase), args.padding*np.ones_like(freq))
+s12 = shiftmp(freq, polar2complex(s12amp, s12phase), args.padding*np.ones_like(freq))
 
 ## Build the debug plots
 arg = (1+0j-s11**2+s12**2)/2/(s12)
 argLog = np.e**(1j*np.angle(arg))*np.log(1+abs(arg)) ## radially shrinked graph to see the topology
 
-## Calculate N, Z and try to correct the signs (TODO use K-K branch selection!)
+## Calculate N, Z and try to correct the signs
 if len(freq)>2:
-    N, N_uo, N_debug    = rt2n(freq, s11, s12, d, init_branch=N_init_branch, init_sign=N_init_sign)
+    N, N_uo, N_debug    = rt2n(freq, s11, s12, d, init_branch=args.N_init_branch, init_sign=args.N_init_sign)
     #print "N before correctio1", N[0:10]
-    Z, Z_uo             = rt2z(s11, s12, init_sign=Z_init_sign)
-    if autocorrect_signs: 
+    Z, Z_uo             = rt2z(s11, s12, init_sign=args.Z_init_sign)
+    if args.autocorrect_signs: 
 
         ## Fix N sign so that N.imag > 0 
         nimag = np.sum(np.clip(N.imag,-10., 10.))
         if nimag<0: N *= -1
 
         ## Take a sample
-        ii = int(float(len(N)) * autobranch_sampler_position)
+        ii = int(float(len(N)) * args.autobranch_sampler_position)
         sampleR = np.real(N[ii])
         sampleI = np.imag(N[ii])
         print 'sampleR, sampleI =', sampleR, sampleI
@@ -426,18 +426,13 @@ if len(freq)>2:
             det_branch *= -1
             branch_selector *= -1
         print 'branch_selector, det_branch, diff', branch_selector, det_branch, (branch_selector-det_branch)
-        #print "N before correction", N[0:20]
         N -= det_branch / (freq/c*d)/2
-        #print "N after  correction", N[0:20]
         ## Fixing Z sign so that Z.real > 0
-        #Z *= np.sign(Z.real)
         if sum(np.clip(Z.real,-10., 10.))<0: 
             Z *= -1
-            #Z, Z_uo             = rt2z(s11, s12, init_sign=Z_init_sign)
 else:
-    N = np.zeros_like(freq)         # TODO why?
+    N = np.zeros_like(freq) 
     Z = np.zeros_like(freq)
-#}}}
 
 ## Detect resonances
 losses = 1-abs(s11)**2-abs(s12)**2
@@ -450,11 +445,12 @@ eps, mu = nz2epsmu(N, Z)
 
 ## Verify the results by back-calculating s11 and s12 to compare with the original values
 s11backcalc, s12backcalc = nz2rt(freq, N, Z, d)
+# }}}
 
 ## --- Plotting to cartesian graphs -------------------------------------------- #{{{
 plt.figure(figsize=(15,15))
 xticks = np.arange(plot_freq_min, plot_freq_max, reasonable_ticks((plot_freq_max-plot_freq_min)/10))
-xnumbers = [("%.2f"%(f/frequnit) if abs(f%reasonable_ticks((plot_freq_max-plot_freq_min)/10))<(frequnit/1000) else "") for f in xticks]
+xnumbers = [("%.2f"%(f/args.frequnit) if abs(f%reasonable_ticks((plot_freq_max-plot_freq_min)/10))<(args.frequnit/1000) else "") for f in xticks]
 marker = "s" if (len(freq) < 20) else ""  # Use point markers for short data files
 subplot_number = 4
 
@@ -462,24 +458,24 @@ subplot_number = 4
 plt.subplot(subplot_number, 1, 1)
 plt.plot(freq, s11amp, marker=marker, color="#AA4A00", label=u'$|s_{11}|$')
 plt.plot(freq, s12amp, marker=marker, color="#004AAA", label=u'$|s_{12}|$')
-if plot_weak_transmission:
+if args.plot_weak_transmission:
     plt.plot(freq, s12amp*1000, marker=marker, color="#00AA4A", label=u'$|s_{12}|*1000$')
     plt.plot(freq, s12amp*100, marker=marker, color="#4AAA00", label=u'$|s_{12}|*100$')
 plt.plot(freq, losses, color="#AAAAAA", label=u'loss')
-if plot_expe and os.path.exists('r.dat'):
+if args.plot_expe and os.path.exists('r.dat'):
     rf, ry = np.loadtxt('r.dat', usecols=list(range(2)), unpack=True)
     plt.plot(rf, ry, lw=.5, ms=3, color='#AA8A40', marker='o') 
-if plot_expe and os.path.exists('t.dat'):
+if args.plot_expe and os.path.exists('t.dat'):
     tf, ty = np.loadtxt('t.dat', usecols=list(range(2)), unpack=True)
     plt.plot(tf, ty, lw=.5, ms=3, color='#408AAA', marker='o') 
 
 # - temporary -
-if plot_expe and os.path.exists('../t00kVcm_Comsol.dat'):           ## XXX
+if args.plot_expe and os.path.exists('../t00kVcm_Comsol.dat'):           ## XXX
     tf, ty = np.loadtxt('../t00kVcm_Comsol.dat', usecols=list(range(2)), unpack=True)
-    plt.plot(tf*frequnit, ty, lw=2, color='#4A00AA', marker='o', alpha=.3, label='$|t_{0kV/cm}^{(Coms)}|$') 
-if plot_expe and os.path.exists('../t90kVcm_Comsol.dat'):
+    plt.plot(tf*args.frequnit, ty, lw=2, color='#4A00AA', marker='o', alpha=.3, label='$|t_{0kV/cm}^{(Coms)}|$') 
+if args.plot_expe and os.path.exists('../t90kVcm_Comsol.dat'):
     tf, ty = np.loadtxt('../t90kVcm_Comsol.dat', usecols=list(range(2)), unpack=True)
-    plt.plot(tf*frequnit, ty, lw=2, color='#00AA4A', marker='s', alpha=.3, label='$|t_{90kV/cm}^{(Coms)}|$') 
+    plt.plot(tf*args.frequnit, ty, lw=2, color='#00AA4A', marker='s', alpha=.3, label='$|t_{90kV/cm}^{(Coms)}|$') 
 
 ## Verification of calculated data by calculating reflection and transmission again
 plt.subplot(subplot_number, 1, 1) 
@@ -487,9 +483,9 @@ plt.plot(freq, abs(s11backcalc), color="#FA9962", label=u'$|s_{11FD}|$', ls='--'
 plt.plot(freq, abs(s12backcalc), color="#6299FA", label=u'$|s_{12FD}|$', ls='--')
 #plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(1)
 
-plt.ylabel(u"Amplitude"); plt.ylim((-0.1,1.1)); plt.xlim((plot_freq_min, plot_freq_max)) # XXX
+plt.ylabel(u"Amplitude"); plt.ylim((-0.1,1.1)); plt.xlim((args.plot_freq_min, args.plot_freq_max)) # XXX
 plt.xticks(xticks, xnumbers); plt.minorticks_on();  plt.grid(True)
-if legend_enable: plt.legend(loc="upper right"); 
+if args.legend_enable: plt.legend(loc="upper right"); 
 
 
 #print '*********************************************'
@@ -534,7 +530,7 @@ if len(freq)>2:
     plt.plot(freq, -np.ones_like(freq), color="k", label=u"", lw=.3, ls='-') 
     plt.plot(freq, np.ones_like(freq), color="k", label=u"", lw=.3, ls='-') 
 
-    if autobranch:          ## EXPERIMENTAL
+    if args.autobranch:          ## EXPERIMENTAL
         # Detection of key points in the spectrum (PBG boundaries, branch skips etc.)
         def find_maxima(x, y, minimum_value=.1):
             """ 
@@ -573,8 +569,8 @@ if len(freq)>2:
         ## Scan through all photonic bands/bandgaps, seleting the correct N branch
         #print 'allindices', allindices
         #N_init_branch = 0
-        #print 'N_init_sign', N_init_sign
-        #N_init_sign = -1 
+        #print 'args.N_init_sign', args.N_init_sign
+        #args.N_init_sign = -1 
         #pN_uo = [0,0,0,0]
         pN_uo = [2*pi,2*pi,2*pi,0]
         det_branch = 0
@@ -604,7 +600,7 @@ if len(freq)>2:
 
                 ## Plot oldschool N
                 pN_uo_old = pN_uo
-                pN, pN_uo, pN_debug    = rt2n(pfreq, ps11, ps12, d, init_branch=N_init_branch, init_sign=N_init_sign, uo=pN_uo)
+                pN, pN_uo, pN_debug    = rt2n(pfreq, ps11, ps12, d, init_branch=args.N_init_branch, init_sign=args.N_init_sign, uo=pN_uo)
                 #if q!=0: pN_uo = pN_uo_old
 
                 #print 'end=', np.array(pN_uo)/pi
@@ -632,20 +628,20 @@ if len(freq)>2:
 
 plt.ylabel(u"Phase"); None
 plt.ylim((-15,15))
-plt.xlim((plot_freq_min, plot_freq_max)) # XXX
+plt.xlim((args.plot_freq_min, args.plot_freq_max)) # XXX
 #plt.xlim((00e9, 440e9))
 plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(True)
-if legend_enable: plt.legend(); 
+if args.legend_enable: plt.legend(); 
 
 
 ## Plot Z, N and figure-of-merit
 plt.subplot(subplot_number, 1, 3)
 
-if brillouin_boundaries:
+if args.brillouin_boundaries:
     for i in range(1,4):
         plt.plot(freq, c/(2*freq*d)*i, color="#000000", label=u'', ls='-', lw=.5, alpha=.5)
         plt.plot(freq, -c/(2*freq*d)*i, color="#000000", label=u'', ls='-', lw=.5, alpha=.5)
-if check_hilbert and len(freq)>1:
+if args.check_hilbert and len(freq)>1:
     import scipy.fftpack
     N[0] = N[1]  ## avoid NaN
     #np.kaiser(len(N), 5)
@@ -679,15 +675,15 @@ plt.plot(freq, np.log((np.real(N)/np.imag(N)))/np.log(10), \
     color="#BB22FF", ls=":", label=u"$N$''$>0$ FOM")
 plt.ylabel(u"Value"); 
 plt.ylim((-5., 15.)); 
-plt.xlim((plot_freq_min, plot_freq_max)); 
+plt.xlim((args.plot_freq_min, args.plot_freq_max)); 
 plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(True)
-if legend_enable: plt.legend(); 
+if args.legend_enable: plt.legend(); 
 
 
 ## 4) Plot epsilon and mu
 plt.subplot(subplot_number, 1, 4)
 
-if find_plasma_frequency:
+if args.find_plasma_frequency:
     try:
         from scipy.optimize import fsolve
         x, y = freq, eps.real
@@ -696,18 +692,18 @@ if find_plasma_frequency:
     except:
         print "Plasma frequency (epsilon(f) == 0) detection failed"
      
-plt.xlabel(u"Frequency [%s]" % frequnitname) 
-if plot_expe and os.path.exists('eps.dat'):
+plt.xlabel(u"Frequency [%s]" % args.frequnitname) 
+if args.plot_expe and os.path.exists('eps.dat'):
     tf, ty = np.loadtxt('eps.dat', usecols=list(range(2)), unpack=True)
-    plt.plot(tf*frequnit, ty, lw=0, color='#AA0088', marker='o') ## XXX
-    plt.plot(tf*frequnit, -ty, lw=0, color='#AA8888', marker='s') ## XXX
+    plt.plot(tf*args.frequnit, ty, lw=0, color='#AA0088', marker='o') ## XXX
+    plt.plot(tf*args.frequnit, -ty, lw=0, color='#AA8888', marker='s') ## XXX
     #plt.plot(tf     , ty, lw=0, color='#AA0088', marker='o') ## XXX
-if plot_expe and os.path.exists('mu.dat'):
+if args.plot_expe and os.path.exists('mu.dat'):
     tf, ty = np.loadtxt('mu.dat', usecols=list(range(2)), unpack=True)
-    plt.plot(tf*frequnit, ty, lw=0, color='#AA8800', marker='o') ## XXX
-    plt.plot(tf*frequnit, -ty, lw=0, color='#AA8888', marker='s') ## XXX 
+    plt.plot(tf*args.frequnit, ty, lw=0, color='#AA8800', marker='o') ## XXX
+    plt.plot(tf*args.frequnit, -ty, lw=0, color='#AA8888', marker='s') ## XXX 
     #plt.plot(tf     , ty, lw=0, color='#AA0088', marker='o') ## XXX 
-if check_hilbert and len(freq)>1:
+if args.check_hilbert and len(freq)>1:
     import scipy.fftpack
     eps[0] = 0  ## avoid NaN
     eps_KK = scipy.fftpack.hilbert(eps.real + 1j*abs(eps.imag)) / 1j  
@@ -728,16 +724,16 @@ plt.plot(freq, np.real(mu),  color="#BB8800", label=u"$\\mu_{eff}$'")
 plt.plot(freq, np.imag(mu),  color="#DDAA00", label=u'$\\mu_{eff}$"', ls='--')
 plt.ylabel(u"Value"); plt.ylim((-10.,10.)); 
 plt.yscale('symlog', linthreshy=.1); 
-plt.xlim((plot_freq_min, plot_freq_max))
+plt.xlim((args.plot_freq_min, args.plot_freq_max))
 plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(True)
-if legend_enable: plt.legend(); 
+if args.legend_enable: plt.legend(); 
 
 ## Final plotting 
 plt.savefig(last_simulation_name+".png", bbox_inches='tight')
 #}}}
 ## --- Plotting to dispersion curves (k-omega) -------------------------------------------- #{{{
-if plot_bands and not os.path.exists("band"): os.mkdir("band")
-if plot_bands and os.path.isdir("band"):
+if args.plot_bands and not os.path.exists("band"): os.mkdir("band")
+if args.plot_bands and os.path.isdir("band"):
     plt.figure(figsize=(8,8))
     plt.plot(np.arcsin(np.sin(np.real(N*freq*d/c) * pi)) / pi, freq, color="#33AA00", label=u"$k$'")
     plt.plot(np.imag(N*freq*d/c), freq, color="#33AA33", label=u'$\\kappa$', ls='--')
@@ -764,7 +760,7 @@ if plot_bands and os.path.isdir("band"):
     plt.xlim((-.5, .5)); 
     plt.xticks(xticks, xnumbers); plt.minorticks_on(); 
     plt.grid(True)
-    if legend_enable: plt.legend(loc="upper right"); 
+    if args.legend_enable: plt.legend(loc="upper right"); 
 
     ## Final plotting 
     splitpath = os.path.split(last_simulation_name)
@@ -772,8 +768,7 @@ if plot_bands and os.path.isdir("band"):
     plt.savefig(outfile, bbox_inches='tight')
 #}}}
 ## --- Nice plotting to PDF ----------------------------------------------------------------------------------#{{{
-#if plot_publi and not os.path.exists("publi"): os.mkdir("publi") TODO remove
-if plot_publi:
+if args.plot_publi:
     if not os.path.exists("publi"): os.mkdir("publi")
     matplotlib.rc('text', usetex=True)
     matplotlib.rc('font', size=14)
@@ -781,122 +776,124 @@ if plot_publi:
             '\usepackage{amsmath}, \usepackage{palatino},\usepackage{upgreek}')
     matplotlib.rc('font',**{'family':'serif','serif':['palatino, times']})  ## select fonts
 
-    fig = plt.figure(figsize=(7,4))
+    subplot_index = 1
+    subplot_count = sum([(1 if x else 0) for x in (args.plot_publi_rt, args.plot_publi_n, args.plot_publi_z, args.plot_publi_eps, args.plot_publi_mu)])
+    fig = plt.figure(figsize=(7,1+3*subplot_count))
     fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.0, hspace=.0) ## XXX
+    print 'subplot_count', subplot_count
 
-    publi_toplot = {'rt':1, 'N':0, 'eps':0, 'mu':0, 'Z':0} ## select parameters by setting 1 or 0
-    publi_plot_Brillouin = True
-    publi_use_grid = False
 
-    subplot_index  = 1
-    subplot_count  = sum(publi_toplot.values())
-    ## ---- r, t -----
-    if publi_toplot['rt']:
+    if args.plot_publi_rt:
         ax= plt.subplot(subplot_count, 1, subplot_index)
-        #plt.title(u"Dielectric spheres $r=%d\\;\\upmu$m" % 25) 
-        #plt.title(u"Dielectric spheres in wire mesh") 
-        #plt.title(u"") 
         ax.label_outer()
-        plt.grid(publi_use_grid)
-        plt.plot(freq, s11amp, marker=marker, color="#880000", label=u'$|r|$', lw=1)
-        plt.plot(freq, s12amp, marker=marker, color="#0088ff", label=u'$|t|$', lw=1)
+        plt.grid(args.plot_publi_overlay_grid)
+        plt.plot(freq/args.frequnit, s11amp, marker=marker, color="#880000", label=u'$|r|$', lw=1)
+        plt.plot(freq/args.frequnit, s12amp, marker=marker, color="#0088ff", label=u'$|t|$', lw=1)
         plt.ylabel(u"Amplitude"); 
-        if plot_expe and os.path.exists('r.dat'):
-            tf, ty = np.loadtxt('r.dat', usecols=list(range(2)), unpack=True)
-            plt.plot(tf, ty, lw=0, color='r', marker='o', ms=3, label=u'$|r|$ frequency-domain')        ## NOTE: may need tf*frequnit
-        if plot_expe and os.path.exists('t.dat'):
+        if args.plot_expe and os.path.exists('r.dat'):
+            rf, ry = np.loadtxt('r.dat', usecols=list(range(2)), unpack=True)
+            plt.plot(rf, ry, lw=0, color='r', marker='o' if len(rf)<20 else '', ms=3, label=u'$|r|$')        ## NOTE: may need tf*args.frequnit
+        if args.plot_expe and os.path.exists('t.dat'):
             tf, ty = np.loadtxt('t.dat', usecols=list(range(2)), unpack=True)
-            plt.plot(tf, ty, lw=0, color='b', marker='s', ms=3, label=u'$|t|$ frequency-domain')        ## NOTE: may need tf*frequnit
-        subplot_index += 1
+            plt.plot(tf, ty, lw=0, color='b', marker='s' if len(rf)<20 else '', ms=3, label=u'$|t|$')        ## NOTE: may need tf*args.frequnit
         plt.xticks(xticks, xnumbers); plt.minorticks_on(); 
-        plt.xlim((plot_freq_min, plot_freq_max)); plt.ylim((0,1.)); plt.legend(loc='lower left').draw_frame(False)
-
-    ## Todo allow plotting phase! (And in the 'cartesian' plot, too)
+        plt.xlim((plot_freq_min/args.frequnit, plot_freq_max/args.frequnit))
+        print freq
+        print plot_freq_min/args.frequnit, plot_freq_max/args.frequnit
+        plt.ylim((0,1.)); 
+        plt.legend(loc='lower left').draw_frame(False)
+        subplot_index += 1
 
     ## ---- N -----
-    if publi_toplot['N']:
+    if args.plot_publi_n:
         ax = plt.subplot(subplot_count, 1, subplot_index)
         ax.label_outer()
-        plt.grid(publi_use_grid)
-        plt.ylabel(u"Index of refraction  $N_{\\text{eff}}$"); 
+        plt.grid(args.plot_publi_overlay_grid)
+        plt.ylabel(u"Index of refraction"); 
 
-        if publi_plot_Brillouin:
+        if args.plot_publi_overlay_Brillouin:
             for ii in np.arange(-10, 10):
                 plt.plot(freq, ii*c/freq/d, color="#000000", label=u"", lw=.2)
                 plt.plot(freq, (ii+.5)*c/freq/d, color="#777777", label=u"", lw=.2)
 
-        #TODO if plot_expe and os.path.exists('k.dat'):
+        #TODO if args.plot_expe and os.path.exists('k.dat'):
             #tf, ty = np.loadtxt('t.dat', usecols=list(range(2)), unpack=True)
-            #plt.plot(tf*frequnit, ty, lw=0, color='#004AAA', marker='o', ms=2, label=u'$|t|$ exp') 
+            #plt.plot(tf*args.frequnit, ty, lw=0, color='#004AAA', marker='o', ms=2, label=u'$|t|$ exp') 
 
-        plt.plot(freq, np.real(N), color="#448800", label=u"$N'$")
-        plt.plot(freq, np.imag(N), color="#448800", label=u"$N''$", ls='--')
-        if check_hilbert and len(freq)>1:
-            plt.plot(freq, np.real(N_KK), color="#dd88aa", label=u"")
-            plt.plot(freq, np.imag(N_KK), color="#dd88aa", label=u"", ls='--')
+        plt.plot(freq/args.frequnit, np.real(N), color="#448800", label=u"$N_{\\text{eff}}'$")
+        plt.plot(freq/args.frequnit, np.imag(N), color="#448800", label=u"$N_{\\text{eff}}''$", ls='--')
+        if args.check_hilbert and len(freq)>1:
+            plt.plot(freq/args.frequnit, np.real(N_KK), color="#dd88aa", label=u"")
+            plt.plot(freq/args.frequnit, np.imag(N_KK), color="#dd88aa", label=u"", ls='--')
         plt.xticks(xticks, xnumbers); plt.minorticks_on()
-        plt.xlim((plot_freq_min, plot_freq_max)); plt.ylim((-5,5)); plt.legend(loc='lower left'); 
+        plt.xlim((args.plot_freq_min, args.plot_freq_max))
+        plt.ylim((-5,5))
+        plt.legend(loc='lower left').draw_frame(False) 
+        subplot_index += 1
+
+    ### ----- Z -----
+    if args.plot_publi_z:
+        ax = plt.subplot(subplot_number, 1, subplot_index)
+        ax.label_outer()
+        plt.grid(args.plot_publi_overlay_grid)
+        plt.ylabel(u"Impedance"); plt.ylim((-2.,4.))
+        plt.plot(freq/args.frequnit, np.real(Z), color="#004488", label=u"$Z_{\\text{eff}}'$")
+        plt.plot(freq/args.frequnit, np.imag(Z), color="#004488", label=u"$Z_{\\text{eff}}''$", ls='--')
+        plt.xticks(xticks, xnumbers); plt.minorticks_on(); 
+        plt.xlim((args.plot_freq_min, args.plot_freq_max))
+        plt.legend(loc=(.03,.6));
         subplot_index += 1
 
     ## ----- EPS -----
-    if publi_toplot['eps']:
+    if args.plot_publi_eps:
         ax = plt.subplot(subplot_count, 1, subplot_index)
         ax.label_outer()
-        plt.grid(publi_use_grid)
+        plt.grid(args.plot_publi_overlay_grid)
         plt.ylabel(u"Permittivity $\\varepsilon_{\\text{eff}}$") 
-        plt.plot(freq, np.real(eps), color="#660044", label=u"$\\varepsilon'$")
-        plt.plot(freq, np.imag(eps),       color="#660044", label=u"$\\varepsilon''$", ls='--')
+        plt.plot(freq/args.frequnit, np.real(eps), color="#660044", label=u"$\\varepsilon'$")
+        plt.plot(freq/args.frequnit, np.imag(eps), color="#660044", label=u"$\\varepsilon''$", ls='--')
 
         ## optional: Drude model
         #plt.plot(freq, 1-(1100e9/freq)**2,       color="#888888", label=u"$1-\\frac{f_p^2}{f^2}$", ls='-') 
 
         plt.xticks(xticks, xnumbers); plt.minorticks_on()
-        plt.xlim((plot_freq_min, plot_freq_max)); plt.ylim((-5.,5.)); plt.legend(loc='lower left'); 
+        plt.xlim((args.plot_freq_min, args.plot_freq_max))
+        plt.ylim((-5.,5.))
+        plt.legend(loc='lower left'); 
         subplot_index += 1
 
     ## ----- MU -----
-    if publi_toplot['mu']:
+    if args.plot_publi_mu:
         ax = plt.subplot(subplot_count, 1, subplot_index)
         ax.label_outer()
-        plt.grid(publi_use_grid)
+        plt.grid(args.plot_publi_overlay_grid)
         plt.ylabel(u"Permeability $\\mu_{\\text{eff}}$"); 
-        plt.plot(freq, np.real(mu), color="#663300", label=u"$\\mu'$")
-        plt.plot(freq, np.imag(mu), color="#663300", label=u"$\\mu''$", ls='--')
+        plt.plot(freq/args.frequnit, np.real(mu), color="#663300", label=u"$\\mu'$")
+        plt.plot(freq/args.frequnit, np.imag(mu), color="#663300", label=u"$\\mu''$", ls='--')
         plt.xticks(xticks, xnumbers); plt.minorticks_on(); 
-        plt.xlim((plot_freq_min, plot_freq_max)); 
+        plt.xlim((args.plot_freq_min, args.plot_freq_max)); 
         plt.ylim((-5.,5.)); 
         plt.legend(loc='lower left'); 
         subplot_index += 1
 
-    ### ----- Z -----
-    if publi_toplot['Z']:
-        ax = plt.subplot(subplot_number, 1, subplot_index)
-        ax.label_outer()
-        plt.ylabel(u"Impedance"); plt.ylim((-2.,4.))
-        plt.plot(freq, np.real(Z), color="#004488", label=u"$Z'$")
-        plt.plot(freq, np.imag(Z), color="#004488", label=u"$Z''$", ls='--')
-        plt.xticks(xticks, xnumbers); plt.minorticks_on(); 
-        plt.xlim((plot_freq_min, plot_freq_max));  plt.legend(loc=(.03,.6));
-        subplot_index += 1
-
-    plt.xlabel(u"Frequency [%s]" % frequnitname) 
+    plt.xlabel(u"Frequency [%s]" % args.frequnitname) 
     splitpath = os.path.split(last_simulation_name)
     outfile = os.path.join(splitpath[0], "publi", splitpath[1]+"_publi.pdf")
     plt.savefig(outfile, bbox_inches='tight')
     #}}}
 
 ## --- Save data to effparam.dat (to ./effparam/*dat) ------------------------------------------#{{{
-if savedat:
+if args.savedat:
     splitpath = os.path.split(last_simulation_name)
     if not os.path.exists("effparam"): os.mkdir("effparam") ## FIXME - fails if processing file outside pwd?
-    savedatfile = os.path.join(splitpath[0], "effparam", splitpath[1]+"_effparam.dat")
+    args.savedatfile = os.path.join(splitpath[0], "effparam", splitpath[1]+"_effparam.dat")
 
     ## Copy parameters - load header 
     header = ""
     with open(last_simulation_name+".dat") as datafile:
         for line in datafile:
             if (line[:1]=="#") and (not "olumn" in line): header+=line
-    with open(savedatfile, "w") as outfile:
+    with open(args.savedatfile, "w") as outfile:
         ## Copy parameters - write header 
         outfile.write(header)
         ## Write column headers
@@ -908,8 +905,8 @@ if savedat:
                     N.real, N.imag, Z.real, Z.imag, eps.real, eps.imag, mu.real, mu.imag), fmt="%.8e")
 #}}}
 ## --- Plot polar ------------------------------------------------------------#{{{
-if plot_polar and not os.path.exists("polar"): os.mkdir("polar")
-if plot_polar and os.path.isdir("polar"):
+if args.plot_polar and not os.path.exists("polar"): os.mkdir("polar")
+if args.plot_polar and os.path.isdir("polar"):
     ## Truncate the arrays (optional)
     #(d0,d1) = np.interp((500e9, 650e9), freq, range(len(freq)))
     #(freq, s11, s12, N, Z, eps, mu, arg, argLog) = \
@@ -923,7 +920,7 @@ if plot_polar and os.path.isdir("polar"):
 
     plotlabels=("s11", "s12", "N", "Z", "eps", "mu", "arg", "argLog")
 
-    freqlabels = np.append(loss_maxima[loss_maxima<plot_freq_max], freq[-1])
+    freqlabels = np.append(loss_maxima[loss_maxima<args.plot_freq_max], freq[-1])
 
     fig = plt.figure(figsize=(11,22))
     subplot_number = len(datalist)
@@ -955,7 +952,7 @@ if plot_polar and os.path.isdir("polar"):
         ## Annotate resonant frequencies
         xpoints = np.interp(freqlabels, freq, x.real)
         ypoints = np.interp(freqlabels, freq, y.real)
-        freqlabelstxt = [("%d" % (fr*1000/frequnit)) for fr in freqlabels]
+        freqlabelstxt = [("%d" % (fr*1000/args.frequnit)) for fr in freqlabels]
         for label, xpoint, ypoint in zip(freqlabelstxt, xpoints, ypoints):
             plt.annotate(label, xy = (xpoint, ypoint), xytext = (-10, 10),
                 textcoords = 'offset points', ha = 'right', va = 'bottom',
