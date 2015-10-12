@@ -201,7 +201,7 @@ for color, param, filename in datasets:
         else:
             label = ("%s = %s" % (args.paramname, param))   # automatic formatted label
 
-        plt.plot(x, y, color=color, label=label)
+        plt.plot(x, y, color=color, label=label, marker='o', markersize=(3 if len(x)<50 else 0))
     else:
         ## Store the points for later interpolation and contour plot
         xs      = np.append(xs, x)
