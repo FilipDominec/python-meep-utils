@@ -46,7 +46,7 @@ parser.add_argument('--paramname',  type=str,               help='(compulsory) p
 parser.add_argument('--title',      type=str, default='', help='plot title')
 # todo: remove the --xunit --yunit
 parser.add_argument('--yunit',      type=float, default=1., help='prescaling of the y-axis')
-parser.add_argument('--paramlabel', type=str,   default='', help='line label (use standard "printf percent substitutes" to format the parameter, use LaTeX for typesetting)')
+parser.add_argument('--paramlabel', type=str,   default='-', help='line label; use standard "printf percent substitutes" to format the parameter, LaTeX for typesetting, empty string to disable')
 parser.add_argument('--xcol',       type=str,   default='0', help='number or exact name of the x-axis column') ## TODO or -- if it is to be generated
 parser.add_argument('--ycol',       type=str,   default='1', help='number or exact name of the y-axis column')
 parser.add_argument('--xeval',      type=str,   default='x', help='any python expression to preprocess the `x`-values, e.g. `1e6*c/x` to convert Hertz to the wavelength in micrometers') 
@@ -62,8 +62,11 @@ parser.add_argument('--xlabel',     type=str,   default='', help='label of the x
 parser.add_argument('--ylabel',     type=str,   default='', help='label of the y-axis (use LaTeX)')
 parser.add_argument('--output',     type=str,   default='output.png', help='output file (e.g. output.png or output.pdf)')
 parser.add_argument('--colormap',   type=str,   default='default', help='matplotlib colormap, available are: hsv (default for lines), gist_earth (default for contours), jet, greys, dark2, brg...')
-parser.add_argument('--usetex',    type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
-parser.add_argument('--contours',    type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
+parser.add_argument('--overlayplot',type=str,   default='', help='one or more expressions, separated by comma, that are plotted to help guide the eye (e.g. 1/x)')
+parser.add_argument('--figsizex',   type=float, default=8, help='figure width (inches), 8 is default')
+parser.add_argument('--figsizey',   type=float, default=4, help='figure height (inches), 4 is default')
+parser.add_argument('--usetex',     type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
+parser.add_argument('--contours',   type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
 parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
 #if len(sys.argv)==1: parser.print_help(); sys.exit(1)
 ## (todo) optional: Load data from multiple files
@@ -133,7 +136,7 @@ def reasonable_ticks(lim1, lim2, density=1, extend_to_lims=False): #{{{
 #}}}
 
 ## Start figure + subplot 
-fig = plt.figure(figsize=(8,4))
+fig = plt.figure(figsize=(args.figsizex,args.figsizey))
 fig.subplots_adjust(left=.05, bottom=.05, right=.99, top=.99, wspace=.05, hspace=.05) ## (for interactive mode)
 
 def loadtxt_columns(filename): #{{{
@@ -153,7 +156,7 @@ def get_col_index(col, fn):#{{{
         try:
             return loadtxt_columns(fn).index(col), col      ## column name given, find its number
         except:
-            raise ValueError, "Could not find column %s for the x-axis in file %s" % (col, fn)
+            raise ValueError, "Could not find column '%s' for the x-axis in file %s;\n\tIndex it by number 0-%d or by name: '%s'" % (col, fn, len(columnnames), "', '".join(columnnames))
 #}}}
 
 
@@ -186,13 +189,17 @@ for color, param, filename in datasets:
 
     if not args.contours == 'yes':
         ## Plot a curve with a nice label, generated from the parameter
-        if args.paramlabel:
+        if args.paramlabel == 'none':
+            label = ''
+        elif ("'" in args.paramlabel) or ('"' in args.paramlabel):
+            label = args.paramlabel.strip('"').strip("'")
+        elif args.paramlabel:
             if '%' in args.paramlabel:
                 label = (args.paramlabel % param)           # manually formatted label
             else:
                 label = (args.paramlabel+(" = %s" % param))           # manual label with parameter value appended
         else:
-            param = ("%s = %s" % (args.paramname, param))   # automatic formatted label
+            label = ("%s = %s" % (args.paramname, param))   # automatic formatted label
 
         plt.plot(x, y, color=color, label=label)
     else:
@@ -224,8 +231,6 @@ if args.xlim2 != "": plt.xlim(right=float(args.xlim2))
 plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
 
 if args.contours == 'yes':
-
-
     plt.ylabel(args.paramname if args.paramlabel == '' else args.paramlabel) 
     plt.title(args.title if args.title else ycolname) 
 else:
@@ -234,7 +239,15 @@ else:
     plt.ylabel(ycolname if args.ylabel == '' else args.ylabel) 
     if args.title: plt.title(args.title)
 plt.grid()
-if not args.contours == 'yes': plt.legend(prop={'size':12}, loc='upper left').draw_frame(False)
+if args.overlayplot:
+    for overlayfunc in args.overlayplot.split(','):
+        plt.plot(x, eval(overlayfunc), color='#808080', lw=.5)
+
+try: 
+    if not args.contours == 'yes': plt.legend(prop={'size':12}, loc='upper left').draw_frame(False)
+except:
+    pass
+
 
 ## ==== Outputting ====
 plt.savefig(args.output, bbox_inches='tight')
