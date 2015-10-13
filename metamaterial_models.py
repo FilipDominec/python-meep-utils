@@ -28,14 +28,9 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
         self.register_locals(locals())          ## Remember the parameters
-        if courant != 0.5:
-            meep.use_Courant(self.courant) 
-            meep.master_printf("meep.use_Courant(%f)" % courant)
-        print self.comment
 
         ## Define materials (with manual Lorentzian clipping) 
         self.materials = []  
-
         if epsilon=="TiO2":     ## use titanium dioxide if permittivity not specified...
             tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
             if loss != 1: tio2.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
@@ -47,11 +42,6 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
 
         if wirethick > 0:
             au = meep_materials.material_Au(where=self.where_wire)
-            if 'diluted' in comment:  ## debug
-                print au.pol[0]['sigma']
-                meep.all_wait()
-                au.pol[0]['sigma'] /= 100
-                print au.pol[0]['sigma']
             self.fix_material_stability(au, verbose=0)
             self.materials.append(au)
 
@@ -82,7 +72,6 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
         self.register_locals(locals())          ## Remember the parameters
 
         ## Constants for the simulation
-        print cellsize
         self.pml_thickness = 20e-6
         self.simtime = simtime      # [s]
         self.src_freq, self.src_width = 2000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/src_width)
@@ -91,7 +80,6 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
         self.size_x, self.size_y  = self.resolution*2, cellsize
         self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
-        print self.monitor_z1-self.monitor_z2
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
         ## Define materials
@@ -185,17 +173,8 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
             if  in_xcyl(r, cy=self.size_y/2, cz=cellc, rad=self.wirethick) or \
                     in_xcyl(r, cy= -self.size_y/2, cz=cellc, rad=self.wirethick):
                 return self.return_value             # (do not change this line)
-
-        #r = self.RotatedCoordsY(r, angle=np.pi/4)
-        #print dir(r)
-        r = self.rotatedX(r, np.pi/4)
-        r = self.rotatedY(r, np.pi/4)
-        #without rot =  66  s
-        #with    rot = 165  s
-        #with   2rot = 239  s
-        #with    rot = 74.7442  s (optimized):
-        #with   2rot = 74.7442  s (optimized):
-
+        #r = self.rotatedX(r, np.pi/4)
+        #r = self.rotatedY(r, np.pi/4)
         for cellc in self.cellcenters:
             ## define the split-ring resonator
             if  (((in_ycyl(r, cx=0, cz=cellc, rad=self.radius+self.srrthick/2)             # outer radius
@@ -222,7 +201,6 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
         self.size_x = resolution*1.8 
         self.size_y = tdist
         self.size_z = ldist + 2*padding + 2*self.pml_thickness
-        meep.master_printf("number of voxels: %d", int(self.size_x*self.size_y*self.size_y/resolution**3))
         self.monitor_z1, self.monitor_z2 = (-(ldist/2)-padding, (ldist/2)+padding)
         cellsize = ldist+2*padding
 
