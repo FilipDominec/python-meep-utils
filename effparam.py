@@ -383,9 +383,9 @@ elif 'plot_freq_max' in params:      plot_freq_max = params['plot_freq_max']
 else:                                plot_freq_max = np.max(freq)
 # }}}
 ## --- Calculation of effective parameters -------------------- # {{{
-## Convert to complex numbers and compensate for the additional args.padding of the monitor planes
-s11 = shiftmp(freq, polar2complex(s11amp, s11phase), args.padding*np.ones_like(freq))
-s12 = shiftmp(freq, polar2complex(s12amp, s12phase), args.padding*np.ones_like(freq))
+## Convert to complex numbers and compensate for the additional padding of the monitor planes
+s11 = shiftmp(freq, polar2complex(s11amp, s11phase), padding*np.ones_like(freq))
+s12 = shiftmp(freq, polar2complex(s12amp, s12phase), padding*np.ones_like(freq))
 
 ## Build the debug plots
 arg = (1+0j-s11**2+s12**2)/2/(s12)
@@ -441,8 +441,6 @@ s11backcalc, s12backcalc = nz2rt(freq, N, Z, d)
 
 ## --- Plotting to cartesian graphs -------------------------------------------- #{{{
 plt.figure(figsize=(15,15))
-xticks = np.arange(plot_freq_min, plot_freq_max, reasonable_ticks((plot_freq_max-plot_freq_min)/10))
-xnumbers = [("%.2f"%(f/args.frequnit) if abs(f%reasonable_ticks((plot_freq_max-plot_freq_min)/10))<(args.frequnit/1000) else "") for f in xticks]
 marker = "s" if (len(freq) < 20) else ""  # Use point markers for short data files
 subplot_number = 4
 
@@ -461,22 +459,12 @@ if args.plot_expe and os.path.exists('t.dat'):
     tf, ty = np.loadtxt('t.dat', usecols=list(range(2)), unpack=True)
     plt.plot(tf, ty, lw=.5, ms=3, color='#408AAA', marker='o') 
 
-# - temporary -
-if args.plot_expe and os.path.exists('../t00kVcm_Comsol.dat'):           ## XXX
-    tf, ty = np.loadtxt('../t00kVcm_Comsol.dat', usecols=list(range(2)), unpack=True)
-    plt.plot(tf*args.frequnit, ty, lw=2, color='#4A00AA', marker='o', alpha=.3, label='$|t_{0kV/cm}^{(Coms)}|$') 
-if args.plot_expe and os.path.exists('../t90kVcm_Comsol.dat'):
-    tf, ty = np.loadtxt('../t90kVcm_Comsol.dat', usecols=list(range(2)), unpack=True)
-    plt.plot(tf*args.frequnit, ty, lw=2, color='#00AA4A', marker='s', alpha=.3, label='$|t_{90kV/cm}^{(Coms)}|$') 
-
 ## Verification of calculated data by calculating reflection and transmission again
 plt.subplot(subplot_number, 1, 1) 
 plt.plot(freq, abs(s11backcalc), color="#FA9962", label=u'$|s_{11FD}|$', ls='--')
 plt.plot(freq, abs(s12backcalc), color="#6299FA", label=u'$|s_{12FD}|$', ls='--')
-#plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(1)
 
-plt.ylabel(u"Amplitude"); plt.ylim((-0.1,1.1)); plt.xlim((args.plot_freq_min, args.plot_freq_max)) # XXX
-plt.xticks(xticks, xnumbers); plt.minorticks_on();  plt.grid(True)
+plt.ylabel(u"Amplitude"); plt.ylim((-0.1,1.1)); plt.xlim((plot_freq_min, plot_freq_max)) # XXX
 if args.legend_enable: plt.legend(loc="upper right"); 
 
 ## Plot r and t phase
@@ -485,9 +473,7 @@ plt.plot(freq, np.unwrap(np.angle(s11))/pi, marker=marker, color="#AA4A00", labe
 plt.plot(freq, np.unwrap(np.angle(s12))/pi, marker=marker, color="#004AAA", label=u'$\\phi(s_{12})/\\pi$')
 plt.ylabel(u"Phase")
 plt.ylim((-15,15))
-plt.xlim((args.plot_freq_min, args.plot_freq_max)) # XXX
-#plt.xlim((00e9, 440e9))
-plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(True)
+plt.xlim((plot_freq_min, plot_freq_max)) # XXX
 if args.legend_enable: plt.legend(); 
 
 
@@ -527,8 +513,8 @@ plt.plot(freq, np.log((np.real(N)/np.imag(N)))/np.log(10), \
     color="#BB22FF", ls=":", label=u"$N$''$>0$ FOM")
 plt.ylabel(u"Value"); 
 plt.ylim((-5., 15.)); 
-plt.xlim((args.plot_freq_min, args.plot_freq_max)); 
-plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(True)
+plt.xlim((plot_freq_min, plot_freq_max)); 
+plt.grid(True)
 if args.legend_enable: plt.legend(); 
 
 
@@ -576,8 +562,8 @@ plt.plot(freq, np.real(mu),  color="#BB8800", label=u"$\\mu_{eff}$'")
 plt.plot(freq, np.imag(mu),  color="#DDAA00", label=u'$\\mu_{eff}$"', ls='--')
 plt.ylabel(u"Value"); plt.ylim((-10.,10.)); 
 plt.yscale('symlog', linthreshy=.1); 
-plt.xlim((args.plot_freq_min, args.plot_freq_max))
-plt.xticks(xticks, xnumbers); plt.minorticks_on(); plt.grid(True)
+plt.xlim((plot_freq_min, plot_freq_max))
+plt.grid(True)
 if args.legend_enable: plt.legend(); 
 
 ## Final plotting 
@@ -610,7 +596,6 @@ if args.plot_bands and os.path.isdir("band"):
     plt.ylabel(u"frequency"); 
     plt.xlabel(u"wavenumber $ka/\\pi$"); 
     plt.xlim((-.5, .5)); 
-    plt.xticks(xticks, xnumbers); plt.minorticks_on(); 
     plt.grid(True)
     if args.legend_enable: plt.legend(loc="upper right"); 
 
@@ -658,7 +643,7 @@ if args.plot_polar and os.path.isdir("polar"):
 
     plotlabels=("s11", "s12", "N", "Z", "eps", "mu", "arg", "argLog")
 
-    freqlabels = np.append(loss_maxima[loss_maxima<args.plot_freq_max], freq[-1])
+    freqlabels = np.append(loss_maxima[loss_maxima<plot_freq_max], freq[-1])
 
     fig = plt.figure(figsize=(11,22))
     subplot_number = len(datalist)

@@ -11,8 +11,8 @@ import meep_mpi as meep
 #import meep
 
 class SphereArray(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=50e-6, cellnumber=1, padding=20e-6, 
-            radius=13e-6, wirethick=0, loss=1, epsilon=-1, courant=0.5):
+    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=50e-6, cellnumber=1, padding=50e-6, 
+            radius=13e-6, wirethick=0, loss=1, epsilon="TiO2", courant=0.5):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -28,30 +28,20 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
         self.register_locals(locals())          ## Remember the parameters
-        if courant != 0.5:
-            meep.use_Courant(self.courant) 
-            meep.master_printf("meep.use_Courant(%f)" % courant)
-        print self.comment
 
         ## Define materials (with manual Lorentzian clipping) 
         self.materials = []  
-
-        if epsilon==-1:     ## use titanium dioxide if permittivity not specified...
+        if epsilon=="TiO2":     ## use titanium dioxide if permittivity not specified...
             tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
             if loss != 1: tio2.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
         else:           ## ...or define a custom dielectric if permittivity not specified
-            tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=self.epsilon) 
+            tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=float(self.epsilon)) 
 
         self.fix_material_stability(tio2, verbose=0) ##f_c=2e13,  rm all osc above the first one, to optimize for speed 
         self.materials.append(tio2)
 
         if wirethick > 0:
             au = meep_materials.material_Au(where=self.where_wire)
-            if 'diluted' in comment:  ## debug
-                print au.pol[0]['sigma']
-                meep.all_wait()
-                au.pol[0]['sigma'] /= 100
-                print au.pol[0]['sigma']
             self.fix_material_stability(au, verbose=0)
             self.materials.append(au)
 
@@ -106,7 +96,7 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class Slab(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=100e-12, resolution=2e-6, cellnumber=1, cellsize=100e-6, padding=50e-6,
+    def __init__(self, comment="", simtime=100e-12, resolution=2e-6, cellnumber=1, cellsize=100e-6, padding=50e-6, 
             fillfraction=0.5, epsilon=2):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
@@ -117,7 +107,7 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
         self.pml_thickness = 0.1*c/self.src_freq
 
         self.size_x = resolution*2 
-        self.size_y = resolution*2
+        self.size_y = resolution
         self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
@@ -127,13 +117,13 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
         ## Define materials
         # note: for optical range, it was good to supply f_c=5e15 to fix_material_stability
         if 'Au' in comment:           
-            m = meep_materials.material_Au(where=self.where_metal)
+            m = meep_materials.material_Au(where=self.where_slab)
             self.fix_material_stability(m, verbose=0) ## rm all osc above the first one, to optimize for speed 
         elif 'Ag' in comment:           
-            m = meep_materials.material_Ag(where=self.where_metal)
+            m = meep_materials.material_Ag(where=self.where_slab)
             self.fix_material_stability(m, verbose=0) ## rm all osc above the first one, to optimize for speed 
         else:
-            m = meep_materials.material_dielectric(where=self.where_metal, loss=.0001)
+            m = meep_materials.material_dielectric(where=self.where_slab, loss=0.001, eps=epsilon)
         self.materials = [m]
 
         ## Test the validity of the model
@@ -141,7 +131,7 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
                 draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
         self.test_materials()
 
-    def where_metal(self, r):
+    def where_slab(self, r):
         if in_zslab(r, d=self.cellsize*self.fillfraction, cz=0):
             return self.return_value             # (do not change this line)
         return 0
@@ -183,17 +173,8 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
             if  in_xcyl(r, cy=self.size_y/2, cz=cellc, rad=self.wirethick) or \
                     in_xcyl(r, cy= -self.size_y/2, cz=cellc, rad=self.wirethick):
                 return self.return_value             # (do not change this line)
-
-        #r = self.RotatedCoordsY(r, angle=np.pi/4)
-        #print dir(r)
-        r = self.rotatedX(r, np.pi/4)
-        r = self.rotatedY(r, np.pi/4)
-        #without rot =  66  s
-        #with    rot = 165  s
-        #with   2rot = 239  s
-        #with    rot = 74.7442  s (optimized):
-        #with   2rot = 74.7442  s (optimized):
-
+        #r = self.rotatedX(r, np.pi/4)
+        #r = self.rotatedY(r, np.pi/4)
         for cellc in self.cellcenters:
             ## define the split-ring resonator
             if  (((in_ycyl(r, cx=0, cz=cellc, rad=self.radius+self.srrthick/2)             # outer radius
@@ -220,7 +201,6 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
         self.size_x = resolution*1.8 
         self.size_y = tdist
         self.size_z = ldist + 2*padding + 2*self.pml_thickness
-        meep.master_printf("number of voxels: %d", int(self.size_x*self.size_y*self.size_y/resolution**3))
         self.monitor_z1, self.monitor_z2 = (-(ldist/2)-padding, (ldist/2)+padding)
         cellsize = ldist+2*padding
 
