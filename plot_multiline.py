@@ -241,10 +241,13 @@ else:
 plt.grid()
 if args.overlayplot:
     for overlayfunc in args.overlayplot.split(','):
-        plt.plot(x, eval(overlayfunc), color='#808080', lw=.5)
+        plt.plot(x, eval(overlayfunc), color='#808080', lw=.5, ls='--', scaley=False)
 
 try: 
-    if not args.contours == 'yes': plt.legend(prop={'size':12}, loc='upper left').draw_frame(False)
+    if not args.contours == 'yes': 
+        #plt.legend(prop={'size':12}, loc='upper left') #.draw_frame(False)
+        plt.legend(prop={'size':12}, loc='best', fancybox=True, framealpha=0.5)
+
 except:
     pass
 
