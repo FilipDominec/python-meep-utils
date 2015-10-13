@@ -3,11 +3,11 @@ if [ -z $NP ] ; then NP=2 ; fi             # number of processors
 model=SphereArray
 cellsize=300e-6
 thz=1e12
-mpirun -np $NP ../../scatter.py model=Slab fillfraction=.1 resolution=5u simtime=50p cellsize=$cellsize padding=100e-6 epsilon=4
+mpirun -np $NP ../../scatter.py model=Slab fillfraction=.5 resolution=5u simtime=50p cellsize=$cellsize padding=100e-6 epsilon=4
 ../../effparam.py
-mpirun -np $NP ../../scatter.py model=Slab fillfraction=.1 resolution=5u simtime=50p cellsize=$cellsize padding=100e-6 epsilon=9
+mpirun -np $NP ../../scatter.py model=Slab fillfraction=.5 resolution=5u simtime=50p cellsize=$cellsize padding=100e-6 epsilon=9
 ../../effparam.py
-mpirun -np $NP ../../scatter.py model=Slab fillfraction=.1 resolution=5u simtime=50p cellsize=$cellsize padding=100e-6 epsilon=16
+mpirun -np $NP ../../scatter.py model=Slab fillfraction=.5 resolution=5u simtime=50p cellsize=$cellsize padding=100e-6 epsilon=16
 ../../effparam.py
 
 sharedoptions='effparam/*.dat --paramname epsilon --paramlabel '\$\\varepsilon_r\$' --figsizey 2 --xeval x/1e12 --ylim1 0'
