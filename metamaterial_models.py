@@ -123,7 +123,7 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
             m = meep_materials.material_Ag(where=self.where_slab)
             self.fix_material_stability(m, verbose=0) ## rm all osc above the first one, to optimize for speed 
         else:
-            m = meep_materials.material_dielectric(where=self.where_slab, loss=0, eps=epsilon)
+            m = meep_materials.material_dielectric(where=self.where_slab, loss=0.001, eps=epsilon)
         self.materials = [m]
 
         ## Test the validity of the model
