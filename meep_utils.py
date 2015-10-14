@@ -1045,16 +1045,7 @@ class AmplitudeMonitorPlane(meep.Callback):#{{{
     """
 
 
-    def complex_vec(self, r):
-        return 1.
-
-    def double_vec(self, r):
-        return 1.
-
     def __init__(self, field, comp=None, size_x=None, size_y=None, z_position=None, Kx=0, Ky=0):
-        meep.Callback.__init__(self)
-        meep.set_CMPL1_Callback(self.__disown__())    
-
         self.comp=comp
         self.size_x = size_x
         self.size_y = size_y
@@ -1066,22 +1057,24 @@ class AmplitudeMonitorPlane(meep.Callback):#{{{
         self.waveform = []
 
         ## New way of averaging (removes explicit cycle, few percent faster)
-        xcount, ycount = (7, 7)
+        xcount, ycount = (5, 5)
         xr = [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]
         yr = [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]
+
+        #for x in [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]:
+            #for y in [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]:
+                #field_sum += (field.get_field(self.comp, meep.vec(x, y, self.z_position)) *  
+                                #np.exp(1j*(self.Kx*x + self.Ky*y)) )
         self.xm, self.ym = np.meshgrid(xr,yr)
         self.xmm, self.ymm = self.xm.flatten(), self.ym.flatten()
-        #self.points = np.vstack([self.xmm, self.ymm]).T
         self.points = zip(self.xmm, self.ymm)
-        self.vecs = map(lambda pos: meep.vec(pos[0], pos[1], self.z_position), self.points)
-
-        print self.points
-        #1/0
-        vvec = lambda pos: _meep.fields_get_field(field, self.comp, pos)
-        self.vfn2 = np.vectorize(vvec)
-
-                #self.double_vec = self.where
-                ## point it to 
+        self.vecs  = map(lambda pos: meep.vec(pos[0], pos[1], self.z_position), self.points)
+        self.phase = map(lambda pos: np.exp(1j*(self.Kx*pos[0] + self.Ky*pos[1])), self.points)
+        self.points = zip(self.vecs, self.phase)
+        if self.Kx == 0 and self.Ky == 0: 
+            self.fn = lambda point: field.get_field(self.comp, point[0])             ## just retrieve the fields
+        else:
+            self.fn = lambda point: field.get_field(self.comp, point[0])*point[1] ## account for the phase
 
     def average_field(self, field):
         """
@@ -1094,59 +1087,15 @@ class AmplitudeMonitorPlane(meep.Callback):#{{{
         This implementation is inefficient and inflexible, but one would have to edit the MEEP source otherwise.
         """
 
-        field_sum = 0 
-        #The mode function has the form of an oblique plane wave
-        #xcount, ycount = (7, 7)
-        #for x in [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]:
-            #for y in [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]:
-                #field_sum += (field.get_field(self.comp, meep.vec(x, y, self.z_position)) *  
-                                #np.exp(1j*(self.Kx*x + self.Ky*y)) )
-        #return field_sum/(xcount*ycount)
+        return sum(map(self.fn, self.points))
 
-        #sum_ = sum(map(lambda pos: field.get_field(self.comp, meep.vec(pos[0], pos[1], self.z_position)), points))
-        #return sum_/(xcount*ycount)
+        #return sum(map(lambda vec: _meep.fields_get_field(field, self.comp, vec), self.vecs)) # takes the same time
 
-        #print field.get_field(meep.Ex, meep.vec(0,0,0)),
-        #print _meep.fields_get_field(field, meep.Ex, meep.vec(0,0,0))
-        #get_field(fields self, meep::component c, vec loc) -> std::complex< double >
-
-
-        #vol=meep.volume(                    ## (spatial source shape)
-            #meep.vec(-self.size_x/2, -self.size_y/2, 0),
-            #meep.vec( self.size_x/2,  self.size_y/2, 0))
-        #x=34
-        #print field.integrate(1, meep.Ex, self.complex_vec, x, vol)
-#
-        #print field.integrate(1, meep.Ex, meep.CMPL1, None, vol)
-
-        #Possible C/C++ prototypes are:
-            #meep::fields::integrate(int,meep::component const *,meep::field_function,void *,meep::volume const &,double *)
-            #meep::fields::integrate(int,meep::component const *,meep::field_function,void *,meep::volume const &)
-            #meep::fields::integrate(int,meep::component const *,meep::field_rfunction,void *,meep::volume const &,double *)
-            #meep::fields::integrate(int,meep::component const *,meep::field_rfunction,void *,meep::volume const &)
-        #fields::integrate(int num_fvals, const component *components,
-        #field_function integrand,
-        #void *integrand_data_,
-        #const volume &where,
-        #double *maxabs
-
-
-
-
-
-        #return sum(map(lambda pos: field.get_field(self.comp, meep.vec(pos[0], pos[1], self.z_position)), self.points)) #40
-        #return sum(map(lambda vec: field.get_field(self.comp, vec), self.vecs))                #25
-        return sum(map(lambda vec: _meep.fields_get_field(field, self.comp, vec), self.vecs))  #24
-
-    #def NEW_average_field_xy_plane(field, component, zpos, model): ## TODO use the internal integration of fields by MEEP
-        # TODO rewrite:
-        # (fields &f, linear_integrand_data &d, const volume &v, component cgrid)
-        # f.integrate(0, 0, linear_integrand, (void *) &d, v)
-        #integrate(meep::fields *,int,meep::component const *,meep::field_function,void *,meep::volume const &,double *)
-        #v = meep.volume(
-                #meep.vec(-model.size_x/2, -model.size_y/2, -model.size_z/2+model.pml_thickness), 
-                #meep.vec(model.size_x/2, model.size_y/2, -model.size_z/2+model.pml_thickness))
-        #return field.integrate(1, [component], meep.one_vec, [], v)
+        ## todo for future? Should speed-up the integration!
+        ## def complex_vec(self, r): return 1. # <-- put above init
+        ## meep.Callback.__init__(self); meep.set_CMPL1_Callback(self.__disown__())     # <-- put to init
+        ## v = meep.volume( meep.vec(-self.size_x/2, -self.size_y/2, 0), meep.vec(self.size_x/2, self.size_y/2, 0))
+        ## import ctypes; return field.integrate(1, self.comp, self.complex_vec, ctypes.pointer(ctypes.c_int(0)), v)
     
     def record(self, field=None):
         """ 
