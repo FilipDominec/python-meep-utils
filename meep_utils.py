@@ -30,6 +30,7 @@ matplotlib.use('Agg') # may help against the "tkinter.TclError: bad screen dista
 import matplotlib.pyplot as plt
 
 import meep_mpi as meep
+import _meep_mpi as _meep
 #import meep
 
 ## === User interaction and convenience routines ===
@@ -1053,6 +1054,12 @@ class AmplitudeMonitorPlane():#{{{
         self.t = []
         self.waveform = []
 
+        ## New way of averaging (removes explicit cycle, few percent faster)
+        xcount, ycount = (7, 7)
+        xr = [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]
+        yr = [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]
+        xm, ym = np.meshgrid(xr,yr)
+        points = zip(xm.flatten(), ym.flatten())
 
     def average_field(self, field):
         """
@@ -1076,15 +1083,15 @@ class AmplitudeMonitorPlane():#{{{
         #sum_ = sum(map(lambda pos: field.get_field(self.comp, meep.vec(pos[0], pos[1], self.z_position)), points))
         #return sum_/(xcount*ycount)
 
-        ## New way of averaging (removes explicit cycle, few percent faster)
-        xcount, ycount = (7, 7)
-        xr = [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]
-        yr = [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]
-        xm, ym = np.meshgrid(xr,yr)
-        points = zip(xm.flatten(), ym.flatten())
-        sum_ = sum(map(lambda pos: field.get_field(self.comp, meep.vec(pos[0], pos[1], self.z_position)), points))
-        return sum_/(xcount*ycount)
+        sum_ = 
+        return sum(map(lambda pos: field.get_field(self.comp, meep.vec(pos[0], pos[1], self.z_position)), self.points))
 
+#NotImplementedError: Wrong number or type of arguments for overloaded function 'fields_get_field'.
+  #Possible C/C++ prototypes are:
+    #meep::fields::get_field(int,meep::vec const &) const
+    #meep::fields::get_field(meep::component,meep::vec const &) const
+    #meep::fields::get_field(meep::derived_component,meep::vec const &) const
+    #meep::fields::get_field(meep::component,meep::ivec const &) const
 
         ## Yet newer way
         #xr = [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]
