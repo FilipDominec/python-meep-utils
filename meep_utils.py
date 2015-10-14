@@ -1034,7 +1034,7 @@ def get_phase(complex_data):#{{{
     center_phase = phase[min(5, len(phase)-1)] ## 5 is chosen to avoid zero freq.
     return phase-(round(center_phase/2/np.pi)*2*np.pi)
 #}}}
-class AmplitudeMonitorPlane():#{{{
+class AmplitudeMonitorPlane(meep.Callback):#{{{
     """ Calculates an average of electric field and perpendicular magnetic field.
 
     I asked for a similar field-averaging function built in MEEP, but it seems not to be implemented yet.
@@ -1043,7 +1043,18 @@ class AmplitudeMonitorPlane():#{{{
 
     Note this implementation requires the planes are in vacuum (where impedance = 1.0)
     """
-    def __init__(self, comp=None, size_x=None, size_y=None, z_position=None, Kx=0, Ky=0):
+
+
+    def complex_vec(self, r):
+        return 1.
+
+    def double_vec(self, r):
+        return 1.
+
+    def __init__(self, field, comp=None, size_x=None, size_y=None, z_position=None, Kx=0, Ky=0):
+        meep.Callback.__init__(self)
+        meep.set_CMPL1_Callback(self.__disown__())    
+
         self.comp=comp
         self.size_x = size_x
         self.size_y = size_y
@@ -1058,8 +1069,19 @@ class AmplitudeMonitorPlane():#{{{
         xcount, ycount = (7, 7)
         xr = [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]
         yr = [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]
-        xm, ym = np.meshgrid(xr,yr)
-        points = zip(xm.flatten(), ym.flatten())
+        self.xm, self.ym = np.meshgrid(xr,yr)
+        self.xmm, self.ymm = self.xm.flatten(), self.ym.flatten()
+        #self.points = np.vstack([self.xmm, self.ymm]).T
+        self.points = zip(self.xmm, self.ymm)
+        self.vecs = map(lambda pos: meep.vec(pos[0], pos[1], self.z_position), self.points)
+
+        print self.points
+        #1/0
+        vvec = lambda pos: _meep.fields_get_field(field, self.comp, pos)
+        self.vfn2 = np.vectorize(vvec)
+
+                #self.double_vec = self.where
+                ## point it to 
 
     def average_field(self, field):
         """
@@ -1072,8 +1094,9 @@ class AmplitudeMonitorPlane():#{{{
         This implementation is inefficient and inflexible, but one would have to edit the MEEP source otherwise.
         """
 
-        #field_sum = 0 
-        # The mode function has the form of an oblique plane wave
+        field_sum = 0 
+        #The mode function has the form of an oblique plane wave
+        #xcount, ycount = (7, 7)
         #for x in [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]:
             #for y in [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]:
                 #field_sum += (field.get_field(self.comp, meep.vec(x, y, self.z_position)) *  
@@ -1083,35 +1106,37 @@ class AmplitudeMonitorPlane():#{{{
         #sum_ = sum(map(lambda pos: field.get_field(self.comp, meep.vec(pos[0], pos[1], self.z_position)), points))
         #return sum_/(xcount*ycount)
 
-        sum_ = 
-        return sum(map(lambda pos: field.get_field(self.comp, meep.vec(pos[0], pos[1], self.z_position)), self.points))
+        #print field.get_field(meep.Ex, meep.vec(0,0,0)),
+        #print _meep.fields_get_field(field, meep.Ex, meep.vec(0,0,0))
+        #get_field(fields self, meep::component c, vec loc) -> std::complex< double >
 
-#NotImplementedError: Wrong number or type of arguments for overloaded function 'fields_get_field'.
-  #Possible C/C++ prototypes are:
-    #meep::fields::get_field(int,meep::vec const &) const
-    #meep::fields::get_field(meep::component,meep::vec const &) const
-    #meep::fields::get_field(meep::derived_component,meep::vec const &) const
-    #meep::fields::get_field(meep::component,meep::ivec const &) const
 
-        ## Yet newer way
-        #xr = [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]
-        #yr = [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]
-        #xm, ym = np.meshgrid(xr,yr)
-        #v = meep.vec(0,0, self.z_position)
-        #points = zip(xm.flatten(), ym.flatten())
-        #sum_ = sum(map(lambda pos: _meep_mpi.fields_get_field(field, self.comp, v), points))
-        #sum_ = sum(map(lambda pos: _meep_mpi.fields_get_field(field, self.comp, _meep_mpi.new_vec(0,0,0)), points))
-        #cp =self.comp
-        #zp = self.z_position
-        #sum_ = sum(map(lambda pos: _meep_mpi.fields_get_field(field, cp, _meep_mpi.new_vec(pos[0], pos[1], zp)), points))
-        #return sum_/(xcount*ycount)
-        
-        # TODO speed up using cython
-        #print dir(field.get_field)
-        #['__call__', '__class__', '__cmp__', '__delattr__', '__doc__', '__format__', '__func__', '__get__', '__getattribute__', 
-        #'__hash__', '__init__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__self__', '__setattr__', '__sizeof__', 
-        #'__str__', '__subclasshook__', 'im_class', 'im_func', 'im_self']
+        #vol=meep.volume(                    ## (spatial source shape)
+            #meep.vec(-self.size_x/2, -self.size_y/2, 0),
+            #meep.vec( self.size_x/2,  self.size_y/2, 0))
+        #x=34
+        #print field.integrate(1, meep.Ex, self.complex_vec, x, vol)
+#
+        #print field.integrate(1, meep.Ex, meep.CMPL1, None, vol)
 
+        #Possible C/C++ prototypes are:
+            #meep::fields::integrate(int,meep::component const *,meep::field_function,void *,meep::volume const &,double *)
+            #meep::fields::integrate(int,meep::component const *,meep::field_function,void *,meep::volume const &)
+            #meep::fields::integrate(int,meep::component const *,meep::field_rfunction,void *,meep::volume const &,double *)
+            #meep::fields::integrate(int,meep::component const *,meep::field_rfunction,void *,meep::volume const &)
+        #fields::integrate(int num_fvals, const component *components,
+        #field_function integrand,
+        #void *integrand_data_,
+        #const volume &where,
+        #double *maxabs
+
+
+
+
+
+        #return sum(map(lambda pos: field.get_field(self.comp, meep.vec(pos[0], pos[1], self.z_position)), self.points)) #40
+        #return sum(map(lambda vec: field.get_field(self.comp, vec), self.vecs))                #25
+        return sum(map(lambda vec: _meep.fields_get_field(field, self.comp, vec), self.vecs))  #24
 
     #def NEW_average_field_xy_plane(field, component, zpos, model): ## TODO use the internal integration of fields by MEEP
         # TODO rewrite:
@@ -1122,16 +1147,6 @@ class AmplitudeMonitorPlane():#{{{
                 #meep.vec(-model.size_x/2, -model.size_y/2, -model.size_z/2+model.pml_thickness), 
                 #meep.vec(model.size_x/2, model.size_y/2, -model.size_z/2+model.pml_thickness))
         #return field.integrate(1, [component], meep.one_vec, [], v)
-      #Possible C/C++ prototypes are:
-        #meep::fields::integrate(int,meep::component const *,meep::field_function,void *,meep::volume const &,double *)
-        #meep::fields::integrate(int,meep::component const *,meep::field_function,void *,meep::volume const &)
-        #meep::fields::integrate(int,meep::component const *,meep::field_rfunction,void *,meep::volume const &,double *)
-        #meep::fields::integrate(int,meep::component const *,meep::field_rfunction,void *,meep::volume const &)
-        #fields::integrate(int num_fvals, const component *components,
-        #field_function integrand,
-        #void *integrand_data_,
-        #const volume &where,
-        #double *maxabs
     
     def record(self, field=None):
         """ 

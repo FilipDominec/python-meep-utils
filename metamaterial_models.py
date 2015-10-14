@@ -127,9 +127,9 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
         self.materials = [m]
 
         ## Test the validity of the model
-        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
-                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
-        self.test_materials()
+        #meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                #draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        #self.test_materials()
 
     def where_slab(self, r):
         if in_zslab(r, d=self.cellsize*self.fillfraction, cz=0):
