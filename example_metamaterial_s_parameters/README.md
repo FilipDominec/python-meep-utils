@@ -1,8 +1,8 @@
 ##Examples of metamaterial scattering parameters computation
 ####Basic structures
 __Slab__ made of dielectric
- * [ ] spectrum of pure Bragg PBGs (cf. with MPB and modes of 1-D PhC)
- * [ ] fill-fraction scan (point out zero-width gaps = Fabry-Pérot resonances)
+ * [x] spectrum of pure Bragg PBGs (cf. with MPB and modes of 1-D PhC)
+ * [x] fill-fraction scan (point out zero-width gaps = Fabry-Pérot resonances)
 
 __Wires__ [metallic wires oriented along electric field]
  * [ ] spectrum, analyze eps
