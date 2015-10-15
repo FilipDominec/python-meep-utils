@@ -10,18 +10,18 @@ from meep_utils import in_sphere, in_xcyl, in_ycyl, in_zcyl, in_xslab, in_yslab,
 import meep_mpi as meep
 #import meep
 
-class SphereArray(meep_utils.AbstractMeepModel): #{{{
+class SphereWire(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=50e-6, cellnumber=1, padding=50e-6, 
-            radius=13e-6, wirethick=0, loss=1, epsilon="TiO2", courant=0.5):
+            radius=13e-6, wirethick=0, loss=1, epsilon="TiO2"):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
-        self.simulation_name = "SphereArray"    
+        self.simulation_name = "SphereWire"    
         self.src_freq, self.src_width = 1000e9, 4000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (100e9, 2000e9)    # Which frequencies will be saved to disk
         self.pml_thickness = .1*c/self.src_freq
 
-        self.size_x = cellsize 
+        self.size_x = cellsize if radius>0 else resolution/1.8
         self.size_y = cellsize
         self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
@@ -31,14 +31,14 @@ class SphereArray(meep_utils.AbstractMeepModel): #{{{
 
         ## Define materials (with manual Lorentzian clipping) 
         self.materials = []  
-        if epsilon=="TiO2":     ## use titanium dioxide if permittivity not specified...
-            tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
-            if loss != 1: tio2.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
-        else:           ## ...or define a custom dielectric if permittivity not specified
-            tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=float(self.epsilon)) 
-
-        self.fix_material_stability(tio2, verbose=0) ##f_c=2e13,  rm all osc above the first one, to optimize for speed 
-        self.materials.append(tio2)
+        if radius > 0:
+            if epsilon=="TiO2":     ## use titanium dioxide if permittivity not specified...
+                tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
+                if loss != 1: tio2.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
+            else:           ## ...or define a custom dielectric if permittivity not specified
+                tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=float(self.epsilon)) 
+            self.fix_material_stability(tio2, verbose=0) ##f_c=2e13,  rm all osc above the first one, to optimize for speed 
+            self.materials.append(tio2)
 
         if wirethick > 0:
             au = meep_materials.material_Au(where=self.where_wire)
@@ -291,5 +291,5 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
-models = {'Slab':Slab, 'SphereArray':SphereArray, 'RodArray':RodArray, 'SRRArray':SRRArray, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
+models = {'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':SRRArray, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
 
