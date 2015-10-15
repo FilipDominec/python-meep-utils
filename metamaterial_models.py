@@ -11,7 +11,7 @@ import meep_mpi as meep
 #import meep
 
 class SphereWire(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=50e-6, cellnumber=1, padding=50e-6, 
+    def __init__(self, comment="", simtime=30e-12, resolution=4e-6, cellsize=50e-6, cellnumber=1, padding=50e-6, 
             radius=13e-6, wirethick=0, loss=1, epsilon="TiO2"):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
@@ -42,6 +42,8 @@ class SphereWire(meep_utils.AbstractMeepModel): #{{{
 
         if wirethick > 0:
             au = meep_materials.material_Au(where=self.where_wire)
+            #au.pol[0]['sigma'] /= 100
+            #au.pol[0]['gamma'] *= 10000
             self.fix_material_stability(au, verbose=0)
             self.materials.append(au)
 
@@ -52,13 +54,13 @@ class SphereWire(meep_utils.AbstractMeepModel): #{{{
 
     def where_sphere(self, r):
         for cellc in self.cellcenters:
-            if  in_sphere(r, cx=0, cy=0, cz=cellc, rad=self.radius):
+            if  in_sphere(r, cx=self.resolution/4, cy=self.resolution/4, cz=cellc+self.resolution/4, rad=self.radius):
                 return self.return_value             # (do not change this line)
         return 0
     def where_wire(self, r):
         for cellc in self.cellcenters:
-            if  in_xcyl(r, cy=self.size_y/2, cz=cellc, rad=self.wirethick) or \
-                    in_xcyl(r, cy= -self.size_y/2, cz=cellc, rad=self.wirethick):
+            if  in_xcyl(r, cy=self.size_y/2+self.resolution/4, cz=cellc, rad=self.wirethick) or \
+                    in_xcyl(r, cy= -self.size_y/2+self.resolution/4, cz=cellc, rad=self.wirethick):
                 return self.return_value             # (do not change this line)
         return 0
 #}}}

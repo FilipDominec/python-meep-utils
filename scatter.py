@@ -38,17 +38,17 @@ srcvolume = meep.volume(                    ## (spatial source shape)
 f.add_volume_source(meep.Ex, src_time_type, srcvolume)
 
 ## Define monitors planes and visualisation output
-monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'Kx':sim_param.get('Kx', 0), 'Ky':sim_param.get('Ky', 0)}
+monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'resolution':model.resolution, 'Kx':sim_param.get('Kx', 0), 'Ky':sim_param.get('Ky', 0)}
 monitor1_Ex = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Ex, z_position=model.monitor_z1, **monitor_options)
 monitor1_Hy = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Hy, z_position=model.monitor_z1, **monitor_options)
 monitor2_Ex = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Ex, z_position=model.monitor_z2, **monitor_options)
 monitor2_Hy = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
 
 slices = []
-slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
-slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_t=np.inf, 
-        name=('At%.3eHz'%sim_param['frequency']) if sim_param['frequency_domain'] else '', outputpng=True, outputvtk=False)]
-slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', min_timestep=.1/model.src_freq, outputgif=True)]
+#slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
+#slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_x=0, at_t=np.inf, 
+        #name=('At%.3eHz'%sim_param['frequency']) if sim_param['frequency_domain'] else '', outputpng=True, outputvtk=False)]
+#slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', min_timestep=.1/model.src_freq, outputgif=True)]
 # slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
 
 ## Run the FDTD simulation or the frequency-domain solver

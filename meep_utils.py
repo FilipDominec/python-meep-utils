@@ -1045,7 +1045,7 @@ class AmplitudeMonitorPlane(meep.Callback):#{{{
     """
 
 
-    def __init__(self, field, comp=None, size_x=None, size_y=None, z_position=None, Kx=0, Ky=0):
+    def __init__(self, field, comp=None, size_x=None, size_y=None, resolution=None, z_position=None, Kx=0, Ky=0):
         self.comp=comp
         self.size_x = size_x
         self.size_y = size_y
@@ -1057,7 +1057,9 @@ class AmplitudeMonitorPlane(meep.Callback):#{{{
         self.waveform = []
 
         ## New way of averaging (removes explicit cycle, few percent faster)
-        xcount, ycount = (5, 5)
+        xcount = min(5, int(np.ceil(size_x/resolution)))
+        ycount = min(5, int(np.ceil(size_y/resolution)))
+        print 'xcount, ycount' , xcount, ycount 
         xr = [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]
         yr = [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]
 
