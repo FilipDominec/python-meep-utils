@@ -515,7 +515,7 @@ plt.plot(freq, np.log(-(np.real(N)/np.imag(N)))/np.log(10),
 plt.plot(freq, np.log((np.real(N)/np.imag(N)))/np.log(10), \
     color="#BB22FF", ls=":", label=u"$N$''$>0$ FOM")
 plt.ylabel(u"Value"); 
-plt.ylim((-5., 15.)); 
+plt.ylim((-3., 6.)); 
 plt.xlim((plot_freq_min, plot_freq_max)); 
 plt.grid(True)
 if args.legend_enable: plt.legend(); 

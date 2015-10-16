@@ -5,7 +5,7 @@ __Slab__ made of dielectric
  * [x] Slab fillfraction015 epsilon comparison 
  * [x] Slab epsilon4 fillfraction scan
  * [x] Slab fillfraction015 epsilon scan
- * [ ] slab cellscan
+ * [ ] (slab cellscan .. unstable)
  * [ ] CDH?
 
 __Wires__ [metallic wires oriented along electric field]
@@ -17,7 +17,9 @@ __Wires__ [metallic wires oriented along electric field]
 
 __Cut wires__  parallel to __E__
  * [ ] spectrum
- * [ ] wire 
+ * [ ] CutWires radius4um cutscan
+ * [ ] CutWires cut20um radiusscan
+
 
 ####Negative-permeability resonant structures
 __Rod array__ parallel to __H__

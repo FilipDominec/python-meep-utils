@@ -3,10 +3,9 @@ if [ -z $NP ] ; then NP=2 ; fi             # number of processors
 model=SphereArray
 cellsize=300e-6
 thz=1e12
-for epsilon in 4 12 20; do
-	mpirun -np $NP ../../scatter.py model=Slab fillfraction=.15 resolution=3u simtime=50p cellsize=$cellsize padding=100e-6 epsilon=$epsilon
-	../../effparam.py
-done
+par='model=SphereArray resolution=4u simtime=50p'
+mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=0u wirecut=20e-6
+../../effparam.py
 
 sharedoptions='effparam/*.dat --paramname epsilon --figsizey 2 --xeval x/1e12 --ylim1 0'
 

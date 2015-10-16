@@ -51,7 +51,7 @@ class material_dielectric():#{{{
         ## TODO: make the loss effect well defined (for some frequency), and write 
         if loss != 0:
             self.pol = [
-                    {'omega':5e12, 'gamma':10e12, 'sigma':100*loss},            ## TODO make clearer
+                    {'omega':5e12, 'gamma':10e12,  'sigma':100*loss},            ## TODO make clearer
                     ]
         else:
             self.pol = []

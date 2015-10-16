@@ -1,6 +1,5 @@
 #!/bin/bash
 if [ -z $NP ] ; then NP=2 ; fi             # number of processors
-model=SphereArray
 cellsize=300e-6
 thz=1e12
 for eps in `seq 1 .5 25 | tr , .`; do
