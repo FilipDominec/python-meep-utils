@@ -1,14 +1,19 @@
+
 ##Examples of metamaterial scattering parameters computation
 ####Basic structures
 __Slab__ made of dielectric
- * [x] spectrum of pure Bragg PBGs (cf. with MPB and modes of 1-D PhC)
- * [x] fill-fraction scan (point out zero-width gaps = Fabry-Pérot resonances)
+ * [x] Slab fillfraction015 epsilon comparison 
+ * [x] Slab epsilon4 fillfraction scan
+ * [x] Slab fillfraction015 epsilon scan
+ * [ ] slab cellscan
+ * [ ] CDH?
 
 __Wires__ [metallic wires oriented along electric field]
- * [ ] spectrum, analyze eps
- * [ ] modes [eps<0, eps>0 above omegap, PhC regime]
- * [ ] dependence of plasma frequency on wire radius
- * [ ] dependence of plasma frequency on spacing
+ * [x] Wires radiusscan
+ * [x] dependence of plasma frequency on wire radius
+ * [x] dependence of plasma frequency on spacing
+ * [ ] modes [eps<0, eps>0 above omegap, PhC regime] ??
+ * [ ] CDH?
 
 __Cut wires__  parallel to __E__
  * [ ] spectrum
@@ -27,6 +32,7 @@ __SRRs__
 __Wire pairs__ 
  * [ ] spectrum / cdh
  * [ ] 
+ * [ ] CDH?
 
 __Dielectric spheres__ 
  * [ ] spacing-scan
@@ -35,6 +41,14 @@ __Dielectric spheres__
  * [ ] ellipticity scan along __x__
  * [ ] ellipticity scan along __y__
  * [ ] ellipticity scan along __z__
+ * [ ] CDH?
+
+ * [ ] spheres lossscan
+ * [ ] sphereTiO2 LossScan
+ * [ ] sphere wire comparison
+ * [ ] SphereWire principles
+ * [ ] Wires radiusscan
+
 
 ####Negative-index structures
 __Dielectric spheres with wires__ 
@@ -49,17 +63,14 @@ __Rod array__ parallel to E
  * [ ] overthick, spectrum and modes (PB, PBG, PB, PBG, PB)
 	 (analogy with diel slab?)
 
-__Fishnet__
+__Fishnet__ and extraordinary transmission
  * [ ] inter-layer __z__-distance scan
- * [ ] aperture size scan
+ * [ ] aperture radius scan
  * [ ] aperture __x__-axis scan
  * [ ] aperture __y__-axis scan
- * [ ] 
-
-####Studies of extraordinary transmission
-__Metallic slab__ parallel to the magnetic field
  * [ ] slab width (i.e. fill-fraction) scan
  * [ ] slab thickness scan
  * [ ] adding plastic layer - symmetric
  * [ ] adding plastic layer - single-sided
- * [ ] 
+ * [ ] CDH?
+ * [ ] ...?
