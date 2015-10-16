@@ -232,7 +232,7 @@ plt.xlabel(xcolname if args.xlabel == '' else args.xlabel)
 
 if args.contours == 'yes':
     plt.ylabel(args.paramname if args.paramlabel == '' else args.paramlabel) 
-    plt.title(args.title if args.title else ycolname) 
+    plt.title(args.title if args.title else (ycolname if args.ylabel == '' else args.ylabel)) 
 else:
     if args.ylim1 != "": plt.ylim(ymin=float(args.ylim1)) 
     if args.ylim2 != "": plt.ylim(ymax=float(args.ylim2))
