@@ -12,7 +12,7 @@ import meep_mpi as meep
 
 class SphereWire(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=30e-12, resolution=4e-6, cellsize=50e-6, cellnumber=1, padding=50e-6, 
-            radius=13e-6, wirethick=0, loss=1, epsilon="TiO2"):
+            radius=13e-6, wirethick=0, wirecut=0, loss=1, epsilon="TiO2"):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -21,7 +21,7 @@ class SphereWire(meep_utils.AbstractMeepModel): #{{{
         self.interesting_frequencies = (10e9, 3000e9)    # Which frequencies will be saved to disk
         self.pml_thickness = .1*c/self.src_freq
 
-        self.size_x = cellsize if radius>0 else resolution/1.8
+        self.size_x = cellsize if (radius>0 or wirecut>0) else resolution/1.8
         self.size_y = cellsize
         self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
@@ -59,6 +59,8 @@ class SphereWire(meep_utils.AbstractMeepModel): #{{{
         return 0
     def where_wire(self, r):
         for cellc in self.cellcenters:
+            if in_xslab(r, cx=self.resolution/4, d=self.wirecut):
+                return 0
             if  in_xcyl(r, cy=self.size_y/2+self.resolution/4, cz=cellc, rad=self.wirethick) or \
                     in_xcyl(r, cy= -self.size_y/2+self.resolution/4, cz=cellc, rad=self.wirethick):
                 return self.return_value             # (do not change this line)
@@ -134,8 +136,9 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
         #self.test_materials()
 
     def where_slab(self, r):
-        if in_zslab(r, d=self.cellsize*self.fillfraction, cz=0):
-            return self.return_value             # (do not change this line)
+        for cellc in self.cellcenters:
+            if in_zslab(r, d=self.cellsize*self.fillfraction, cz=cellc):
+                return self.return_value             # (do not change this line)
         return 0
 #}}}
 class SRRArray(meep_utils.AbstractMeepModel): #{{{
