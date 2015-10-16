@@ -31,7 +31,7 @@ parser.add_argument('--N_init_branch',                  type=int,   default=0)
 parser.add_argument('--Z_init_sign',                    type=int,   default=-1)
 parser.add_argument('--padding',                        type=float, default=0., help='')
 parser.add_argument('--autocorrect_signs',              type=int,   default=1, help='shall enforce the positive value of imag N?')
-parser.add_argument('--autobranch_sampler_position',    type=float, default=0.05)
+parser.add_argument('--autobranch_sampler_position',    type=float, default=0.03)
 parser.add_argument('--autobranch',                     type=int,   default=0, help='automatepsic selection of the branch')
 parser.add_argument('--savedat',                        type=int,   default=1, help='created directory "effparam" and saves all params to an ascii file with header')
 ## Postprocessing
