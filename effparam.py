@@ -50,6 +50,7 @@ parser.add_argument('--plot_expe',                      type=int,   default=1, h
 parser.add_argument('--plot_freq_min',                  type=float, default=np.nan, help='')
 parser.add_argument('--plot_freq_max',                  type=float, default=np.nan, help='if None, decide from the input file header')
 parser.add_argument('--plot_weak_transmission',         type=int,   default=0)
+parser.add_argument('filenames',    type=str,   nargs='?', help='DAT files to be processed')
 args = parser.parse_args()
 
 np.seterr(all='ignore')      ## do not print warnings for negative-number logarithms etc.
@@ -61,9 +62,10 @@ def get_simulation_name(argindex=1): #{{{
 
     Priority: 1) parameter, 2) last_simulation_name.dat, 3) working directory"""
     cwd = os.getcwd()
-    if len(sys.argv)>argindex and sys.argv[argindex] != "-"  and __name__ == "__main__": 
-        print "Parameter passed:", sys.argv[argindex]
-        last_simulation_name = sys.argv[argindex]
+    print args.filenames
+    if args.filenames  and __name__ == "__main__": 
+        print "Parameter passed:", args.filenames
+        last_simulation_name = args.filenames
     elif os.path.exists(os.path.join(cwd, 'last_simulation_name.dat')):
         print "Loading from", os.path.join(cwd, 'last_simulation_name.dat')
         last_simulation_name = os.path.join(cwd, open(os.path.join(cwd, 'last_simulation_name.dat'),'r').read().strip())
@@ -360,8 +362,9 @@ def nz2rt(freq, N, Z, d):#{{{
 ## --- Preparation of data ------------------------------------ # {{{
 ## Get reflection and transmission data, prepare its parameters
 last_simulation_name = get_simulation_name()
+print 'last_simulation_name', last_simulation_name
 freq, s11amp, s11phase, s12amp, s12phase = load_rt(last_simulation_name)
-params  = get_param('/'+last_simulation_name.strip('/')+'.dat')
+params  = get_param(last_simulation_name+'.dat')
 
 if 'cellsize' in params.keys():   cellsize = params['cellsize']
 else:                             print "Warning, `cellsize' parameter not specified, effparam retrieval wrong"; cellsize = 1 
