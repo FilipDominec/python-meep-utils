@@ -191,6 +191,56 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
                 return self.return_value             # (do not change this line)
         return 0
 #}}}
+class ESRRArray(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=20e-6, 
+            radius=40e-6, wirethick=6e-6, srrthick=6e-6, splitting=16e-6, splitting2=0e-6, capacitorr=0e-6):
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
+
+        ## Constant parameters for the simulation
+        self.simulation_name = "SRRArray"    
+        self.src_freq, self.src_width = 1000e9, 4000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (100e9, 2000e9)    # Which frequencies will be saved to disk
+        self.pml_thickness = 20e-6
+
+        self.size_x = cellsize 
+        self.size_y = cellsize
+        self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
+        self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
+
+        self.register_locals(locals())          ## Remember the parameters
+
+        ## Define materials
+        self.materials = []  
+
+        au = meep_materials.material_Au(where=self.where_wire)
+        self.fix_material_stability(au, verbose=0)
+        self.materials.append(au)
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        self.test_materials()
+
+    def where_wire(self, r):
+        for cellc in self.cellcenters:
+            ## define the wires
+            if  in_xcyl(r, cy=self.size_y/2, cz=cellc, rad=self.wirethick) or \
+                    in_xcyl(r, cy= -self.size_y/2, cz=cellc, rad=self.wirethick):
+                return self.return_value             # (do not change this line)
+        #r = self.rotatedX(r, np.pi/4)
+        #r = self.rotatedY(r, np.pi/4)
+        for cellc in self.cellcenters:
+            ## define the split-ring resonator
+            if  (((in_ycyl(r, cx=0, cz=cellc, rad=self.radius+self.srrthick/2)             # outer radius
+                    and not in_ycyl(r, cx=0, cz=cellc, rad=self.radius-self.srrthick/2)   # subtract inner radius
+                    and in_yslab(r, cy=0, d=self.srrthick))                               # delimit to a disc
+                    or (in_xcyl(r, cy=0, cz=cellc+self.radius, rad=self.capacitorr) and in_xslab(r, cx=0, d=self.splitting+2*self.wirethick)))
+                    and not (r.z()>cellc and in_xslab(r, cx=0, d=self.splitting))           # make the first splitting
+                    and not (r.z()<cellc and in_xslab(r, cx=0, d=self.splitting2))):        # make the second splitting, if any
+                return self.return_value             # (do not change this line)
+        return 0
+#}}}
 class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=200e-15, resolution=20e-9, cellnumber=1, padding=50e-6, 
             tdist=50e-6, ldist=100e-6, rcore1=6e-6, rclad1=0, rcore2=6e-6, tshift=0):
@@ -296,5 +346,5 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
-models = {'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':SRRArray, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
+models = {'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':SRRArray, 'ESRRArray':ESRRArray, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
 

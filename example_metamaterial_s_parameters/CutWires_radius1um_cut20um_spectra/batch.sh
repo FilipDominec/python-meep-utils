@@ -4,10 +4,10 @@ model=SphereArray
 cellsize=300e-6
 thz=1e12
 par='model=SphereArray resolution=2u simtime=20p'
-#for wc in 1 2 4 8 16; do
-	#mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=0u wirecut=${wc}e-6
-	#../../effparam.py
-#done
+for wc in 1 2 4 8 16; do
+	mpirun -np $NP  ../../scatter.py $par wirethick=1u radius=0u wirecut=${wc}e-6
+	../../effparam.py
+done
 
 sharedoptions='effparam/*.dat --paramname wirecut --figsizey 2 --xeval x/1e12 --ylim1 0 --parameval param*1e6'
 
