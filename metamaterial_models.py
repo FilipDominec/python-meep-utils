@@ -11,8 +11,8 @@ import meep_mpi as meep
 #import meep
 
 class SphereWire(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=30e-12, resolution=4e-6, cellsize=50e-6, cellnumber=1, padding=50e-6, 
-            radius=13e-6, wirethick=0, wirecut=0, loss=1, epsilon="TiO2"):
+    def __init__(self, comment="", simtime=30e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=50e-6, 
+            radius=30e-6, wirethick=0, wirecut=0, loss=1, epsilon="TiO2"):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation

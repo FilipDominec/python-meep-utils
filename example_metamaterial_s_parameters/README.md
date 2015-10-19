@@ -16,9 +16,10 @@ __Wires__ [metallic wires oriented along electric field]
  * [ ] CDH?
 
 __Cut wires__  parallel to __E__
- * [ ] spectrum
- * [ ] CutWires radius4um cutscan
- * [ ] CutWires cut20um radiusscan
+ * [C] CutWires radius1um wirecut comparison
+																^--- COMP
+ * [C] CutWires cut2um wireradiusscan
+																^--- COMP
 
 
 ####Negative-permeability resonant structures
@@ -37,9 +38,10 @@ __Wire pairs__
  * [ ] CDH?
 
 __Dielectric spheres__ 
+ * [C] TiO2 radius30um loss comparison							
+																^--- COMP
  * [ ] spacing-scan
  * [ ] permittivity scan (e.g. ferroelectric tunability)
- * [x] loss-scan
  * [ ] ellipticity scan along __x__
  * [ ] ellipticity scan along __y__
  * [ ] ellipticity scan along __z__
@@ -54,7 +56,7 @@ __Dielectric spheres__
 
 ####Negative-index structures
 __Dielectric spheres with wires__ 
- * [x] principles (s, w, s+w)
+ * [ ] principles (s, w, s+w)
  * [ ] wire radius scan
 
 __Rod array__ parallel to E 

@@ -1,25 +1,41 @@
 #!/bin/bash
-if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
-par='model=SphereArray resolution=4u simtime=100p'
+if [ -z $NP ] ; then NP=2 ; fi             # number of processors
+model=SphereArray
+cellsize=100e-6
+thz=1e12
+par="model=SphereArray resolution=4u radius=30e-6 wirethick=0 cellsize=$cellsize"
 
-for loss in 0.003 0.01 0.03 0.1 0.3 1; do 
-    mpirun -np $np   python ../../scatter.py $par loss=$loss; ../../effparam.py
-done
+mpirun -np $NP   python ../../scatter.py $par loss=1 comment='100' simtime=150p
+../../effparam.py
+mpirun -np $NP   python ../../scatter.py $par loss=0.3	comment='10' simtime=150p
+../../effparam.py
+mpirun -np $NP   python ../../scatter.py $par loss=0.1 comment='1' simtime=300p
+../../effparam.py
 
-../effparam.py
+sharedoptions='effparam/*.dat --paramname comment --figsizey 2 --xeval x/1e12 --ylim1 0 --xlim2 1.5'
 
-../../plot_multiline.py effparam/SphereArray_simtime\=1.000e-10_*.dat --paramname loss --paramlabel 'Losses percentage %d' --paramunit .01  --ycol 'real N' --xlabel 'Frequency [THz]' --xeval x/1e12
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol '|r|' \
+	--paramlabel '%.1f losses' \
+   	--ylabel 'Reflectance   $|r|$' --output ${PWD##*/}_r.pdf
 
-../../plot_multiline.py effparam/RodArray_effparam.dat    --paramname radius --paramlabel none \
-        --xlabel "Frequency (THz)" --xeval x/1e12  \
-        --ycol '|r|' --ylabel 'Reflectance   $|r|$' --figsizey 2 --output ${PWD##*/}_r.pdf --color RdYlBu
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol '|t|' \
+	--paramlabel '%.1f losses' \
+   	--ylabel 'Transmittance $|t|$' --figsizey 2 --output ${PWD##*/}_t.pdf
 
-../../plot_multiline.py effparam/RodArray_effparam.dat    --paramname radius --paramlabel none  \
-        --xlabel "Frequency (THz)" --xeval x/1e12  \
-        --ycol '|t|' --ylabel 'Transmittance $|t|$' --figsizey 2 --output ${PWD##*/}_t.pdf --color RdYlBu_r
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real N' \
+	--paramlabel '%.1f losses' \
+   	--ylabel 'Refractive index $N_{\text{eff}}^\prime$' --output ${PWD##*/}_nr.pdf  \
+    --overlayplot "c/2/$cellsize/x/$thz,2*c/2/$cellsize/x/$thz,3*c/2/$cellsize/x/$thz,4*c/2/$cellsize/x/$thz"  
 
-../../plot_multiline.py effparam/RodArray_effparam.dat    --paramname radius --paramlabel none  \
-        --xlabel "Frequency (THz)" --xeval x/1e12  \
-        --ycol 'real N' --ylim2 5.  --ylabel 'Effective index $N^\prime$' --figsizey 2 --output ${PWD##*/}_n.pdf --color PiYG_r \
-		--overlayplot "2.998e8/4./50e-6/(x*1e12)"
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'imag N' \
+	--paramlabel '%.1f losses' \
+   	--ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.pdf
+
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real eps' \
+	--paramlabel 'wire cut $d_c = %.0f$ $\upmu$m' \
+   	--ylabel 'Permittivity $\varepsilon_{\text{eff}}^{\prime}$' --output ${PWD##*/}_epsr.pdf
+
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real mu' \
+	--paramlabel 'wire cut $d_c = %.0f$ $\upmu$m' \
+   	--ylabel 'Permeability $\mu_{\text{eff}}^{\prime}$' --output ${PWD##*/}_mur.pdf
 

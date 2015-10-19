@@ -1,14 +1,17 @@
 #!/bin/bash
-if [ -z $NP ] ; then NP=1 ; fi			 # number of processors
-par='model=SphereArray resolution=4u simtime=50p'
+if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
+par='model=SphereArray resolution=4u simtime=100p'
 
-mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=0u  comment=OnlyWire                   ;  ../../effparam.py
+mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=13u comment='TiO$_2$ spheres with wires'
 ../effparam
-mpirun -np $NP  ../../scatter.py $par wirethick=0u radius=13u comment=OnlySphere                 ;  ../../effparam.py
+mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=13u comment='Lossless spheres with wires' loss=.01
 ../effparam
-mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=13u comment=SphereWireNIM              ;  ../../effparam.py
+mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=0u  comment='Wires only'
+../effparam
+mpirun -np $NP  ../../scatter.py $par wirethick=0u radius=13u comment='TiO$_2$ Spheres only'
 ../effparam
 
+sharedoptions='effparam/*.dat --paramname comment --figsizey 2 --xeval x/1e12 --ylim1 0 --xlim2 1.5'
 
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol '|r|' \
    	--ylabel 'Reflectance   $|r|$' --output ${PWD##*/}_r.pdf # --color RdYlBu
@@ -22,4 +25,13 @@ mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=13u comment=SphereWire
 
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'imag N' \
    	--ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.pdf #--color PiYG_r
+
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real eps' \
+	--paramlabel 'wire cut $d_c = %.0f$ $\upmu$m' \
+   	--ylabel 'Permittivity $\varepsilon_{\text{eff}}^{\prime}$' --output ${PWD##*/}_epsr.pdf
+
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real mu' \
+	--paramlabel 'wire cut $d_c = %.0f$ $\upmu$m' \
+   	--ylabel 'Permeability $\mu_{\text{eff}}^{\prime}$' --output ${PWD##*/}_mur.pdf
+
 
