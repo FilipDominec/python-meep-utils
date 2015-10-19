@@ -25,7 +25,6 @@ sharedoptions="effparam/*.dat --paramname wirethick --parameval param*1e6 --figs
 
 ../../plot_multiline.py $sharedoptions --paramlabel '$r_w$ = %.1f $\upmu$m' --xlabel "Frequency (THz)" --ycol 'real eps' --ylim1 -12 --ylim2 3  \
    	--ylabel 'Effective permittivity $\varepsilon_{\text{eff}}^{\prime}$' --output ${PWD##*/}_epsr.pdf \
-    --overlayplot "1-.6**2/x**2"  
 
 ../../plot_multiline.py $sharedoptions --paramlabel '$r_w$ = %.1f $\upmu$m' --xlabel "Frequency (THz)" --ycol 'imag eps' --ylim1 -12 --ylim2 3  \
    	--ylabel 'Effective permittivity $\varepsilon_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_epsi.pdf \
