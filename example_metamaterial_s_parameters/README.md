@@ -47,13 +47,6 @@ __Dielectric spheres__
  * [ ] ellipticity scan along __z__
  * [ ] CDH?
 
- * [ ] spheres lossscan
- * [ ] sphereTiO2 LossScan
- * [ ] sphere wire comparison
- * [ ] SphereWire principles
- * [ ] Wires radiusscan
-
-
 ####Negative-index structures
 __Dielectric spheres with wires__ 
  * [ ] principles (s, w, s+w)
