@@ -30,6 +30,7 @@ parser.add_argument('--N_init_sign',                    type=int,   default=1)
 parser.add_argument('--N_init_branch',                  type=int,   default=0)
 parser.add_argument('--Z_init_sign',                    type=int,   default=-1)
 parser.add_argument('--padding',                        type=float, default=0., help='')
+parser.add_argument('--numstabcoef',                    type=float, default=.9997, help='slight artificial "absorption" to keep algorithm numerically stable')
 parser.add_argument('--autocorrect_signs',              type=int,   default=1, help='shall enforce the positive value of imag N?')
 parser.add_argument('--autobranch_sampler_position',    type=float, default=0.03)
 parser.add_argument('--autobranch',                     type=int,   default=0, help='automatepsic selection of the branch')
@@ -387,8 +388,8 @@ else:                                plot_freq_max = np.max(freq)
 # }}}
 ## --- Calculation of effective parameters -------------------- # {{{
 ## Convert to complex numbers and compensate for the additional padding of the monitor planes
-s11 = shiftmp(freq, polar2complex(s11amp, s11phase), padding*np.ones_like(freq))
-s12 = shiftmp(freq, polar2complex(s12amp, s12phase), padding*np.ones_like(freq))
+s11 = shiftmp(freq, polar2complex(s11amp, s11phase), padding*np.ones_like(freq)) * args.numstabcoef
+s12 = shiftmp(freq, polar2complex(s12amp, s12phase), padding*np.ones_like(freq)) * args.numstabcoef
 
 ## Build the debug plots
 arg = (1+0j-s11**2+s12**2)/2/(s12)
