@@ -46,11 +46,13 @@ parser.add_argument('--paramname',  type=str,               help='(compulsory) p
 parser.add_argument('--title',      type=str, default='', help='plot title')
 # todo: remove the --xunit --yunit
 parser.add_argument('--yunit',      type=float, default=1., help='prescaling of the y-axis')
-parser.add_argument('--paramlabel', type=str,   default='-', help='line label; use standard "printf percent substitutes" to format the parameter, LaTeX for typesetting, empty string to disable')
+parser.add_argument('--paramlabel', type=str,   default='', help='line label; use standard printf percent substitutes to format the parameter, LaTeX for typesetting')
 parser.add_argument('--xcol',       type=str,   default='0', help='number or exact name of the x-axis column') ## TODO or -- if it is to be generated
 parser.add_argument('--ycol',       type=str,   default='1', help='number or exact name of the y-axis column')
-parser.add_argument('--xeval',      type=str,   default='x', help='any python expression to preprocess the `x`-values, e.g. `1e6*c/x` to convert Hertz to the wavelength in micrometers') 
-parser.add_argument('--yeval',      type=str,   default='y', help='any python expression to preprocess the `y`-values, e.g. `y/x` to normalize against newly computed x') 
+parser.add_argument('--ycol2',      type=str,   default='', help='number or exact name of the auxiliary y-axis column; value can be accessed as `ycol2`; is plotted as a dashed line')
+parser.add_argument('--xeval',      type=str,   default='x', help='Python expression to preprocess the `x`-values, e.g. `1e6*c/x` to convert Hertz to the wavelength in micrometers') 
+parser.add_argument('--yeval',      type=str,   default='y', help='Python expression to preprocess the `y`-values, e.g. `y/x` to normalize against newly computed x') 
+parser.add_argument('--yeval2',     type=str,   default='y2', help='Python expression to preprocess the auxiliary `y`-values (computed before `y` is processed)') 
 parser.add_argument('--parameval',  type=str,   default='param', help='any python expression to preprocess the `param`-values, e.g. `param/1e-9` to convert it to nanometers') 
 parser.add_argument('--xlim1',      type=str,   default='', help='start for the x-axis range')
 parser.add_argument('--xlim2',      type=str,   default='', help='end for the x-axis range')
@@ -175,11 +177,15 @@ if args.contours == 'yes':
     xs, ys, params  = [np.array([]) for _ in range(3)] ## three empty arrays
 for color, param, filename in datasets:
     # identify the x,y columns by its number or by its name, load them and optionally process them with an expression
-    xcol, xcolname = get_col_index(args.xcol, filename) 
-    ycol, ycolname = get_col_index(args.ycol, filename)
+    xcol,  xcolname  = get_col_index(args.xcol,  filename) 
+    ycol,  ycolname  = get_col_index(args.ycol,  filename)
+    ycol2, ycolname2 = get_col_index(args.ycol2, filename) if args.ycol2 else (None,None)
     (x, y) = np.loadtxt(filename, usecols=[xcol, ycol], unpack=True)
-    x = eval(args.xeval)
-    y = eval(args.yeval)
+    x  = eval(args.xeval)
+    if args.ycol2: 
+        y2 = np.loadtxt(filename, usecols=[ycol2], unpack=True)
+        y2 = eval(args.yeval2)
+    y  = eval(args.yeval)
 
     # if the legend format is not supplied by user, generate it from the parameter name 
     if type(param) in (float, int):
@@ -201,6 +207,7 @@ for color, param, filename in datasets:
         else:
             label = ("%s = %s" % (args.paramname, param))   # automatic formatted label
 
+        if args.ycol2: plt.plot(x, y2, color=color, label='', marker='s', markersize=(3 if len(x)<50 else 0), ls='--')
         plt.plot(x, y, color=color, label=label, marker='o', markersize=(3 if len(x)<50 else 0))
     else:
         ## Store the points for later interpolation and contour plot
@@ -236,7 +243,7 @@ if args.contours == 'yes':
 else:
     if args.ylim1 != "": plt.ylim(ymin=float(args.ylim1)) 
     if args.ylim2 != "": plt.ylim(ymax=float(args.ylim2))
-    plt.ylabel(ycolname if args.ylabel == '' else args.ylabel) 
+    plt.ylabel(args.ylabel if args.ylabel != '' else (ycolname+" (solid), "+ycolname2+" (dashed)") if ycol2 else ycolname) 
     if args.title: plt.title(args.title)
 plt.grid()
 if args.overlayplot:

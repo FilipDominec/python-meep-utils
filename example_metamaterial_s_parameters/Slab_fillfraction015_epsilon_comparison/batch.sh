@@ -18,12 +18,7 @@ sharedoptions='effparam/*.dat --paramname epsilon --figsizey 2 --xeval x/1e12 --
 	--paramlabel '$\varepsilon_r$' \
    	--ylabel 'Transmittance $|t|$' --figsizey 2 --output ${PWD##*/}_t.pdf
 
-../../plot_multiline.py $sharedoptions --ycol 'real N' --xlabel "Frequency (THz)" \
+../../plot_multiline.py $sharedoptions --ycol 'real N' --ycol2 'imag N' --xlabel "Frequency (THz)" \
 	--paramlabel '$\varepsilon_r$' \
-   	--ylabel 'Refractive index $N_{\text{eff}}^\prime$' --output ${PWD##*/}_nr.pdf  \
-    --overlayplot "c/2/$cellsize/x/$thz,2*c/2/$cellsize/x/$thz,3*c/2/$cellsize/x/$thz,4*c/2/$cellsize/x/$thz"  
-
-../../plot_multiline.py $sharedoptions --ycol 'imag N' --xlabel "Frequency (THz)" \
-	--paramlabel '$\varepsilon_r$' \
-   	--ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.pdf
+   	--ylabel 'Refractive index $N_{\text{eff}}^{\prime}, $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_n.pdf
 

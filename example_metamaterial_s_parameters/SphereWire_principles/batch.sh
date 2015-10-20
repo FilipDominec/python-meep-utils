@@ -1,15 +1,17 @@
 #!/bin/bash
 if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
+cellsize=100e-6
+thz=1e12
 par='model=SphereArray resolution=4u simtime=100p'
 
-mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=13u comment='TiO$_2$ spheres with wires'
-../effparam
-mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=13u comment='Lossless spheres with wires' loss=.01
-../effparam
-mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=0u  comment='Wires only'
-../effparam
-mpirun -np $NP  ../../scatter.py $par wirethick=0u radius=13u comment='TiO$_2$ Spheres only'
-../effparam
+#mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=13u comment='TiO$_2$ spheres with wires'
+#../../effparam.py
+#mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=13u comment='Lossless spheres with wires' loss=.01
+#../../effparam.py
+#mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=0u  comment='Wires only'
+#../../effparam.py
+#mpirun -np $NP  ../../scatter.py $par wirethick=0u radius=13u comment='TiO$_2$ Spheres only'
+#../../effparam.py
 
 sharedoptions='effparam/*.dat --paramname comment --figsizey 2 --xeval x/1e12 --ylim1 0 --xlim2 1.5'
 
