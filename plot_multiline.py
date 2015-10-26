@@ -68,18 +68,12 @@ parser.add_argument('--overlayplot',type=str,   default='', help='one or more ex
 parser.add_argument('--numcontours',type=int,   default=50, help='number of levels in the contour plot (default 50)')
 parser.add_argument('--contourresx',type=int,   default=200,help='row length of the internal interpolation matrix for contour plot (default 200)')
 parser.add_argument('--contourresp',type=int,   default=200,help='column height of the internal interpolation matrix for contour plot (default 200)')
+
 parser.add_argument('--figsizex',   type=float, default=8, help='figure width (inches), 8 is default')
 parser.add_argument('--figsizey',   type=float, default=4, help='figure height (inches), 4 is default')
-parser.add_argument('--usetex',     type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
 parser.add_argument('--contours',   type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
+parser.add_argument('--usetex',     type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
 parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
-#if len(sys.argv)==1: parser.print_help(); sys.exit(1)
-## (todo) optional: Load data from multiple files
-                    #if len(sys.argv) > 1:
-                        #filenames = sys.argv[1:]
-                    #else: 
-                        #filenames = [x for x in os.listdir(os.getcwd())   if '.dat' in x]
-
 args = parser.parse_args()
 
 ## Plotting style
@@ -236,6 +230,7 @@ if args.contours == 'yes':
     if args.plim1 != "": plt.ylim(ymin=float(args.plim1))
     if args.plim2 != "": plt.ylim(ymax=float(args.plim2))
 
+## ==== Plot tuning and labeling ====
 if args.xlim1 != "": plt.xlim(left=float(args.xlim1))
 if args.xlim2 != "": plt.xlim(right=float(args.xlim2))
 plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
@@ -257,7 +252,6 @@ try:
     if not args.contours == 'yes': 
         #plt.legend(prop={'size':12}, loc='upper left') #.draw_frame(False)
         plt.legend(prop={'size':12}, loc='best', fancybox=True, framealpha=0.5)
-
 except:
     pass
 
