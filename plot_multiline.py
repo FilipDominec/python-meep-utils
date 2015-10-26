@@ -65,6 +65,9 @@ parser.add_argument('--ylabel',     type=str,   default='', help='label of the y
 parser.add_argument('--output',     type=str,   default='output.png', help='output file (e.g. output.png or output.pdf)')
 parser.add_argument('--colormap',   type=str,   default='default', help='matplotlib colormap, available are: hsv (default for lines), gist_earth (default for contours), jet, greys, dark2, brg...')
 parser.add_argument('--overlayplot',type=str,   default='', help='one or more expressions, separated by comma, that are plotted to help guide the eye (e.g. 1/x)')
+parser.add_argument('--numcontours',type=int,   default=50, help='number of levels in the contour plot (default 50)')
+parser.add_argument('--contourresx',type=int,   default=200,help='row length of the internal interpolation matrix for contour plot (default 200)')
+parser.add_argument('--contourresp',type=int,   default=200,help='column height of the internal interpolation matrix for contour plot (default 200)')
 parser.add_argument('--figsizex',   type=float, default=8, help='figure width (inches), 8 is default')
 parser.add_argument('--figsizey',   type=float, default=4, help='figure height (inches), 4 is default')
 parser.add_argument('--usetex',     type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
@@ -218,15 +221,15 @@ for color, param, filename in datasets:
 if args.contours == 'yes':
     # Grid the data, produce interpolated quantities:
     from matplotlib.mlab import griddata
-    xi      = np.linspace(min(xs),       max(xs),        200)
-    paramsi = np.linspace(min(params),   max(params),    200)
+    xi      = np.linspace(min(xs),       max(xs),       args.contourresx)
+    paramsi = np.linspace(min(params),   max(params),   args.contourresp)
     interp_anisotropy = 1       # value lower than 1. interpolates rather vertically; optimize if plot disintegrates
     yi      = griddata(xs, params*interp_anisotropy, ys, xi, paramsi*interp_anisotropy, interp='linear')
 
     # Standard contour plot
     cmaprange1 = float(args.ylim1) if (args.ylim1 != "") else np.min(yi) 
     cmaprange2 = float(args.ylim2) if (args.ylim2 != "") else np.max(yi) 
-    levels = np.linspace(cmaprange1, cmaprange2, 50) 
+    levels = np.linspace(cmaprange1, cmaprange2, args.numcontours) 
     contours = plt.contourf(xi, paramsi, yi, cmap=cmap, levels=levels, extend='both')  
     for contour in contours.collections: contour.set_antialiased(False) ## fix aliasing for old Matplotlib
     cb=plt.colorbar().set_ticks(reasonable_ticks(cmaprange1, cmaprange2, density=.8)) 
