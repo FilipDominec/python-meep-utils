@@ -410,7 +410,7 @@ if len(freq)>2:
         ii = int(float(len(N)) * args.autobranch_sampler_position)
         sampleR = np.real(N[ii])
         sampleI = np.imag(N[ii])
-        print 'sampleR, sampleI =', sampleR, sampleI
+        #print 'sampleR, sampleI =', sampleR, sampleI
 
         #if ii == -0: N *= -1  ## alternative way of fixing sign?
 
@@ -421,10 +421,12 @@ if len(freq)>2:
             N *= -1
             det_branch *= -1
             branch_selector *= -1
-        print 'branch_selector, det_branch, diff', branch_selector, det_branch, (branch_selector-det_branch)
+        #print 'branch_selector, det_branch, diff', branch_selector, det_branch, (branch_selector-det_branch)
         N -= det_branch / (freq/c*d)/2
+
         ## Fixing Z sign so that Z.real > 0
-        if sum(np.clip(Z.real,-10., 10.))<0: 
+        #if sum(np.clip(Z.real,-10., 10.))<0: 
+        if np.real(Z[ii])<0: 
             Z *= -1
 else:
     N = np.zeros_like(freq) 
