@@ -2,38 +2,47 @@
 if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
 cellsize=100e-6
 thz=1e12
-par='model=SphereArray resolution=4u simtime=100p'
+par="model=SphereArray resolution=5u simtime=100p cellsize=$cellsize"
 
-#mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=13u comment='TiO$_2$ spheres with wires'
-#../../effparam.py
-#mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=13u comment='Lossless spheres with wires' loss=.01
+#mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=30u comment='TiO$_2$ spheres with wires'
 #../../effparam.py
 #mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=0u  comment='Wires only'
 #../../effparam.py
-#mpirun -np $NP  ../../scatter.py $par wirethick=0u radius=13u comment='TiO$_2$ Spheres only'
+#mpirun -np $NP  ../../scatter.py $par wirethick=0u radius=30u comment='TiO$_2$ spheres only'
+#../../effparam.py
+
+#mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=30u comment='Lossless spheres with wires' loss=.01 simtime=400p
 #../../effparam.py
 
 sharedoptions='effparam/*.dat --paramname comment --figsizey 2 --xeval x/1e12 --ylim1 0 --xlim2 1.5'
 
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol '|r|' \
-   	--ylabel 'Reflectance   $|r|$' --output ${PWD##*/}_r.pdf # --color RdYlBu
-
+	--paramlabel '%s' --ylabel 'Reflectance   $|r|$' --output ${PWD##*/}_r.pdf
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol '|t|' \
-   	--ylabel 'Transmittance $|t|$' --figsizey 2 --output ${PWD##*/}_t.pdf  #--color RdYlBu_r
+	--paramlabel '%s' --ylabel 'Transmittance $|t|$' --figsizey 2 --output ${PWD##*/}_t.pdf
 
+
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real N' --ycol2 'imag N' --ylim1 -3 --ylim2 3\
+	--paramlabel '%s' --ylabel 'Refractive index $N_{\text{eff}}$' --output ${PWD##*/}_n.pdf  \
+    --overlayplot "c/2/$cellsize/x/$thz,2*c/2/$cellsize/x/$thz,3*c/2/$cellsize/x/$thz,4*c/2/$cellsize/x/$thz"  
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real N' \
-   	--ylabel 'Refractive index $N_{\text{eff}}^\prime$' --output ${PWD##*/}_nr.pdf  \
-    --overlayplot "-c/2/$cellsize/x/$thz, c/2/$cellsize/x/$thz,2*c/2/$cellsize/x/$thz,3*c/2/$cellsize/x/$thz,4*c/2/$cellsize/x/$thz"  
+	--paramlabel '%s' --ylabel 'Refractive index $N_{\text{eff}}^\prime$' --output ${PWD##*/}_nr.pdf  \
+    --overlayplot "c/2/$cellsize/x/$thz,2*c/2/$cellsize/x/$thz,3*c/2/$cellsize/x/$thz,4*c/2/$cellsize/3x/$thz"  
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'imag N' --ylim2 3 \
+	--paramlabel '%s' --ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.pdf
 
-../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'imag N' \
-   	--ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.pdf #--color PiYG_r
 
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real eps' --ycol2 'imag eps' --ylim1 -5 --ylim2 5 \
+	--paramlabel '%s' --ylabel 'Permittivity $\varepsilon_{\text{eff}}$' --output ${PWD##*/}_eps.pdf
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real eps' \
-	--paramlabel 'wire cut $d_c = %.0f$ $\upmu$m' \
-   	--ylabel 'Permittivity $\varepsilon_{\text{eff}}^{\prime}$' --output ${PWD##*/}_epsr.pdf
+	--paramlabel '%s' --ylabel 'Permittivity $\varepsilon_{\text{eff}}^{\prime}$' --output ${PWD##*/}_epsr.pdf
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'imag eps' \
+	--paramlabel '%s' --ylabel 'Permittivity $\varepsilon_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_epsi.pdf
 
+
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real mu' --ycol2 'imag mu' \
+	--paramlabel '%s' --ylabel 'Permeability $\mu_{\text{eff}}$' --output ${PWD##*/}_mu.pdf
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real mu' \
-	--paramlabel 'wire cut $d_c = %.0f$ $\upmu$m' \
-   	--ylabel 'Permeability $\mu_{\text{eff}}^{\prime}$' --output ${PWD##*/}_mur.pdf
-
-
+	--paramlabel '%s' --ylabel 'Permeability $\mu_{\text{eff}}^{\prime}$' --output ${PWD##*/}_mur.pdf
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'imag mu' \
+	--paramlabel '%s' --ylabel 'Permeability $\mu_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_mui.pdf

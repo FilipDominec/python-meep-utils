@@ -20,14 +20,29 @@ sharedoptions='effparam/*.dat --paramname wirecut --figsizey 2 --xeval x/1e12 --
 	--paramlabel '$d_c = %.0f$ $\upmu$m' \
    	--ylabel 'Transmittance $|t|$' --figsizey 2 --output ${PWD##*/}_t.pdf
 
+
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real N' --ycol2 'imag N' \
 	--paramlabel '$d_c = %.0f$ $\upmu$m' \
-   	--ylabel 'Refractive index $N_{\text{eff}}^\prime$, $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_n.pdf  \
+   	--ylabel 'Refractive index $N_{\text{eff}}$, $N_{\text{eff}}$' --output ${PWD##*/}_n.pdf  \
     --overlayplot "c/2/$cellsize/x/$thz,2*c/2/$cellsize/x/$thz,3*c/2/$cellsize/x/$thz,4*c/2/$cellsize/x/$thz"  
 
-../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real eps' --ycol2 'imag eps' \
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real N' \
 	--paramlabel '$d_c = %.0f$ $\upmu$m' \
-   	--ylabel 'Permittivity $\varepsilon_{\text{eff}}^{\prime}$, $\varepsilon_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_eps.pdf
+   	--ylabel 'Refractive index $N_{\text{eff}}^\prime$' --output ${PWD##*/}_nr.pdf  \
+    --overlayplot "c/2/$cellsize/x/$thz,2*c/2/$cellsize/x/$thz,3*c/2/$cellsize/x/$thz,4*c/2/$cellsize/x/$thz"  
+
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'imag N' \
+	--paramlabel '$d_c = %.0f$ $\upmu$m' \
+   	--ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.pdf  \
+    --overlayplot "c/2/$cellsize/x/$thz,2*c/2/$cellsize/x/$thz,3*c/2/$cellsize/x/$thz,4*c/2/$cellsize/x/$thz"  
+
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real eps' --ycol2 'imag eps' --ylim1 -2  --ylim2 5 \
+	--paramlabel 'none' \
+   	--ylabel 'Permittivity $\varepsilon_{\text{eff}}$' --output ${PWD##*/}_eps.pdf
+../../plot_multiline.py effparam/*wirecut=2.000e-06*dat --paramname wirecut --figsizey 2 --xeval x/1e12 --ylim1 0 --parameval param*1e6 \
+	--xlabel "Frequency (THz)" --ycol 'real eps' --ycol2 'imag eps' --ylim1 -2  --ylim2 5 \
+	--paramlabel '$d_c = %.0f$ $\upmu$m' \
+   	--ylabel 'Permittivity $\varepsilon_{\text{eff}}$' --output ${PWD##*/}_eps_r2.pdf
 
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real mu' --ycol2 'imag mu' \
 	--paramlabel '$d_c = %.0f$ $\upmu$m' \
