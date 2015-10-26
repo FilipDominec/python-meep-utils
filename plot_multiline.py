@@ -52,7 +52,7 @@ parser.add_argument('--ycol',       type=str,   default='1', help='number or exa
 parser.add_argument('--ycol2',      type=str,   default='', help='number or exact name of the auxiliary y-axis column; value can be accessed as `ycol2`; is plotted as a dashed line')
 parser.add_argument('--xeval',      type=str,   default='x', help='Python expression to preprocess the `x`-values, e.g. `1e6*c/x` to convert Hertz to the wavelength in micrometers') 
 parser.add_argument('--yeval',      type=str,   default='y', help='Python expression to preprocess the `y`-values, e.g. `y/x` to normalize against newly computed x') 
-parser.add_argument('--yeval2',     type=str,   default='y2', help='Python expression to preprocess the auxiliary `y`-values (computed before `y` is processed)') 
+parser.add_argument('--y2eval',     type=str,   default='y2', help='Python expression to preprocess the auxiliary `y`-values (computed before `y` is processed)') 
 parser.add_argument('--parameval',  type=str,   default='param', help='any python expression to preprocess the `param`-values, e.g. `param/1e-9` to convert it to nanometers') 
 parser.add_argument('--xlim1',      type=str,   default='', help='start for the x-axis range')
 parser.add_argument('--xlim2',      type=str,   default='', help='end for the x-axis range')
@@ -184,7 +184,7 @@ for color, param, filename in datasets:
     x  = eval(args.xeval)
     if args.ycol2: 
         y2 = np.loadtxt(filename, usecols=[ycol2], unpack=True)
-        y2 = eval(args.yeval2)
+        y2 = eval(args.y2eval)
     y  = eval(args.yeval)
 
     # if the legend format is not supplied by user, generate it from the parameter name 
