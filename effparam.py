@@ -30,6 +30,7 @@ parser.add_argument('--N_init_sign',                    type=int,   default=1)
 parser.add_argument('--N_init_branch',                  type=int,   default=0)
 parser.add_argument('--Z_init_sign',                    type=int,   default=-1)
 parser.add_argument('--padding',                        type=float, default=0., help='')
+parser.add_argument('--numstabcoef',                    type=float, default=.9997, help='slight artificial "absorption" to keep algorithm numerically stable')
 parser.add_argument('--autocorrect_signs',              type=int,   default=1, help='shall enforce the positive value of imag N?')
 parser.add_argument('--autobranch_sampler_position',    type=float, default=0.03)
 parser.add_argument('--autobranch',                     type=int,   default=0, help='automatepsic selection of the branch')
@@ -387,8 +388,8 @@ else:                                plot_freq_max = np.max(freq)
 # }}}
 ## --- Calculation of effective parameters -------------------- # {{{
 ## Convert to complex numbers and compensate for the additional padding of the monitor planes
-s11 = shiftmp(freq, polar2complex(s11amp, s11phase), padding*np.ones_like(freq))
-s12 = shiftmp(freq, polar2complex(s12amp, s12phase), padding*np.ones_like(freq))
+s11 = shiftmp(freq, polar2complex(s11amp, s11phase), padding*np.ones_like(freq)) * args.numstabcoef
+s12 = shiftmp(freq, polar2complex(s12amp, s12phase), padding*np.ones_like(freq)) * args.numstabcoef
 
 ## Build the debug plots
 arg = (1+0j-s11**2+s12**2)/2/(s12)
@@ -409,7 +410,7 @@ if len(freq)>2:
         ii = int(float(len(N)) * args.autobranch_sampler_position)
         sampleR = np.real(N[ii])
         sampleI = np.imag(N[ii])
-        print 'sampleR, sampleI =', sampleR, sampleI
+        #print 'sampleR, sampleI =', sampleR, sampleI
 
         #if ii == -0: N *= -1  ## alternative way of fixing sign?
 
@@ -420,10 +421,12 @@ if len(freq)>2:
             N *= -1
             det_branch *= -1
             branch_selector *= -1
-        print 'branch_selector, det_branch, diff', branch_selector, det_branch, (branch_selector-det_branch)
+        #print 'branch_selector, det_branch, diff', branch_selector, det_branch, (branch_selector-det_branch)
         N -= det_branch / (freq/c*d)/2
+
         ## Fixing Z sign so that Z.real > 0
-        if sum(np.clip(Z.real,-10., 10.))<0: 
+        #if sum(np.clip(Z.real,-10., 10.))<0: 
+        if np.real(Z[ii])<0: 
             Z *= -1
 else:
     N = np.zeros_like(freq) 

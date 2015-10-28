@@ -877,7 +877,7 @@ class Slice(): #{{{
 
 ## Obtain and process the s-parameters of the structure 
 def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
-        frequency_domain=False, frequency=None, pad_zeros=0.0, intf=[0, np.inf], Kx=0, Ky=0, eps1=1, eps2=1):
+        frequency_domain=False, frequency=None, pad_zeros=0.0, intf=[0, np.inf], Kx=0, Ky=0, eps1=1, eps2=1, diag=True):
     """ Returns the frequency, s11 (reflection) and s12 (transmission) spectra
     (works for both time- and freq-domain simulation) 
 
@@ -903,20 +903,21 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
             field[t>max(t)*.8] = field[t>max(t)*.8]*(.5 + .5*np.cos(np.pi * (t[t>max(t)*.8]/max(t)-.8)/(1-.8)))
 
     try:
-        import matplotlib
-        #matplotlib.use('Agg') ## Enable plotting even in the GNU screen session?
-        from matplotlib import pyplot as plt
-        plt.figure(figsize=(7,6))
-        plt.plot(t, abs(Ex1), label="Ex1")
-        plt.plot(t, abs(Hy1), label="Hy1")
-        plt.plot(t, abs(Ex2), label="Ex2", lw=1.5)
-        plt.plot(t, abs(Hy2), label="Hy2")
+        if diag:
+            import matplotlib
+            #matplotlib.use('Agg') ## Enable plotting even in the GNU screen session?
+            from matplotlib import pyplot as plt
+            plt.figure(figsize=(7,6))
+            plt.plot(t, abs(Ex1), label="Ex1")
+            plt.plot(t, abs(Hy1), label="Hy1")
+            plt.plot(t, abs(Ex2), label="Ex2", lw=1.5)
+            plt.plot(t, abs(Hy2), label="Hy2")
 
-        plt.gca().set_ylim(ymin=1e-10)
-        plt.legend(prop={'size':10}, loc='upper right')
-        plt.xlabel('Time'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
-        plt.yscale("log")
-        plt.savefig("amplitudes_time_domain.png", bbox_inches='tight')
+            plt.gca().set_ylim(ymin=1e-10)
+            plt.legend(prop={'size':10}, loc='upper right')
+            plt.xlabel('Time'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
+            plt.yscale("log")
+            plt.savefig("amplitudes_time_domain.png", bbox_inches='tight')
     except:
         meep.master_printf("Timedomain plot failed")
 
@@ -949,17 +950,18 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
 
     ## Diagnostics: plot frequency-domain data
     try:
-        plt.figure(figsize=(7,6))
-        plt.plot(freq, abs(Ex1f), label="Ex1")
-        plt.plot(freq, abs(Hy1f), label="Hy1")
-        plt.plot(freq, abs(Ex2f), label="Ex2")
-        plt.plot(freq, abs(Hy2f), label="Hy2")
-        plt.yscale("log");   plt.gca().set_ylim(ymin=1e-8)
-        plt.yscale("log");   plt.gca().set_ylim(ymin=1e-8)
-        plt.xlim(0, np.max(freq))
-        plt.legend(prop={'size':10}, loc='upper right')
-        plt.xlabel('Frequency'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
-        plt.savefig("amplitudes_freq_domain.png", bbox_inches='tight')
+        if diag:
+            plt.figure(figsize=(7,6))
+            plt.plot(freq, abs(Ex1f), label="Ex1")
+            plt.plot(freq, abs(Hy1f), label="Hy1")
+            plt.plot(freq, abs(Ex2f), label="Ex2")
+            plt.plot(freq, abs(Hy2f), label="Hy2")
+            plt.yscale("log");   plt.gca().set_ylim(ymin=1e-8)
+            plt.yscale("log");   plt.gca().set_ylim(ymin=1e-8)
+            plt.xlim(0, np.max(freq))
+            plt.legend(prop={'size':10}, loc='upper right')
+            plt.xlabel('Frequency'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
+            plt.savefig("amplitudes_freq_domain.png", bbox_inches='tight')
     except:
         meep.master_printf("Raw freq-domain plot failed %s" % sys.exc_info()[0])
 
@@ -1005,17 +1007,18 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
 
     ## Diagnostics: Plot spectral profile
     try:
-        plt.figure(figsize=(7,6))
-        plt.plot(freq, abs(in1), label="in1")
-        plt.plot(freq, abs(out1), label="out1")
-        plt.plot(freq, abs(in2), label="in2")
-        plt.plot(freq, abs(out2), label="out2")
-        plt.xlim(0, np.max(freq))
-        plt.legend(prop={'size':10}, loc='lower left')
-        plt.xlabel('Frequency'); plt.ylabel('Transmitted amplitude')
-        #plt.title('Frequency-domain wave amplitudes')
-        plt.yscale("log")
-        plt.savefig("amplitudes_spectra.png", bbox_inches='tight')
+        if diag:
+            plt.figure(figsize=(7,6))
+            plt.plot(freq, abs(in1), label="in1")
+            plt.plot(freq, abs(out1), label="out1")
+            plt.plot(freq, abs(in2), label="in2")
+            plt.plot(freq, abs(out2), label="out2")
+            plt.xlim(0, np.max(freq))
+            plt.legend(prop={'size':10}, loc='lower left')
+            plt.xlabel('Frequency'); plt.ylabel('Transmitted amplitude')
+            #plt.title('Frequency-domain wave amplitudes')
+            plt.yscale("log")
+            plt.savefig("amplitudes_spectra.png", bbox_inches='tight')
     except:
         meep.master_printf("Wave amplitude freq-domain plot failed %s" % sys.exc_info()[0])
 
