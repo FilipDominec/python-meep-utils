@@ -10,7 +10,7 @@ if [ -z "$skipsimulation" ]; then
 	done
 fi
 
-sharedoptions="effparam/*.dat --paramname fillfraction --contours yes --colormap gist_earth_r --figsizex 4 --figsizex 4 --xeval x/1e12"
+sharedoptions="effparam/*.dat --paramname fillfraction --contours yes --numcontours 15 --colormap gist_earth --figsizex 4 --figsizey 3 --xeval x/1e12"
 
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol '|r|' \
    	--ylabel 'Reflectance   $|r|$' --output ${PWD##*/}_r.pdf \
@@ -23,9 +23,7 @@ sharedoptions="effparam/*.dat --paramname fillfraction --contours yes --colormap
 	--paramlabel 'Dielectric fill fraction $d_2/a$' \
 	--overlayplot "(c/($cellsize*0.15*2*x*$thz))**2,(2*c/($cellsize*0.15*2*x*$thz))**2"
 
-
-# TODO
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --yeval '0-y' --ycol 'imag N' \
    	--ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.pdf \
-	--paramlabel 'Dielectric fill fraction $d_2/a$' \
+	--paramlabel 'Dielectric fill fraction $d_2/a$'  --ylim1 -.25 --ylim2 -.01 \
 	--overlayplot "(c/($cellsize*0.15*2*x*$thz))**2,(2*c/($cellsize*0.15*2*x*$thz))**2"

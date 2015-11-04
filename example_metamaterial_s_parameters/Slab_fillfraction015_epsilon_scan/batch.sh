@@ -9,26 +9,27 @@ if [ -z "$skipsimulation" ]; then
 	done
 fi
 
-sharedoptions="effparam/*.dat --paramname epsilon --contours yes --colormap gist_earth_r --figsizex 4 --figsizex 4 --xeval x/1e12"
+sharedoptions="effparam/*.dat --paramname epsilon --contours yes --numcontours 15 --colormap gist_earth --figsizex 4 --figsizey 3 --xeval x/1e12"
 
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol '|r|' \
    	--ylabel 'Reflectance   $|r|$' --output ${PWD##*/}_r.pdf \
 	--paramlabel 'Dielectric permittivity $\varepsilon_r$' \
 	--overlayplot "(c/($cellsize*0.15*2*x*$thz))**2,(2*c/($cellsize*0.15*2*x*$thz))**2"
-../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol '|t|' \
-   	--ylabel 'Transmittance   $|t|$' --output ${PWD##*/}_t.pdf \
-	--paramlabel 'Dielectric permittivity $\varepsilon_r$' \
-	--overlayplot "(c/($cellsize*0.15*2*x*$thz))**2,(2*c/($cellsize*0.15*2*x*$thz))**2"
+#../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol '|t|' \
+   	#--ylabel 'Transmittance   $|t|$' --output ${PWD##*/}_t.pdf \
+	#--paramlabel 'Dielectric permittivity $\varepsilon_r$' \
+	#--overlayplot "(c/($cellsize*0.15*2*x*$thz))**2,(2*c/($cellsize*0.15*2*x*$thz))**2"
 
 
-../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real N' --y2eval '0-y' --ycol2 'imag N' \
-   	--ylabel 'Refractive index $N_{\text{eff}}$' --output ${PWD##*/}_n.pdf \
-	--paramlabel 'Dielectric permittivity $\varepsilon_r$' \
-	--overlayplot "(c/($cellsize*0.15*2*x*$thz))**2,(2*c/($cellsize*0.15*2*x*$thz))**2"
-../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real N' \
-   	--ylabel 'Refractive index $N_{\text{eff}}^{\prime}$' --output ${PWD##*/}_ni.pdf \
-	--paramlabel 'Dielectric permittivity $\varepsilon_r$' \
-	--overlayplot "(c/($cellsize*0.15*2*x*$thz))**2,(2*c/($cellsize*0.15*2*x*$thz))**2"
+#../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real N' --y2eval '0-y' --ycol2 'imag N' \
+   	#--ylabel 'Refractive index $N_{\text{eff}}$' --output ${PWD##*/}_n.pdf \
+	#--paramlabel 'Dielectric permittivity $\varepsilon_r$' \
+	#--overlayplot "(c/($cellsize*0.15*2*x*$thz))**2,(2*c/($cellsize*0.15*2*x*$thz))**2"
+#../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real N' \
+   	#--ylabel 'Refractive index $N_{\text{eff}}^{\prime}$' --output ${PWD##*/}_ni.pdf \
+	#--paramlabel 'Dielectric permittivity $\varepsilon_r$' \
+	#--overlayplot "(c/($cellsize*0.15*2*x*$thz))**2,(2*c/($cellsize*0.15*2*x*$thz))**2"
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --yeval '0-y' --ycol 'imag N' \
    	--ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.pdf \
-	--paramlabel 'Dielectric permittivity $\varepsilon_r$'
+	--paramlabel 'Dielectric permittivity $\varepsilon_r$'  --ylim1 -.8 --ylim2 -.01 \
+	--overlayplot "(c/($cellsize*0.15*2*x*$thz))**2,(2*c/($cellsize*0.15*2*x*$thz))**2"
