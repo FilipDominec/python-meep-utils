@@ -34,6 +34,7 @@ parser.add_argument('--numstabcoef',                    type=float, default=.999
 parser.add_argument('--autocorrect_signs',              type=int,   default=1, help='shall enforce the positive value of imag N?')
 parser.add_argument('--autobranch_sampler_position',    type=float, default=0.03)
 parser.add_argument('--autobranch',                     type=int,   default=0, help='automatepsic selection of the branch')
+parser.add_argument('--autocorrect_signs_pointwise',    type=int,   default=0, help='shall finally enforce the positive value of imag N and real Z in every point?')
 parser.add_argument('--savedat',                        type=int,   default=1, help='created directory "effparam" and saves all params to an ascii file with header')
 ## Postprocessing
 parser.add_argument('--find_plasma_frequency',          type=int,   default=0, help='find frequencies where epsilon crosses zero')
@@ -428,6 +429,10 @@ if len(freq)>2:
         #if sum(np.clip(Z.real,-10., 10.))<0: 
         if np.real(Z[ii])<0: 
             Z *= -1
+
+    if args.autocorrect_signs_pointwise: 
+        N *= np.sign(N.imag)
+        Z *= np.sign(Z.imag)
 else:
     N = np.zeros_like(freq) 
     Z = np.zeros_like(freq)
