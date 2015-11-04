@@ -32,22 +32,16 @@ sharedoptions='effparam/*.dat --paramname cellsize --parameval param*1e6 --conto
    	--ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.png
 
 
-#../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real eps' --y2eval '0-y2' --ycol2 'imag eps' \
-	#--paramlabel 'a=%d $\upmu$m' \
-   	#--ylabel 'Permittivity $\varepsilon_{\text{eff}}$' --output ${PWD##*/}_eps.png
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real eps' \
 	--paramlabel 'a=%d $\upmu$m' --ylim1 -5 --ylim2 10 \
    	--ylabel 'Permittivity $\varepsilon_{\text{eff}}^{\prime}$' --output ${PWD##*/}_epsr.png
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --yeval '0-y' --ycol 'imag eps' \
 	--paramlabel 'a=%d $\upmu$m' \
    	--ylabel 'Permittivity $\varepsilon_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_epsi.png
-#
-#
-#../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real mu' --y2eval '0-y2' --ycol2 'imag mu' \
-	#--paramlabel 'a=%d $\upmu$m' \
-   	#--ylabel 'Permeability $\mu_{\text{eff}}$' --output ${PWD##*/}_mu.png
+
+
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real mu' \
-	--paramlabel 'a=%d $\upmu$m' \
+	--paramlabel 'a=%d $\upmu$m' --ylim1 -2 --ylim2 2 \
    	--ylabel 'Permeability $\mu_{\text{eff}}^{\prime}$' --output ${PWD##*/}_mur.png
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --yeval '0-y' --ycol 'imag mu' \
 	--paramlabel 'a=%d $\upmu$m' \
