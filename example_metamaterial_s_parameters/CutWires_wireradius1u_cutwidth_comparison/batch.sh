@@ -3,7 +3,7 @@ if [ -z $NP ] ; then NP=2 ; fi             # number of processors
 model=SphereArray
 cellsize=100e-6
 thz=1e12
-par='model=SphereArray resolution=2u simtime=100p resolution=2u radius=0u'
+par='model=SphereArray resolution=2u simtime=100p radius=0u'
 
 if [ -z "$skipsimulation" ]; then 
 	for wc in 2 4 8 16 32 48; do

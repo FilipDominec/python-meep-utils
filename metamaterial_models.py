@@ -76,10 +76,10 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
         self.register_locals(locals())          ## Remember the parameters
 
         ## Constants for the simulation
-        self.pml_thickness = 20e-6
         self.simtime = simtime      # [s]
         self.src_freq, self.src_width = 2000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
+        self.pml_thickness = .1*c/self.src_freq
 
         self.size_x, self.size_y  = self.resolution*2, cellsize
         self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness

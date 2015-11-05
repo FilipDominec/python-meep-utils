@@ -5,7 +5,7 @@ __Slab__ made of dielectric
  * [x] Slab fillfraction015 epsilon comparison 
  * [x] Slab epsilon4 fillfraction scan
  * [x] Slab fillfraction015 epsilon scan
- * [ ] (slab cellscan .. unstable)
+ * [-] slab cellscan .. (unstable)
  * [ ] CDH?
 
 __Wires__ [metallic wires oriented along electric field]
