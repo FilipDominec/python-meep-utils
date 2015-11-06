@@ -194,7 +194,7 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
 class ESRRArray(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=20e-6, 
             radius=40e-6, wirethick=6e-6, srrthick=6e-6, splitting=26e-6, splitting2=0e-6, capacitorr=10e-6, 
-            cbarthick=6e-6, insplitting=100e-6, incapacitorr=0e-6):
+            cbarthick=0e-6, insplitting=100e-6, incapacitorr=0e-6):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -231,36 +231,36 @@ class ESRRArray(meep_utils.AbstractMeepModel): #{{{
                 return self.return_value             # (do not change this line)
 
             if (    # define the first splitting of SRR
-                    not (r.z()>cellc+self.radius/2 and in_xslab(r, cx=0, d=self.splitting))  
+                    not (r.z()>cellc+self.radius/2 and in_xslab(r, cx=self.resolution/4, d=self.splitting))  
                     # define the 2nd splitting for symmetric SRR
-                    and not (r.z()<cellc-self.radius/2 and in_xslab(r, cx=0, d=self.splitting2))):
+                    and not (r.z()<cellc-self.radius/2 and in_xslab(r, cx=self.resolution/4, d=self.splitting2))):
                 # make the ring (without the central bar)
-                if (in_ycyl(r, cx=0, cz=cellc, rad=self.radius+self.srrthick/2)          # outer radius
+                if (in_ycyl(r, cx=self.resolution/4, cz=cellc, rad=self.radius+self.srrthick/2)          # outer radius
                         and in_yslab(r, cy=0, d=self.srrthick)                             # delimit to a disc
-                        and not in_ycyl(r, cx=0, cz=cellc, rad=self.radius-self.srrthick/2)):    # subtract inner radius 
+                        and not in_ycyl(r, cx=self.resolution/4, cz=cellc, rad=self.radius-self.srrthick/2)):    # subtract inner radius 
                     return self.return_value             # (do not change this line)
                 # optional capacitor pads
                 if (self.splitting > 0
                         and in_xcyl(r, cy=0, cz=cellc+self.radius, rad=self.capacitorr) 
-                        and in_xslab(r, cx=0, d=self.splitting+2*self.wirethick)):          
+                        and in_xslab(r, cx=self.resolution/4, d=self.splitting+2*self.srrthick)):          
                     return self.return_value             # (do not change this line)
                 # optional capacitor pads on second splitting
                 if (self.splitting2 > 0 
                         and in_xcyl(r, cy=0, cz=cellc-self.radius, rad=self.capacitorr) 
-                        and in_xslab(r, cx=0, d=self.splitting2+2*self.wirethick)):          
+                        and in_xslab(r, cx=self.resolution/4, d=self.splitting2+2*self.srrthick)):          
                     return self.return_value             # (do not change this line)
 
             if (self.cbarthick > 0 
                     # def splitting in the central bar for ESRR (the bar is completely disabled if insplitting high enough)
-                    and not (in_zslab(r,cz=cellc,d=self.radius) and in_xslab(r, cx=0, d=self.insplitting))):
-                if (in_ycyl(r, cx=0, cz=cellc, rad=self.radius+self.srrthick/2)         # outer radius
+                    and not (in_zslab(r,cz=cellc,d=self.radius) and in_xslab(r, cx=self.resolution/4, d=self.insplitting))):
+                if (in_ycyl(r, cx=self.resolution/4, cz=cellc, rad=self.radius+self.srrthick/2)         # outer radius
                         and in_yslab(r, cy=0, d=self.srrthick)                          # delimit to a disc
                         and in_zslab(r,cz=cellc,d=self.cbarthick)):                       # but allow the central bar
                     return self.return_value             # (do not change this line)
 
-                if (self.insplitting > 0
+                if ((self.insplitting > 0)
                         and in_xcyl(r, cy=0, cz=cellc, rad=self.incapacitorr) 
-                        and in_xslab(r, cx=0, d=self.insplitting+2*self.wirethick)):          # optional capacitor pads
+                        and in_xslab(r, cx=self.resolution/4, d=self.insplitting+2*self.srrthick)):          # optional capacitor pads
                     return self.return_value             # (do not change this line)
 
         return 0

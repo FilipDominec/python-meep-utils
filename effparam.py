@@ -572,7 +572,7 @@ plt.plot(freq, np.imag(eps), color="#FF22DD", label=u'$\\varepsilon_{eff}$"', ls
 plt.plot(freq, np.real(mu),  color="#BB8800", label=u"$\\mu_{eff}$'")
 plt.plot(freq, np.imag(mu),  color="#DDAA00", label=u'$\\mu_{eff}$"', ls='--')
 plt.ylabel(u"Value"); plt.ylim((-10.,10.)); 
-plt.yscale('symlog', linthreshy=.1); 
+#plt.yscale('symlog', linthreshy=.1); 
 plt.xlim((plot_freq_min, plot_freq_max))
 plt.grid(True)
 if args.legend_enable: plt.legend(); 
