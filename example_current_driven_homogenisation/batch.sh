@@ -3,18 +3,17 @@
 ## See the last line of ../metamaterial_models.py for the list of available models and their options
 ## XXX models = {'Slab':Slab, 'SphereArray':SphereArray, 'RodArray':RodArray}
 
-if [ -z "$NUMCPU" ]; then 
-    NUMCPU=1; 
-    echo "Note:Defaulting to one processor, use e.g. 'export NUMCPU=4' to use multiprocessing"; fi
+if [ -z "$NP" ] ; then NP=2 ; fi             # number of processors
+
 
 compare_dispersion() {
     ## scan through the wave vector
     for Kz in `seq 0  2000 60000`; do 
-        mpirun -np $NUMCPU ../cdh.py Kz=$Kz $1; done
+        mpirun -np $NP ../cdh.py Kz=$Kz $1; done
     ../plot_cdh.py cdh/*dat ## (preview)
 
     ## compute the dispersion curves using the s-parameter method, (with the same parameters)
-    mpirun -np $NUMCPU ../scatter.py $1
+    mpirun -np $NP ../scatter.py $1
     ../effparam.py
 
     ## repeat the plot, now comparing also to the curve retrieved above
