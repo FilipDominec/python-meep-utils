@@ -17,12 +17,14 @@ index of refraction of the metamaterial. etc.
 Some of the parameters that can be passed to the structure are shared among most of them. Their meaning follows:
     * comment     -- any user-defined string (which may however also help defining the structure)
     * simtime     -- full simulation time, higher value leads to better spectral resolution
-    * resolution  -- the size of one voxel in the FDTD grid; halving the value improves precision, but needs 16x CPU time
+    * resolution  -- the size of one voxel in the FDTD grid; halving the value improves accuracy, but needs 16x CPU time
     * cellsize    -- the x- and y-dimensions of the simulation
     * padding     -- the z-distance between the monitors and the unit cell; higher values reduce evanescent field artifacts
     * Kx, Ky      -- the reflection and transmission can be also computed for oblique incidence, 
                      which can be defined by forcing nonzero perpendicular components of the K-vector
     * cellnumber  -- for well-behaved structures the eff-param retrieval should give same results for multiple cells stacked
+Remaining parameters are specific for the given structure, and could be hopefully readable in its definition.
+Note that `scatter.py' also accepts extra parameters, described in its header, that are not passed to the model.
 """
 import time, sys, os
 import numpy as np

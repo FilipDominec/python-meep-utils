@@ -2,7 +2,12 @@
 #-*- coding: utf-8 -*-
 """ An example python-meep simulation of a dielectric sphere scattering a broadband impulse, 
 illustrating the use of the convenient functions provided by meep_utils.py 
-(c) 2014 Filip Dominec, see http://f.dominec.eu/meep for more information """
+(c) 2014 Filip Dominec, see http://f.dominec.eu/meep for more information 
+
+The simulated models of structures are stored in the `metamaterial_models.py' module; see its code for the
+description of each structure and command-line parameters accepted. Several of these parameters are not 
+passed to the model; see the definition of `process_param()' in `meep_utils.py'.
+"""
 
 import time, sys, os
 import numpy as np

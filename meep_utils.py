@@ -40,12 +40,13 @@ def process_param(args):#{{{
     Some of them control the simulation (`sim_param'), but all remaining will be passed to 
     the model (`model_param')
     """
-    sim_param = {   'model':None,
-                    'frequency_domain':False,
-                    'frequency':       None,
-                    'MaxIter':         5000,
-                    'MaxTol':          1e-2,
-                    'BiCGStab':        8 }      ## BiCGStab order of 8 proved to have best performance
+    sim_param = {   'model':None,               ## selects which class will be used to define the structure
+                    'frequency_domain':False,   ## (set automatically, not used from command line)
+                    'frequency':       None,    ## switches to the frequency-domain solver of the same structure
+                    'MaxIter':         5000,    ## maximum number of iterations for frequency-domain solver
+                    'MaxTol':          1e-2,    ## allowable error for the frequency-domain solver to converge
+                    'BiCGStab':        8,       ## biconjugate algorithm order for frequency-domain solver
+                    }                           
     model_param = {}
     for namevalue in args: ## first filter out those parameters that are specific for the simulation, rather than the model
         name, value = namevalue.split("=")
