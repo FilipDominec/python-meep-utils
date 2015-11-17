@@ -1,6 +1,29 @@
 #!/usr/bin/env python
 #coding:utf8
+"""
+This module contains several implementations of the AbstractMEEPModel class. Each of these classes
+defines some structure made of dielectrics or metal, along with its dimensions, frequency of the source,
+and many parameters. 
 
+One of the classes is loaded by the `scatter.py' file, which is supposed to compute the effective 
+parameters of a metamaterial. Therefore, all structures defined
+by this module are assumed to be a single unit cell of a 3-D periodic lattice of the metamaterial.
+
+In general, a wave is sent along the z-axis, its electric field being oriented along the x-axis and its 
+magnetic field along the y-axis. The transmitted and reflected fields are recorded in each time step, and 
+processed afterwards using the Fourier transform and the s-parameter method to retrieve the effective 
+index of refraction of the metamaterial. etc.
+
+Some of the parameters that can be passed to the structure are shared among most of them. Their meaning follows:
+    * comment     -- any user-defined string (which may however also help defining the structure)
+    * simtime     -- full simulation time, higher value leads to better spectral resolution
+    * resolution  -- the size of one voxel in the FDTD grid; halving the value improves precision, but needs 16x CPU time
+    * cellsize    -- the x- and y-dimensions of the simulation
+    * padding     -- the z-distance between the monitors and the unit cell; higher values reduce evanescent field artifacts
+    * Kx, Ky      -- the reflection and transmission can be also computed for oblique incidence, 
+                     which can be defined by forcing nonzero perpendicular components of the K-vector
+    * cellnumber  -- for well-behaved structures the eff-param retrieval should give same results for multiple cells stacked
+"""
 import time, sys, os
 import numpy as np
 from scipy.constants import c, epsilon_0, mu_0

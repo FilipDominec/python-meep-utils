@@ -13,7 +13,7 @@ from scipy.constants import c, hbar, pi
 #matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, ')
 
 # -- settings --
-maxfreq = 4e12
+maxfreq = 2e12
 frequnit = 1e12
 
 plot_FFT = True

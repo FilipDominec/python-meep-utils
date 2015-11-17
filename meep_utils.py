@@ -1272,15 +1272,3 @@ class AmplitudeMonitorPoint(AmplitudeMonitorPlane):#{{{
         return field.get_field(component, self.pos)
 #}}}
         
-"""
-        
-== Possible errors and clues ==
-    HDF5-DIAG: Error detected in HDF5 (1.8.4-patch1) MPI-process 0:
-      #000: ../../../src/H5F.c line 1514 in H5Fopen(): unable to open file
-    ---> perhaps you defined two slices the same?
-
-mpirun has exited due to process rank * with PID **** on *
-    ---> this is harmless
-
-AttributeError: 'unicode' object has no attribute 'shrink' --> try avoiding latex in matplotlib?
-"""

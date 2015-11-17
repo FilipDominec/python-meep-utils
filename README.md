@@ -16,7 +16,7 @@ Filip Dominec, filip.dominec@gmail.com,
 The scripts require working python-meep environment, recommended compilation procedure is supplied in the `python-meep-install.py` script which is hosted here: https://github.com/FilipDominec/python-meep-install
 
 Some scripts use the matplotlib's binding for LaTeX for nicer plots. You may either install the dependencies using 
-`sudo apt-get install -y texlive-latex-extra dvipng`, or modify the scripts to avoid using late.
+`sudo apt-get install -y texlive-latex-extra dvipng`, or modify the scripts to avoid using the latter.
 
 The procedure is tested on Debian-based Linux distributions. You may have to manually modify it if your system differs. Please read the script for details.
 
@@ -80,6 +80,9 @@ materials, data postprocessing etc.
  * the same as above, but `meep_utils.testmaterials()` did not help - _some other error happens. Make sure not to use an `eps` parameter. _
  * simulation aborts with `lorentzian unstable` although the medium passed the `meep_utils.testmaterials()` function - _the compiled-in check for Lorentzian stability is overly prudent; it sometimes aborts a simulation that would be completely stable. You may either change the material model, or change the meep sources to bypass the `abort` in function `lorentzian_unstable` in `src/susceptibility.cpp` and recompile meep. I consider this to be just an unfixed bug, see also the discussion https://github.com/stevengj/meep/issues/12._
  * time-domain simulation aborts when I try to define a material with a negative permittivity - _such materials can not be computed by the time-domain solver. See, again, https://github.com/stevengj/meep/issues/12. Resort to the frequency-domain solver, or define a proper Drude-Lorentz model.
+ * frequency-domain simulation does not converge when I try to define a material with a negative permittivity - _while the frequency-domain solver worked well with realistic metals up to 10 THz, it ceased not converge 
+ * AttributeError: 'unicode' object has no attribute 'shrink' - try avoiding latex in matplotlib?
+ * HDF5-DIAG: Error detected in HDF5 (1.8.4-patch1) MPI-process 0: #000: ../../../src/H5F.c line 1514 in H5Fopen(): unable to open file - perhaps you try to export the fields twice to the same file?
 
 #### Invalid or weird results
  * exported figures show no fields and are black - _infinite values or not-a-numbers resulted from the simulation. This is perhaps due to simulation being unstable (see `amplitudes_time_domain.png`, if available, whether the fields are exponentially decaying or growing. _

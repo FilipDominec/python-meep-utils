@@ -38,7 +38,7 @@ compare_dispersion() {
 #mv cdh_ampli.png    SRRArray_dispersion.png   
 #mv cdh			    cdh_SRRArray             
 
-compare_dispersion 'model=SRRArray simtime=100p splitting2=16u'
-mpirun -np $NUMCPU ../scatter.py 'model=SRRArray simtime=100p'
+compare_dispersion 'model=SRRArray simtime=150p splitting2=16u resolution=6u'
+mpirun -np $NUMCPU ../scatter.py 'model=SRRArray simtime=150p splitting2=16u resolution=6u'
 mv cdh_ampli.png    SRRArrayDoubleSplit_dispersion.png   
 mv cdh			    cdh_SRRArrayDoubleSplit             
