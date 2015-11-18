@@ -27,7 +27,8 @@ vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
 vol.center_origin()
 s = meep_utils.init_structure(model=model, volume=vol, pml_axes=meep.Z)
 f = meep.fields(s)
-f.use_bloch(meep.X, getattr(model, 'Kx', 0) / (-2*np.pi)) # (any transversal component of k-vector is allowed)
+# Define the Bloch-periodic boundaries (any transversal component of k-vector is allowed)
+f.use_bloch(meep.X, getattr(model, 'Kx', 0) / (-2*np.pi)) 
 f.use_bloch(meep.Y, getattr(model, 'Ky', 0) / (-2*np.pi))
 
 # Add the field source (see meep_utils for an example of how an arbitrary source waveform is defined)
@@ -61,7 +62,6 @@ if not getattr(model, 'frequency', None):       ## time-domain computation
     while (f.time()/c < model.simtime):     # timestepping cycle
         f.step()
         timer.print_progress(f.time()/c)
-        #print f.get_field(meep.Ex, meep.vec(0,0,0))
         for monitor in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy): monitor.record(field=f)
         for slice_ in slices: slice_.poll(f.time()/c)
     for slice_ in slices: slice_.finalize()

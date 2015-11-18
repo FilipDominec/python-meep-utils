@@ -8,7 +8,7 @@ if [ -z "$NP" ] ; then NP=2 ; fi             # number of processors
 
 compare_dispersion() {
     ## scan through the wave vector
-    for Kz in `seq 0  2000 60000`; do 
+    for Kz in `seq 0  5000 60000`; do 
         mpirun -np $NP ../cdh.py Kz=$Kz $1; done
     ../plot_cdh.py cdh/*dat ## (preview)
 
@@ -44,4 +44,4 @@ compare_dispersion() {
 #mv cdh_ampli.png    SRRArray_dispersion.png   
 #mv cdh			    cdh_SRRArray             
 
-compare_dispersion 'model=SRRArray simtime=150p splitting2=16u resolution=6u'
+compare_dispersion 'model=SRRArray simtime=50p splitting2=16u resolution=6u'

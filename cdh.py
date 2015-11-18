@@ -56,12 +56,10 @@ class AmplitudeMonitorVolume():#{{{
 #}}}
 
 
+
 # Model selection
-sim_param, model_param = meep_utils.process_param(sys.argv[1:])
-model = (metamaterial_models.models.get(sim_param['model'], metamaterial_models.models.values()[0]))(**model_param)
-if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
-for k in ('Kx','Ky','Kz'):
-    if k in sim_param.keys(): model.simulation_name += ("_%s=%.4e" % (k, sim_param[k]))
+model_param = meep_utils.process_param(sys.argv[1:])
+model = metamaterial_models.models[model_param.get('model', 'default')](**model_param)
 
 ## Note: in CDH, we do not need any PML, padding nor multiple cells; cellsize thus overrides the dimensions given in model
 model.size_x, model.size_y, model.size_z = model.cellsize, model.cellsize, model.cellsize
@@ -71,25 +69,22 @@ vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
 
 
 vol.center_origin()
-s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes="None")
-
-## Create the fields object
+s = meep_utils.init_structure(model=model, volume=vol, pml_axes="None")
 f = meep.fields(s)
 # Define the Bloch-periodic boundaries (any transversal component of k-vector is allowed)
-f.use_bloch(meep.X, sim_param.get('Kx',.0) / (-2*np.pi))
-f.use_bloch(meep.Y, sim_param.get('Ky',.0) / (-2*np.pi))
-f.use_bloch(meep.Z, sim_param.get('Kz',.0) / (-2*np.pi))
+f.use_bloch(meep.X, getattr(model, 'Kx', 0) / (-2*np.pi))
+f.use_bloch(meep.Y, getattr(model, 'Ky', 0) / (-2*np.pi))
+f.use_bloch(meep.Z, getattr(model, 'Kz', 0) / (-2*np.pi))
 
 # Add the field source (see meep_utils for an example of how an arbitrary source waveform is defined)
-if not sim_param['frequency_domain']:           ## Select the source dependence on time
+if not getattr(model, 'frequency_domain', None):           ## Select the source dependence on time
     src_time_type = meep_utils.band_src_time(model.src_freq/c, model.src_width/c, model.simtime*c/10)
     #src_time_type = meep.gaussian_src_time(model.src_freq/c, model.src_width/c)
 else:
-    src_time_type = meep.continuous_src_time(sim_param['frequency']/c)
+    src_time_type = meep.continuous_src_time(getattr(model, 'frequency', None)/c)
 srcvolume = meep.volume(                    ## Source must fill the whole simulation volume
         meep.vec(-model.size_x/2, -model.size_y/2, -model.size_z/2),
         meep.vec( model.size_x/2,  model.size_y/2, model.size_z/2))
-#f.add_volume_source(meep.Ex, src_time_type, srcvolume)
 
 class AmplitudeFactor(meep.Callback): 
     def __init__(self, Kx=0, Ky=0, Kz=0): 
@@ -98,16 +93,16 @@ class AmplitudeFactor(meep.Callback):
     def complex_vec(self, vec):   ## Note: the 'vec' coordinates are _relative_ to the source center
         ## Current-driven homogenisation source forces the K-vector in whole unit cell
         return np.exp(-1j*(self.Kx*vec.x() + self.Ky*vec.y() + self.Kz*vec.z())) 
-af = AmplitudeFactor(Kx=sim_param.get('Kx',.0), Ky=sim_param.get('Ky',.0), Kz=sim_param.get('Kz',.0))
+af = AmplitudeFactor(Kx=getattr(model, 'Kx',.0), Ky=getattr(model, 'Ky',.0), Kz=getattr(model, 'Kz',.0))
 meep.set_AMPL_Callback(af.__disown__())
 f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
 
 ## Define the volume monitor for CDH
 monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'size_z':model.size_z, 
-        'Kx':sim_param.get('Kx',.0), 'Ky':sim_param.get('Ky',.0), 'Kz':sim_param.get('Kz',.0)}
+        'Kx':getattr(model, 'Kx',.0), 'Ky':getattr(model, 'Ky',.0), 'Kz':getattr(model, 'Kz',.0)}
 monitor1_Ex = AmplitudeMonitorVolume(comp=meep.Ex, **monitor_options) ## TODO try out how it differs with comp=meep.Dx - this should work, too
 
-if not sim_param['frequency_domain']:       ## time-domain computation
+if not getattr(model, 'frequency_domain', None):       ## time-domain computation
     f.step()
     dt = (f.time()/c)
     meep_utils.lorentzian_unstable_check_new(model, dt)
@@ -115,23 +110,26 @@ if not sim_param['frequency_domain']:       ## time-domain computation
     while (f.time()/c < model.simtime):                               # timestepping cycle
         f.step()
         timer.print_progress(f.time()/c)
-        #meep.master_printf("%e" % abs(f.get_field(meep.Ex, meep.vec(model.size_x/4, model.size_y/4, model.size_z/4))))
         for monitor in (monitor1_Ex,): monitor.record(field=f)
     meep_utils.notify(model.simulation_name, run_time=timer.get_time())
 else:                                       ## frequency-domain computation
-    f.step()
-    f.solve_cw(sim_param['MaxTol'], sim_param['MaxIter'], sim_param['BiCGStab']) 
+    f.solve_cw(getattr(model, 'MaxTol',0.001), getattr(model, 'MaxIter', 5000), getattr(model, 'BiCGStab', 8)) 
     for monitor in (monitor1_Ex,): monitor.record(field=f)
     meep_utils.notify(model.simulation_name)
 
 ## Get the reflection and transmission of the structure
 if meep.my_rank() == 0:
+    # TODO update to new saving syntax, and test
+    #meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",                            
+            #X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)),                  ## Save 5 columns: freq, amplitude/phase for reflection/transmission
+            #header=model.parameterstring+columnheaderstring)     ## Export header
+
     headerstring = "#x-column Frequency [Hz]\n#Column Ex real\n#Column Ex imag\n"
     t, E = monitor1_Ex.get_waveforms()
     if not os.path.exists("cdh"): os.mkdir("cdh")
     meep_utils.savetxt(fname=os.path.join('cdh',model.simulation_name+".dat"), fmt="%.6e", 
             X=zip(t, E.real, E.imag), 
-            header=model.parameterstring + meep_utils.sim_param_string(sim_param) + headerstring)
+            header=model.parameterstring +  headerstring)
     with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
 
 meep.all_wait()         # Wait until all file operations are finished
