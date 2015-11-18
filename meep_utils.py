@@ -34,38 +34,6 @@ import _meep_mpi as _meep
 #import meep
 
 ## === User interaction and convenience routines ===
-def process_param(args):#{{{                  %% TODO include this code into Abstr..Model.init()
-    """ Parse command-line parameters, and separate them into two groups.
-
-    Some of them control the simulation (`sim_param'), but all remaining will be passed to 
-    the model (`model_param')
-    """
-    #sim_param = {   'model':None,               ## selects which class will be used to define the structure
-                    #'frequency_domain':False,   ## (set automatically, not used from command line)
-                    #'frequency':       None,    ## switches to the frequency-domain solver of the same structure
-                    #'MaxIter':         5000,    ## maximum number of iterations for frequency-domain solver
-                    #'MaxTol':          1e-2,    ## allowable error for the frequency-domain solver to converge
-                    #'BiCGStab':        8,       ## biconjugate algorithm order for frequency-domain solver
-                    #}                           
-    model_param = {}
-    for namevalue in args: ## first filter out those parameters that are specific for the simulation, rather than the model
-        name, value = namevalue.split("=")
-        model_param[name] = phys_to_float(value)
-        #if name == "model":         sim_param['model']      = value XXX
-        #elif name == "frequency": 
-            #sim_param['frequency']          = phys_to_float(value)
-            #sim_param['frequency_domain']   = True
-        #elif name == "maxtol":      sim_param['MaxTol']     = phys_to_float(value)
-        #elif name == "maxiter":     sim_param['MaxIter']    = int(value)
-        #elif name == "bicgstab":    sim_param['BiCGStab']   = int(value)
-        #elif name == "Kx":          sim_param['Kx']         = phys_to_float(value)
-        #elif name == "Ky":          sim_param['Ky']         = phys_to_float(value)
-        #elif name == "Kz":          sim_param['Kz']         = phys_to_float(value)
-        #else:           ## all other parameters will be passed to the model: XXX
-            #model_param[name] = phys_to_float(value)
-    #return sim_param, model_param XXX
-    return model_param
-#}}}
 def phys_to_float(s):#{{{
     """
     Float() that also recognizes the short SI prefixes. Returns string if value is not a number.
@@ -92,6 +60,14 @@ def phys_to_float(s):#{{{
     except IndexError:
         raise ValueError("Empty string was provided as a parameter")
     #}}}
+def process_param(args):#{{{                  %% TODO include this code into Abstr..Model.init()
+    """ Parse command-line parameters and store them as attributes of the model """
+    model_param = {}
+    for namevalue in args: 
+        name, value = namevalue.split("=")
+        model_param[name] = phys_to_float(value)
+    return model_param
+#}}}
 class Timer():#{{{ 
     """
     Prints total estimated time of computation, and the simulation progress 
