@@ -190,9 +190,13 @@ class AbstractMeepModel(meep.Callback):
         setattr(self, param, val)
 
         nondefault = self.named_param_defaults.get(param, None) != val ## XXX
-        if param not in self.named_param_defaults.keys(): infostring = "(additional parameter)"
-        elif nondefault: infostring = "" 
-        else: infostring = "(default parameter value)" 
+        if param in self.named_param_defaults.keys(): 
+            if nondefault: infostring = "(user-set value accepted by the model)" 
+            else: infostring = "(default value specified by the model)" 
+        else:
+            if param in ('Kx', 'Ky', 'Kz', 'model', 'frequency', 'MaxTol', 'MaxIter', 'BiCGStab'): 
+                infostring = "(user-set value used in the simulation scripts)" 
+            else: infostring = "(unknown additional parameter)" 
 
         ## prepare the parameter to be added into name (if not conversible to float, add it as a string)
         try: 
