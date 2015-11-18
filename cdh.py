@@ -105,7 +105,6 @@ f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
 ## Define the volume monitor for CDH
 monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'size_z':model.size_z, 
         'Kx':sim_param.get('Kx',.0), 'Ky':sim_param.get('Ky',.0), 'Kz':sim_param.get('Kz',.0)}
-#'Kx':model.Kx, 'Ky':model.Ky, 'Kz':model.Kz}
 monitor1_Ex = AmplitudeMonitorVolume(comp=meep.Ex, **monitor_options) ## TODO try out how it differs with comp=meep.Dx - this should work, too
 
 if not sim_param['frequency_domain']:       ## time-domain computation

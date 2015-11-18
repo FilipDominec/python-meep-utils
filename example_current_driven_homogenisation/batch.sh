@@ -19,6 +19,12 @@ compare_dispersion() {
     ## repeat the plot, now comparing also to the curve retrieved above
     mv effparam/*dat NRef.dat
     ../plot_cdh.py cdh/*dat 
+
+	## final cleanup
+	mpirun -np $NUMCPU ../scatter.py 'model=SRRArray simtime=150p splitting2=16u resolution=6u'
+	mv cdh_ampli.png    `cat last_simulation_name.dat`.png   
+	mv cdh_ampli.pdf    `cat last_simulation_name.dat`.pdf   
+	rm -r cdh
 }
 
 
@@ -39,6 +45,3 @@ compare_dispersion() {
 #mv cdh			    cdh_SRRArray             
 
 compare_dispersion 'model=SRRArray simtime=150p splitting2=16u resolution=6u'
-mpirun -np $NUMCPU ../scatter.py 'model=SRRArray simtime=150p splitting2=16u resolution=6u'
-mv cdh_ampli.png    SRRArrayDoubleSplit_dispersion.png   
-mv cdh			    cdh_SRRArrayDoubleSplit             

@@ -8,9 +8,11 @@ import numpy as np
 from scipy.constants import c, hbar, pi
 
 ## Use LaTeX
-#matplotlib.rc('text', usetex=True)
-#matplotlib.rc('font', size=13)
-#matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, ')
+matplotlib.rc('text', usetex=True)
+matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, \usepackage{upgreek}') 
+# optionally: \usepackage{palatino} \usepackage{lmodern}, 
+matplotlib.rc('font', size=12)
+matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
 
 # -- settings --
 maxfreq = 2e12
@@ -163,7 +165,7 @@ if plot_FDM:
 
 
 ## Simple axes
-plt.ylim((0,4)); plt.yscale('linear')
+plt.ylim((0,maxfreq/frequnit)); plt.yscale('linear')
 plt.xlim((np.min(ki), np.max(ki))); plt.xscale('linear')
 
 ## ==== Outputting ====
