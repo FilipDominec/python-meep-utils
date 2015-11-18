@@ -18,7 +18,7 @@ matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times'
 maxfreq = 2e12
 frequnit = 1e12
 
-plot_FFT = True
+plot_FFT = False #True
 interp_anisotropy = 2e-5    # value lower than 1. interpolates rather vertically; optimize if plot desintegrates
 FFTcutoff = 0.8             # Hann-like window to suppress spectral leakage in FFT (mostly for aesthetical purposes)
 
@@ -174,6 +174,7 @@ plt.xlabel(u"Wave vector [m$^{-1}$]");
 plt.ylabel(u"Frequency [THz]"); 
 plt.grid()
 plt.legend(prop={'size':10}, loc='upper right')
+plt.savefig("cdh_%s.pdf" % filesuffix, bbox_inches='tight')
 plt.savefig("cdh_%s.png" % filesuffix, bbox_inches='tight')
 
     #plt.plot(freq, np.log10(np.abs(zf)+1e-10), color=color, label=u"$y'$", ls='-')      # (optional) plot amplitude
