@@ -37,7 +37,7 @@ import meep_mpi as meep
 
 class SphereWire(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=30e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=50e-6, 
-            radius=30e-6, wirethick=0, wirecut=0, loss=1, epsilon="TiO2"):
+            radius=30e-6, wirethick=0, wirecut=0, loss=1, epsilon="TiO2", **other_args):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -52,7 +52,7 @@ class SphereWire(meep_utils.AbstractMeepModel): #{{{
         self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
-        self.register_locals(locals())          ## Remember the parameters
+        self.register_locals(locals(), other_args)          ## Remember the parameters
 
         ## Define materials (with manual Lorentzian clipping) 
         self.materials = []  
@@ -93,12 +93,12 @@ class SphereWire(meep_utils.AbstractMeepModel): #{{{
 #}}}
 class RodArray(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=100e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=20e-6, 
-            radius=10e-6, eps2=100):
+            radius=10e-6, eps2=100, **other_args):
 
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
         self.simulation_name = "RodArray"
 
-        self.register_locals(locals())          ## Remember the parameters
+        self.register_locals(locals(), other_args)          ## Remember the parameters
 
         ## Constants for the simulation
         self.simtime = simtime      # [s]
@@ -126,7 +126,7 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
 #}}}
 class Slab(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=100e-12, resolution=2e-6, cellnumber=1, cellsize=100e-6, padding=50e-6, 
-            fillfraction=0.5, epsilon=2):
+            fillfraction=0.5, epsilon=2, **other_args):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -141,7 +141,7 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
         self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
-        self.register_locals(locals())          ## Remember the parameters
+        self.register_locals(locals(), other_args)          ## Remember the parameters
 
         ## Define materials
         # note: for optical range, it was good to supply f_c=5e15 to fix_material_stability
@@ -168,7 +168,7 @@ class Slab(meep_utils.AbstractMeepModel): #{{{
 #}}}
 class SRRArray(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=20e-6, 
-            radius=40e-6, wirethick=6e-6, srrthick=6e-6, splitting=16e-6, splitting2=0e-6, capacitorr=0e-6):
+            radius=40e-6, wirethick=6e-6, srrthick=6e-6, splitting=16e-6, splitting2=0e-6, capacitorr=0e-6, **other_args):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -183,7 +183,7 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
         self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
-        self.register_locals(locals())          ## Remember the parameters
+        self.register_locals(locals(), other_args)          ## Remember the parameters
 
         ## Define materials (with manual Lorentzian clipping) 
         self.materials = []  
@@ -219,7 +219,7 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
 class ESRRArray(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=50e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=20e-6, 
             radius=40e-6, wirethick=6e-6, srrthick=6e-6, splitting=26e-6, splitting2=0e-6, capacitorr=10e-6, 
-            cbarthick=0e-6, insplitting=100e-6, incapacitorr=0e-6):
+            cbarthick=0e-6, insplitting=100e-6, incapacitorr=0e-6, **other_args):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -234,7 +234,7 @@ class ESRRArray(meep_utils.AbstractMeepModel): #{{{
         self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
-        self.register_locals(locals())          ## Remember the parameters
+        self.register_locals(locals(), other_args)          ## Remember the parameters
 
         ## Define materials
         self.materials = []  
@@ -292,7 +292,7 @@ class ESRRArray(meep_utils.AbstractMeepModel): #{{{
 #}}}
 class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=200e-15, resolution=20e-9, cellnumber=1, padding=50e-6, 
-            tdist=50e-6, ldist=100e-6, rcore1=6e-6, rclad1=0, rcore2=6e-6, tshift=0):
+            tdist=50e-6, ldist=100e-6, rcore1=6e-6, rclad1=0, rcore2=6e-6, tshift=0, **other_args):
         """ I have a red laser (spot size : 2mm of diameter) that goes through 2 grids placed a 50cm (see pictures below) but 100um apart from each other. A photomultiplier is placed behind the grids at 1m. During the experiment the second grid moves transversally and alternatively block the light and let the light reaching the photomultiplier. The grids induce a diffraction pattern, of which we only collect the central bright spot with the photomultiplier (a pinhole is placed in front of it with a 2mm diameter hole). What I would like to do is to simulate the profile of intensity of the light collected at the photomultiplier while the second grid moves. That's a first thing. Secondly, I would like to simulate how the profile changes while some material is deposit on the bars of the first grids and obstruct slowly the light to go through. So what matters to me is to recorded "how much light" of the initial light reach my PM while the second grid moves for various thicknesses of material deposited on the first one. """
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
@@ -308,7 +308,7 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
         self.monitor_z1, self.monitor_z2 = (-(ldist/2)-padding, (ldist/2)+padding)
         cellsize = ldist+2*padding
 
-        self.register_locals(locals())          ## Remember the parameters
+        self.register_locals(locals(), other_args)          ## Remember the parameters
 
         ## Define materials (with manual Lorentzian clipping) 
         self.materials = []  
@@ -334,7 +334,7 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
 #}}}
 class HalfSpace(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=100e-15, resolution=10e-9, cellnumber=1, padding=200e-9, cellsize = 200e-9,
-            epsilon=33.97, blend=0):
+            epsilon=33.97, blend=0, **other_args):
         """ This structure demonstrates that scatter.py can also be used for samples on a substrate with unlimited thickness. The back
         side of the substrate is not simulated, and it is assumed there will be no coherent interferences between its sides.
 
@@ -357,7 +357,7 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         self.size_y = resolution*1.8
         self.size_z = blend + 2*padding + 2*self.pml_thickness + 6*resolution
         self.monitor_z1, self.monitor_z2 = (-padding, padding)
-        self.register_locals(locals())          ## Remember the parameters
+        self.register_locals(locals(), other_args)          ## Remember the parameters
         self.mon2eps = epsilon                  ## store what dielectric is the second monitor embedded in
 
         ## Define materials
@@ -395,5 +395,5 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
-models = {'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':SRRArray, 'ESRRArray':ESRRArray, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
+models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':SRRArray, 'ESRRArray':ESRRArray, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
 

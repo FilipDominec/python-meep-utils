@@ -34,35 +34,37 @@ import _meep_mpi as _meep
 #import meep
 
 ## === User interaction and convenience routines ===
-def process_param(args):#{{{                
+def process_param(args):#{{{                  %% TODO include this code into Abstr..Model.init()
     """ Parse command-line parameters, and separate them into two groups.
 
     Some of them control the simulation (`sim_param'), but all remaining will be passed to 
     the model (`model_param')
     """
-    sim_param = {   'model':None,               ## selects which class will be used to define the structure
-                    'frequency_domain':False,   ## (set automatically, not used from command line)
-                    'frequency':       None,    ## switches to the frequency-domain solver of the same structure
-                    'MaxIter':         5000,    ## maximum number of iterations for frequency-domain solver
-                    'MaxTol':          1e-2,    ## allowable error for the frequency-domain solver to converge
-                    'BiCGStab':        8,       ## biconjugate algorithm order for frequency-domain solver
-                    }                           
+    #sim_param = {   'model':None,               ## selects which class will be used to define the structure
+                    #'frequency_domain':False,   ## (set automatically, not used from command line)
+                    #'frequency':       None,    ## switches to the frequency-domain solver of the same structure
+                    #'MaxIter':         5000,    ## maximum number of iterations for frequency-domain solver
+                    #'MaxTol':          1e-2,    ## allowable error for the frequency-domain solver to converge
+                    #'BiCGStab':        8,       ## biconjugate algorithm order for frequency-domain solver
+                    #}                           
     model_param = {}
     for namevalue in args: ## first filter out those parameters that are specific for the simulation, rather than the model
         name, value = namevalue.split("=")
-        if name == "model":         sim_param['model']      = value
-        elif name == "frequency": 
-            sim_param['frequency']          = phys_to_float(value)
-            sim_param['frequency_domain']   = True
-        elif name == "maxtol":      sim_param['MaxTol']     = phys_to_float(value)
-        elif name == "maxiter":     sim_param['MaxIter']    = int(value)
-        elif name == "bicgstab":    sim_param['BiCGStab']   = int(value)
-        elif name == "Kx":          sim_param['Kx']         = phys_to_float(value)
-        elif name == "Ky":          sim_param['Ky']         = phys_to_float(value)
-        elif name == "Kz":          sim_param['Kz']         = phys_to_float(value)
-        else:           ## all other parameters will be passed to the model:
-            model_param[name] = phys_to_float(value)
-    return sim_param, model_param
+        model_param[name] = phys_to_float(value)
+        #if name == "model":         sim_param['model']      = value XXX
+        #elif name == "frequency": 
+            #sim_param['frequency']          = phys_to_float(value)
+            #sim_param['frequency_domain']   = True
+        #elif name == "maxtol":      sim_param['MaxTol']     = phys_to_float(value)
+        #elif name == "maxiter":     sim_param['MaxIter']    = int(value)
+        #elif name == "bicgstab":    sim_param['BiCGStab']   = int(value)
+        #elif name == "Kx":          sim_param['Kx']         = phys_to_float(value)
+        #elif name == "Ky":          sim_param['Ky']         = phys_to_float(value)
+        #elif name == "Kz":          sim_param['Kz']         = phys_to_float(value)
+        #else:           ## all other parameters will be passed to the model: XXX
+            #model_param[name] = phys_to_float(value)
+    #return sim_param, model_param XXX
+    return model_param
 #}}}
 def phys_to_float(s):#{{{
     """
@@ -180,14 +182,17 @@ class AbstractMeepModel(meep.Callback):
         return sum_permittivity      # materials can be blended, but if none present, assume vacuum
         #}}}
     def register_local(self, param, val):#{{{
-        """ Adds a parameter as an attribute of the model (either number or float). 
-        If the parameter value differs its default one, adds it also to the simulation name"""
+        """ 
+        Adds a parameter as an attribute of the model (either number or float). 
+        If the parameter value differs its default one, adds it also to the simulation name
+        """
+
         setattr(self, param, val)
 
         nondefault = self.named_param_defaults.get(param, None) != val ## XXX
-        if param not in self.named_param_defaults.keys(): infostring = "(set in code)"
+        if param not in self.named_param_defaults.keys(): infostring = "(additional parameter)"
         elif nondefault: infostring = "" 
-        else: infostring = "(default)" 
+        else: infostring = "(default parameter value)" 
 
         ## prepare the parameter to be added into name (if not conversible to float, add it as a string)
         try: 
@@ -199,21 +204,23 @@ class AbstractMeepModel(meep.Callback):
             self.parameterstring += "#param %s,%s\n" % (param, val)
             meep.master_printf("  <str>   %s%s = %s %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
         #}}}
-    def register_locals(self, params):#{{{
+    def register_locals(self, params, other_args):#{{{
         """ Scans through the parameters and calls register_local() for each """
+
+        ## Automatically detect whether some argument differs from its default 
         import inspect
         a = inspect.getargspec(self.__init__)
         self.named_param_defaults = dict(zip(a.args[-len(a.defaults):], a.defaults))
 
+        ## Add all parameters specified by the model's __init__
         self.parameterstring = ""
-        ## First look up for the "VIP" parameters that should come first in the name:
-        preferred_params = ['resolution', 'comment', 'frequency', 'simtime']
         for (param_name, val) in params.iteritems():
-            if param_name in preferred_params:
+            if (type(val) in (str, int, float, complex)):
                 self.register_local(param_name, val)
-        ## Then add all remaining parameters of the model
-        for (param_name, val) in params.iteritems():
-            if (param_name not in preferred_params) and param_name != 'self':
+
+        ## Then add other parameters that are not specified in the __init__ function
+        for (param_name, val) in other_args.iteritems():
+            if param_name != 'self':
                 self.register_local(param_name, val)
         #}}}
     def f_c(self):#{{{
@@ -617,13 +624,13 @@ def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_rang
     plt.savefig(filename, bbox_inches='tight')
 #}}}
 
-def init_structure(model, volume, sim_param, pml_axes):#{{{
+def init_structure(model, volume, pml_axes):#{{{
     """
     This routine wraps the usual tasks needed to set up a realistic simulation with meep.
 
-    model, volume and sim_param are objects that need to be passed from the main simulation
+    `model' and `volume' are objects that need to be passed from the main simulation
 
-    pml_axes may be selected from these: None, meep.X, meep.XY, meep.Y or meep.Z, "All" 
+    `pml_axes' may be selected from these: None, meep.X, meep.XY, meep.Y or meep.Z or "All" 
     """
     def init_perfectly_matched_layers():
         if pml_axes == "All" or pml_axes == "all":
@@ -636,7 +643,7 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
             s = meep.structure(volume, meep.EPS, perfectly_matched_layers, meep.identity())
         return s
 
-    if not sim_param['frequency_domain']:
+    if not getattr(model, 'frequency', None):
         meep.master_printf("== Time domain structure setup ==\n")
         ## Define each polarizability by redirecting the callback to the corresponding "where_material" function
         ## Define the frequency-independent epsilon for all materials (needed here, before defining s, or unstable)
@@ -650,19 +657,19 @@ def init_structure(model, volume, sim_param, pml_axes):#{{{
         ## TODO 1. Add chi2, chi3 to AbstractMeepModel (done?), 
         ## TODO 2. move  the callback-like definition from build_polarizabilities() here - similarly as with EPS
     else:
-        meep.master_printf("== Frequency domain structure setup (for frequency of %g Hz) ==\n" % sim_param['frequency'])
+        meep.master_printf("== Frequency domain structure setup (for frequency of %g Hz) ==\n" % getattr(model, 'frequency'))
         ## Frequency-domain simulation in meep does not accept dispersive materials yet. We must redefine each material by 
         ## using the nondispersive permittivity and the nondispersive conductivity 
         ## (both calculated from polarizabilities at given frequency)
 
         ## Define the frequency-independent epsilon for all materials (has to be done _before_ defining s, otherwise unstable)
-        my_eps = MyHiFreqPermittivity(model, sim_param['frequency'])
+        my_eps = MyHiFreqPermittivity(model, getattr(model, 'frequency'))
         meep.set_EPS_Callback(my_eps.__disown__())
         structure = init_perfectly_matched_layers()
         # TODO display a warning about freq-domain neglecting chi2, chi3 (if defined and nonzero in some of materials)
 
         ## Create callback to set nondispersive conductivity (depends on material polarizabilities and frequency)
-        mc = MyConductivity(model, sim_param['frequency'])
+        mc = MyConductivity(model, getattr(model, 'frequency'))
         meep.set_COND_Callback(mc.__disown__())
         structure.set_conductivity(meep.E_stuff, meep.COND)  ## only "E_stuff" worked here for me
 
@@ -678,17 +685,6 @@ def run_bash(cmd, anyprocess=False): #{{{
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
         out = p.stdout.read().strip()
         return out
-#}}}
-def sim_param_string(sim_param):#{{{
-    if sim_param['frequency_domain']:
-        output = "#param frequency_domain,True\n#param SolverTol,%d\n#param SolverMaxIter,%d\n#param SolverBiCGStab,%d\n" % \
-                (sim_param['MaxTol'], sim_param['MaxIter'], sim_param['BiCGStab'])
-    else:
-        output = "#param frequency_domain,False\n"
-    if sim_param.get('Kx') != None: output += "#param Kx,%.3f\n" % sim_param.get('Kx')
-    if sim_param.get('Ky') != None: output += "#param Ky,%.3f\n" % sim_param.get('Ky')
-    if sim_param.get('Kz') != None: output += "#param Kz,%.3f\n" % sim_param.get('Kz')
-    return output
 #}}}
 def savetxt(fname, X, header, **kwargs):#{{{ 
     """
@@ -1273,3 +1269,15 @@ class AmplitudeMonitorPoint(AmplitudeMonitorPlane):#{{{
         return field.get_field(component, self.pos)
 #}}}
         
+
+def sim_param_string(sim_param):#{{{
+    if sim_param['frequency_domain']:
+        output = "#param frequency_domain,True\n#param SolverTol,%d\n#param SolverMaxIter,%d\n#param SolverBiCGStab,%d\n" % \
+                (sim_param['MaxTol'], sim_param['MaxIter'], sim_param['BiCGStab'])
+    else:
+        output = "#param frequency_domain,False\n"
+    if sim_param.get('Kx') != None: output += "#param Kx,%.3f\n" % sim_param.get('Kx')
+    if sim_param.get('Ky') != None: output += "#param Ky,%.3f\n" % sim_param.get('Ky')
+    if sim_param.get('Kz') != None: output += "#param Kz,%.3f\n" % sim_param.get('Kz')
+    return output
+#}}}
