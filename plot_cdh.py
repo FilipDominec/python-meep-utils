@@ -18,7 +18,7 @@ matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times'
 maxfreq = 2e12
 frequnit = 1e12
 
-plot_FFT = False #True
+plot_FFT = True
 interp_anisotropy = 2e-5    # value lower than 1. interpolates rather vertically; optimize if plot desintegrates
 FFTcutoff = 0.8             # Hann-like window to suppress spectral leakage in FFT (mostly for aesthetical purposes)
 
@@ -115,39 +115,42 @@ for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(file
 
 ## Plotting
 plt.figure(figsize=(7,10))
-if plot_FFT:
-    ## Interpolate 2D grid from scattered data
-    from matplotlib.mlab import griddata
-    fi = np.linspace(0, maxfreq/frequnit, 600)
-    ki = np.linspace(0, np.max(Kzs), 200)
+## Interpolate 2D grid from scattered data
+from matplotlib.mlab import griddata
+fi = np.linspace(0, maxfreq/frequnit, 600)
+ki = np.linspace(0, np.max(Kzs), 200)
 
-    ## Plot contours for gridded data
+## Plot contours for gridded data
 
-    if filesuffix == 'phase':
-        z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.angle(Efs), ki*interp_anisotropy, fi, interp='linear')
+if filesuffix == 'phase':
+    z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.angle(Efs), ki*interp_anisotropy, fi, interp='linear')
+    if plot_FFT:
         contours = plt.contourf(ki, fi, z, levels=np.linspace(-np.pi,np.pi,50), cmap=matplotlib.cm.hsv, extend='both') 
         plt.colorbar()
-    elif filesuffix == 'ampli':
-        z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.abs(Efs), ki*interp_anisotropy, fi, interp='linear')
-        log_min, log_max = np.log10(np.min(z)), np.log10(np.max(z))
-        #log_min, log_max = -5, .5
-        levels = 10**(np.arange(         log_min,          log_max,  .2))       ## where the contours are drawn
-        ticks  = 10**(np.arange(np.floor(log_min), np.ceil(log_max),  1))       ## where a number is printed
+elif filesuffix == 'ampli':
+    z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.abs(Efs), ki*interp_anisotropy, fi, interp='linear')
+    log_min, log_max = np.log10(np.min(z)), np.log10(np.max(z))
+    #log_min, log_max = -5, .5
+    levels = 10**(np.arange(         log_min,          log_max,  .2))       ## where the contours are drawn
+    ticks  = 10**(np.arange(np.floor(log_min), np.ceil(log_max),  1))       ## where a number is printed
+    if plot_FFT:
         contours = plt.contourf(ki, fi, z, levels=levels, cmap=plt.cm.gist_earth, norm = matplotlib.colors.LogNorm())
         plt.colorbar(ticks=ticks).set_ticklabels(['$10^{%d}$' % int(np.log10(t)) for t in ticks])
-    elif filesuffix == 'epsilon':
-        ## TODO: non-logarithmic plotting of the effective spatial-dispersive permittivity ε(ω,K)
-        Y = griddata(Kzs*interp_anisotropy, freqs/frequnit, Efs, ki*interp_anisotropy, fi, interp='linear') 
-        g_min, g_max = 0, 10.05
-        levels = np.linspace(g_min,  g_max,  100)       ## where the contours are drawn
-        ticks  = np.linspace(g_min, g_max, 10)       ## where a number is printed
+elif filesuffix == 'epsilon':
+    ## TODO: non-logarithmic plotting of the effective spatial-dispersive permittivity ε(ω,K)
+    Y = griddata(Kzs*interp_anisotropy, freqs/frequnit, Efs, ki*interp_anisotropy, fi, interp='linear') 
+    g_min, g_max = 0, 10.05
+    levels = np.linspace(g_min,  g_max,  100)       ## where the contours are drawn
+    ticks  = np.linspace(g_min, g_max, 10)       ## where a number is printed
+    if plot_FFT:
         contours = plt.contourf(ki, fi, np.abs(Y), levels=levels, cmap=plt.cm.gist_earth)
         plt.colorbar(ticks=ticks).set_ticklabels(['$%.1f$' % t for t in ticks])
-        #contours = plt.contourf(ki, fi, np.real(Y), levels=levels, cmap=plt.cm.Blues)    # plot full complex function
-        #plt.colorbar(ticks=ticks).set_ticklabels(['$%.1f$' % t for t in ticks])
-        #contours = plt.contourf(ki, fi, np.imag(Y), levels=levels, cmap=plt.cm.Reds, alpha=.3)
-        #plt.colorbar(ticks=ticks).set_ticklabels(['$%.1f$' % t for t in ticks])
+    #contours = plt.contourf(ki, fi, np.real(Y), levels=levels, cmap=plt.cm.Blues)    # plot full complex function
+    #plt.colorbar(ticks=ticks).set_ticklabels(['$%.1f$' % t for t in ticks])
+    #contours = plt.contourf(ki, fi, np.imag(Y), levels=levels, cmap=plt.cm.Reds, alpha=.3)
+    #plt.colorbar(ticks=ticks).set_ticklabels(['$%.1f$' % t for t in ticks])
 
+if plot_FFT:
     for contour in contours.collections: contour.set_antialiased(False)     ## optional: avoid white aliasing (for matplotlib 1.0.1 and older) 
 
 
