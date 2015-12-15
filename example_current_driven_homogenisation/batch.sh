@@ -15,7 +15,7 @@ compare_dispersion() {
     ../plot_cdh.py cdh/*dat ## (preview)
 
     ## compute the dispersion curves using the s-parameter method, (with the same parameters)
-    mpirun -np $NP ../scatter.py  simtime=200p "$@"
+    mpirun -np $NP ../scatter.py  "$@" simtime=200p padding=100u
     ../effparam.py
 
     ## repeat the plot, now comparing also to the curve retrieved above
@@ -24,22 +24,25 @@ compare_dispersion() {
 
 	## final cleanup
 	lastname=`cat last_simulation_name.dat`
-	mv cdh_ampli.png    "CDH${lastname}.png"
+	mv cdh_ampli.png "CDH_${lastname}.png"
+	mv cdh_ampli.pdf "CDH_${lastname}.pdf"
 	mkdir "$lastname"
 	mv cdh/ effparam/  NRef.dat "$lastname"
 }
 
 cellsize=100e-6
 thz=1e12
-par=(resolution=4u simtime=30p cellsize=$cellsize )
-for icr in 6 8 10 12 14; do
-compare_dispersion ${par[@]} model=ESRRArray comment="emcSRR" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
-            insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=40e-6 srrthick=10e-6
-done
-compare_dispersion ${par[@]} model=SRRArray wirethick=0u radius=30u "comment=SRR only"
-compare_dispersion ${par[@]} model=SRRArray wirethick=4u radius=30u "comment=SRR with wire"
-compare_dispersion ${par[@]} model=SRRArray wirethick=0u radius=30u splitting2=16u "comment=symmetric SRR"
-compare_dispersion ${par[@]} model=SphereWire wirethick=0u radius=30u 'comment=TiO$_2$ sphere'
-compare_dispersion ${par[@]} model=SphereWire wirethick=4u radius=30u loss=.01 "comment=Lossless spheres with wires"
-#compare_dispersion ${par[@]} model=SRRArray wirethick=4u radius=0u "comment=Wire only"
+par=(resolution=4u simtime=60p cellsize=$cellsize )
+#for icr in 6 8 10 12 14; do
+#compare_dispersion ${par[@]} model=ESRRArray comment="emcSRR" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
+            #insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=40e-6 srrthick=10e-6
+#done
+#compare_dispersion ${par[@]} model=SRRArray wirethick=0u radius=30u "comment=SRR only"
+#compare_dispersion ${par[@]} model=SRRArray wirethick=4u radius=30u "comment=SRR with wire"
+#compare_dispersion ${par[@]} model=SRRArray wirethick=0u radius=30u splitting2=16u "comment=symmetric SRR"
+#compare_dispersion ${par[@]} model=SphereWire wirethick=0u radius=30u 'comment=TiO$_2$ sphere'
+#compare_dispersion ${par[@]} model=SphereWire wirethick=4u radius=30u loss=.01 "comment=Lossless spheres with wires"
+compare_dispersion ${par[@]} model=SRRArray wirethick=4u radius=0u "comment=Wire only"
+compare_dispersion ${par[@]} model=SRRArray wirethick=4u radius=30u splitting2=16u "comment=symmetric SRR with wire"
+compare_dispersion ${par[@]} model=SRRArray wirethick=4u radius=30u splitting2=16u capacitorr=5e-6 "comment=symmetric SRR with pads"
 
