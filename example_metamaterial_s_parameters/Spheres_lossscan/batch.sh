@@ -2,7 +2,7 @@
 if [ -z $NP ] ; then NP=2 ; fi             # number of processors
 cellsize=100e-6
 thz=1e12
-par="model=SphereArray resolution=4u radius=30e-6 wirethick=0 cellsize=$cellsize"
+par="model=SphereWire resolution=4u radius=30e-6 wirethick=0 cellsize=$cellsize"
 
 if [ -z "$skipsimulation" ]; then 
 	mpirun -np $NP   python ../../scatter.py $par loss=1 comment='100' simtime=150p
