@@ -290,6 +290,72 @@ class ESRRArray(meep_utils.AbstractMeepModel): #{{{
 
         return 0
 #}}}
+class SphereInDiel(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=30e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=50e-6, 
+            radius=30e-6, wirethick=0, wirecut=0, loss=1, epsilon="TiO2", diel=1, **other_args):
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
+
+        ## Constant parameters for the simulation
+        self.simulation_name = "SphereWire"    
+        self.src_freq, self.src_width = 1000e9, 4000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (10e9, 3000e9)    # Which frequencies will be saved to disk
+        self.pml_thickness = .1*c/self.src_freq
+
+        self.size_x = cellsize if (radius>0 or wirecut>0) else resolution/1.8
+        self.size_y = cellsize
+        self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
+        self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
+
+        self.register_locals(locals(), other_args)          ## Remember the parameters
+
+        ## Define materials (with manual Lorentzian clipping) 
+        self.materials = []  
+        if radius > 0:
+            if epsilon=="TiO2":     ## use titanium dioxide if permittivity not specified...
+                tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
+                if loss != 1: tio2.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
+            else:           ## ...or define a custom dielectric if permittivity not specified
+                tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=float(self.epsilon)) 
+            self.fix_material_stability(tio2, verbose=0) ##f_c=2e13,  rm all osc above the first one, to optimize for speed 
+            self.materials.append(tio2)
+
+        self.materials.append(meep_materials.material_dielectric(where=self.where_diel, eps=self.diel))
+
+        if wirethick > 0:
+            au = meep_materials.material_Au(where=self.where_wire)
+            #au.pol[0]['sigma'] /= 100
+            #au.pol[0]['gamma'] *= 10000
+            self.fix_material_stability(au, verbose=0)
+            self.materials.append(au)
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        self.test_materials()
+
+    def where_sphere(self, r):
+        for cellc in self.cellcenters:
+            if  in_sphere(r, cx=self.resolution/4, cy=self.resolution/4, cz=cellc+self.resolution/4, rad=self.radius):
+                return self.return_value             # (do not change this line)
+        return 0
+    def where_diel(self, r):
+        for cellc in self.cellcenters:
+            if in_sphere(r, cx=self.resolution/4, cy=self.resolution/4, cz=cellc+self.resolution/4, rad=self.radius):
+                return 0
+        for cellc in self.cellcenters:
+            if in_zslab(r, cz=0, d=self.cellsize):
+                return self.return_value             # (do not change this line)
+        return 0
+    def where_wire(self, r):
+        for cellc in self.cellcenters:
+            if in_xslab(r, cx=self.resolution/4, d=self.wirecut):
+                return 0
+            if  in_xcyl(r, cy=self.size_y/2+self.resolution/4, cz=cellc, rad=self.wirethick) or \
+                    in_xcyl(r, cy= -self.size_y/2+self.resolution/4, cz=cellc, rad=self.wirethick):
+                return self.return_value             # (do not change this line)
+        return 0
+#}}}
 class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=200e-15, resolution=20e-9, cellnumber=1, padding=50e-6, 
             tdist=50e-6, ldist=100e-6, rcore1=6e-6, rclad1=0, rcore2=6e-6, tshift=0, **other_args):
@@ -395,5 +461,5 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
-models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':SRRArray, 'ESRRArray':ESRRArray, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
+models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':SRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel,  'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
 
