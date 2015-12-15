@@ -28,6 +28,11 @@ FDMtrunc = (.1, .5)         # Harminv (also known as FDM) may work better when i
 
 plot_NRef = True
 
+
+cmap = matplotlib.cm.Blues_r
+cmap = matplotlib.colors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=.4, b=1.0), cmap(np.linspace(.4, 1.0, 100)))
+
+
 if   '-phase' in sys.argv[1:]: 
     filesuffix = 'phase'
 elif '-epsilon' in sys.argv[1:]: 
@@ -51,12 +56,14 @@ FDM_Kzs = []
 
 for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(filenames)))): 
     Kz = None
+    cellsize = None
     with open(filename) as datafile:
         for line in datafile:
             if line[0:1] in "0123456789": break         # end of file header
             value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
-            if not Kz and ("Kz" in line): 
-                Kz = float(value)
+            if not Kz and ("Kz" in line): Kz = float(value)
+            if not cellsize and ("cellsize" in line): cellsize = float(value)
+    Kz = Kz*cellsize/2/np.pi
     (t, E) = np.loadtxt(filename, usecols=list(range(2)), unpack=True, )
 
     if plot_FDM:
@@ -114,28 +121,29 @@ for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(file
 
 
 ## Plotting
-plt.figure(figsize=(7,10))
+plt.figure(figsize=(4,8))
 ## Interpolate 2D grid from scattered data
 from matplotlib.mlab import griddata
-fi = np.linspace(0, maxfreq/frequnit, 600)
-ki = np.linspace(0, np.max(Kzs), 200)
+fi = np.linspace(0, maxfreq/frequnit, 200)
+ki = np.linspace(0, np.max(Kzs), 50)
 
 ## Plot contours for gridded data
 
 if filesuffix == 'phase':
     z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.angle(Efs), ki*interp_anisotropy, fi, interp='linear')
     if plot_FFT:
-        contours = plt.contourf(ki, fi, z, levels=np.linspace(-np.pi,np.pi,50), cmap=matplotlib.cm.hsv, extend='both') 
+        contours = plt.contourf(ki, fi, z, levels=np.linspace(-np.pi,np.pi,50), cmap=matplotlib.cm.hsv) 
         plt.colorbar()
 elif filesuffix == 'ampli':
     z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.abs(Efs), ki*interp_anisotropy, fi, interp='linear')
     log_min, log_max = np.log10(np.min(z)), np.log10(np.max(z))
+    log_min, log_max = log_min, log_min*.3 + log_max*.7
     #log_min, log_max = -5, .5
-    levels = 10**(np.arange(         log_min,          log_max,  .2))       ## where the contours are drawn
+    levels = 10**(np.arange(         log_min,          log_max,   .5))       ## where the contours are drawn
     ticks  = 10**(np.arange(np.floor(log_min), np.ceil(log_max),  1))       ## where a number is printed
     if plot_FFT:
-        contours = plt.contourf(ki, fi, z, levels=levels, cmap=plt.cm.gist_earth, norm = matplotlib.colors.LogNorm())
-        plt.colorbar(ticks=ticks).set_ticklabels(['$10^{%d}$' % int(np.log10(t)) for t in ticks])
+        contours = plt.contourf(ki, fi, z, levels=levels, cmap=cmap, norm = matplotlib.colors.LogNorm())
+        #plt.colorbar(ticks=ticks).set_ticklabels(['$10^{%d}$' % int(np.log10(t)) for t in ticks])
 elif filesuffix == 'epsilon':
     ## TODO: non-logarithmic plotting of the effective spatial-dispersive permittivity ε(ω,K)
     Y = griddata(Kzs*interp_anisotropy, freqs/frequnit, Efs, ki*interp_anisotropy, fi, interp='linear') 
@@ -157,15 +165,15 @@ if plot_FFT:
 if plot_NRef:
     try:
         f, Nre = np.loadtxt('NRef.dat', usecols=(0,5), unpack=True)
-        plt.plot( Nre*2*np.pi*f/c, f/frequnit, color='w', lw=2.5)               # positive-direction branches
-        plt.plot(-Nre*2*np.pi*f/c, f/frequnit, color='w', ls='--', lw=2.5)      # negative-direction branches
+        plt.plot( Nre*f/c *cellsize, f/frequnit, color='g', lw=1.5)               # positive-direction branches
+        plt.plot(-Nre*f/c *cellsize, f/frequnit, color='g', ls='--', lw=1.5)      # negative-direction branches
     except IOError:
         print "File NRef.dat was not found - not plotting the curve for comparison"
 
 
 if plot_FDM:
-    c = plt.scatter(FDM_Kzs, FDM_freqs, s=FDM_amplis*10+1, c=FDM_phases, cmap=plt.cm.hsv, alpha=1)
-
+    c = plt.scatter(FDM_Kzs, FDM_freqs, s=FDM_amplis*30+1, c=FDM_amplis) #, c=FDM_phases, cmap=plt.cm.hsv
+ 
 
 ## Simple axes
 plt.ylim((0,maxfreq/frequnit)); plt.yscale('linear')
@@ -173,8 +181,8 @@ plt.xlim((np.min(ki), np.max(ki))); plt.xscale('linear')
 
 ## ==== Outputting ====
 ## Finish the plot + save 
-plt.xlabel(u"Wave vector [m$^{-1}$]"); 
-plt.ylabel(u"Frequency [THz]"); 
+plt.xlabel(u"wavenumber $K/\\left(\\frac{2\pi}{a} \\right)$");  # [m$^{-1}$]
+plt.ylabel(u"frequency (THz)"); 
 plt.grid()
 plt.legend(prop={'size':10}, loc='upper right')
 plt.savefig("cdh_%s.pdf" % filesuffix, bbox_inches='tight')
