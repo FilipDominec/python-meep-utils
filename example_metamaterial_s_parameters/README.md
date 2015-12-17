@@ -9,8 +9,8 @@ __Slab__ made of dielectric
 
 __Wires__ [metallic wires oriented along electric field]
  * [x] Wires radiusscan
- * [x] dependence of plasma frequency on wire radius
- * [x] dependence of plasma frequency on spacing
+ * [x] dependence of plasma frequency on wire radius (external) 
+ * [x] dependence of plasma frequency on spacing     (external) 
  * [ ] modes [eps<0, eps>0 above omegap, PhC regime] ??
 
 __Cut wires__  parallel to __E__
@@ -18,11 +18,7 @@ __Cut wires__  parallel to __E__
  * [x] CutWires cut2um wireradiusscan
 
 
-####Negative-permeability resonant structures
-__Rod array__ parallel to __H__
- * [ ] spectrum
- * [ ] modes [1st mode, 2nd mode, 3rd mode]
- * [ ] permittivity scan (refer to tunability)
+#### Disconnected metallic resonant structures
 
 __SRRs__ 
  * [ ] spectrum / cdh
@@ -42,6 +38,13 @@ __Dielectric spheres__
  * [ ] ellipticity scan along __z__
  * [ ] CDH?
 
+#### Dielectric resonant structures
+__Rod array__ parallel to __H__
+ * [ ] spectrum
+ * [ ] modes [1st mode, 2nd mode, 3rd mode]
+ * [ ] permittivity scan (refer to tunability)
+
+
 ####Negative-index structures
 __Dielectric spheres with wires__ 
  * [x] principles (s, w, s+w)
@@ -54,6 +57,7 @@ __Rod array__ parallel to E
  * [ ] overthick, spectrum and modes (PB, PBG, PB, PBG, PB)
 	 (analogy with diel slab?)
 
+#### Connected metallic resonant structures
 __Fishnet__ and extraordinary transmission
  * [ ] inter-layer __z__-distance scan
  * [ ] aperture radius scan
