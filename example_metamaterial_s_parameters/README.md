@@ -1,3 +1,4 @@
+																^--- COMP
 
 ##Examples of metamaterial scattering parameters computation
 ####Basic structures
@@ -5,21 +6,16 @@ __Slab__ made of dielectric
  * [x] Slab fillfraction015 epsilon comparison 
  * [x] Slab epsilon4 fillfraction scan
  * [x] Slab fillfraction015 epsilon scan
- * [-] slab cellscan .. (unstable)
- * [ ] CDH?
 
 __Wires__ [metallic wires oriented along electric field]
  * [x] Wires radiusscan
  * [x] dependence of plasma frequency on wire radius
  * [x] dependence of plasma frequency on spacing
  * [ ] modes [eps<0, eps>0 above omegap, PhC regime] ??
- * [ ] CDH?
 
 __Cut wires__  parallel to __E__
- * [C] CutWires radius1um wirecut comparison
-																^--- COMP
- * [C] CutWires cut2um wireradiusscan
-																^--- COMP
+ * [x] CutWires radius1um wirecut comparison
+ * [x] CutWires cut2um wireradiusscan
 
 
 ####Negative-permeability resonant structures
@@ -38,8 +34,7 @@ __Wire pairs__
  * [ ] CDH?
 
 __Dielectric spheres__ 
- * [C] TiO2 radius30um loss comparison							
-																^--- COMP
+ * [x] TiO2 radius30um loss comparison							
  * [ ] spacing-scan
  * [ ] permittivity scan (e.g. ferroelectric tunability)
  * [ ] ellipticity scan along __x__
@@ -49,8 +44,7 @@ __Dielectric spheres__
 
 ####Negative-index structures
 __Dielectric spheres with wires__ 
- * [ ] principles (s, w, s+w)
- * [ ] wire radius scan
+ * [x] principles (s, w, s+w)
 
 __Rod array__ parallel to E 
  [high-permittivity, cylindrical dielectric rods, oriented along the electric field]
