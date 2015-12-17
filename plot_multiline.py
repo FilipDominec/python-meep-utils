@@ -5,8 +5,8 @@
 plot_multiline.py  --  a script for ready-to-publish presentation of multiple data files in one plot
                                                                                                        
 The data, stored as the `y' value depending on the `x' coordinate in each file, can be either plotted 
-as multiple lines in the x-y plot, which is the default behaviour. Each line is distinguished by the different
-value of the `param'.
+as multiple lines in the x-y plot, which is the default behaviour. Each curve is distinguished by the different
+value of the `param', or simply by the file name if no --paramname option is specified.
 
 Or, if the number of files is over 10 or 20, it may be preferable to plot their `y' values as a 2-D contour plot,
 where the `y' value still represents the horizontal coordinate, but the `param' value now serves as the vertical one. 
@@ -42,7 +42,7 @@ import argparse
 from scipy.constants import c, hbar, pi
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-parser.add_argument('--paramname',  type=str,               help='(compulsory) parameter by which the lines are sorted')
+parser.add_argument('--paramname',  type=str, default='', help='parameter by which the lines are sorted (filename used if omitted)')
 parser.add_argument('--title',      type=str, default='', help='plot title')
 # todo: remove the --xunit --yunit
 parser.add_argument('--yunit',      type=float, default=1., help='prescaling of the y-axis')
@@ -161,7 +161,8 @@ def get_col_index(col, fn):#{{{
 
 ## Sort arguments by a the value of the specified parameter, keep the color order
 filenames = args.filenames
-params  = [get_param(n)[args.paramname] for n in filenames]
+if args.paramname == '':    params, paramname = filenames,                                          'file name'
+else:                       params, paramname = [get_param(n)[args.paramname] for n in filenames],  args.paramname
 datasets = zip(params, filenames)                               ## sort the files by the parameter
 datasets.sort()
 colors = cmap(np.linspace(0.0,0.9,len(filenames)+1)[:-1]) ## add the colors to sorted files
@@ -192,7 +193,7 @@ for color, param, filename in datasets:
 
     if not args.contours == 'yes':
         ## Plot a curve with a nice label, generated from the parameter
-        if args.paramlabel == 'none':
+        if args.paramlabel.lower() == 'none':
             label = ''
         elif ("'" in args.paramlabel) or ('"' in args.paramlabel):
             label = args.paramlabel.strip('"').strip("'")
@@ -251,7 +252,7 @@ if args.overlayplot:
 try: 
     if not args.contours == 'yes': 
         #plt.legend(prop={'size':12}, loc='upper left') #.draw_frame(False)
-        plt.legend(prop={'size':12}, loc='best', fancybox=True, framealpha=0.5)
+        plt.legend(prop={'size':12}, loc='best', fancybox=True, framealpha=0.8)
 except:
     pass
 
