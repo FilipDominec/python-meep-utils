@@ -207,12 +207,12 @@ class SRRArray(meep_utils.AbstractMeepModel): #{{{
         #r = self.rotatedY(r, np.pi/4)
         for cellc in self.cellcenters:
             ## define the split-ring resonator
-            if  (((in_ycyl(r, cx=0, cz=cellc, rad=self.radius+self.srrthick/2)             # outer radius
-                    and not in_ycyl(r, cx=0, cz=cellc, rad=self.radius-self.srrthick/2)   # subtract inner radius
+            if  (((in_ycyl(r, cx=self.resolution/4, cz=cellc, rad=self.radius+self.srrthick/2)             # outer radius
+                    and not in_ycyl(r, cx=self.resolution/4, cz=cellc, rad=self.radius-self.srrthick/2)   # subtract inner radius
                     and in_yslab(r, cy=0, d=self.srrthick))                               # delimit to a disc
                     or (in_xcyl(r, cy=0, cz=cellc+self.radius, rad=self.capacitorr) and in_xslab(r, cx=0, d=self.splitting+2*self.wirethick)))
-                    and not (r.z()>cellc and in_xslab(r, cx=0, d=self.splitting))           # make the first splitting
-                    and not (r.z()<cellc and in_xslab(r, cx=0, d=self.splitting2))):        # make the second splitting, if any
+                    and not (r.z()>cellc and in_xslab(r, cx=self.resolution/4, d=self.splitting))           # make the first splitting
+                    and not (r.z()<cellc and in_xslab(r, cx=self.resolution/4, d=self.splitting2))):        # make the second splitting, if any
                 return self.return_value             # (do not change this line)
         return 0
 #}}}
@@ -225,7 +225,7 @@ class ESRRArray(meep_utils.AbstractMeepModel): #{{{
         ## Constant parameters for the simulation
         self.simulation_name = "SRRArray"    
         self.src_freq, self.src_width = 1000e9, 4000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (100e9, 2000e9)    # Which frequencies will be saved to disk
+        self.interesting_frequencies = (10e9, 2000e9)    # Which frequencies will be saved to disk
         self.pml_thickness = 20e-6
 
         self.size_x = cellsize 
@@ -401,15 +401,17 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
 class HalfSpace(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=100e-15, resolution=10e-9, cellnumber=1, padding=200e-9, cellsize = 200e-9,
             epsilon=33.97, blend=0, **other_args):
-        """ This structure demonstrates that scatter.py can also be used for samples on a substrate with unlimited thickness. The back
-        side of the substrate is not simulated, and it is assumed there will be no coherent interferences between its sides.
+        """ This structure demonstrates that scatter.py can also be used for samples on a substrate with an infinite 
+        thickness. The back side of the substrate is not simulated, and it is assumed there will be no Fabry-Perot
+        interferences between its sides.
 
-        To enable the simulations, the monitor planes are enabled to be placed also inside a dielectric. In which case the wave amplitude is 
-        adjusted so that the light intensity is maintained. The field amplitudes and phases have physical meaning only when both monitor planes are
-        in the same medium, though.
+        The monitor planes are enabled to be placed also inside a dielectric. In which case the wave amplitude is 
+        adjusted so that the light intensity is maintained. The field amplitudes and phases have physical meaning 
+        only when both monitor planes are in the same medium, though.
 
-        Besides, the example demonstrates that with the choice of permittivity of ((1+.5**.5)/(1-.5**.5))**2 ~ 33.97 for a steep interface with air, 
-        the transmitted and reflected waves have exactly the same energy.
+        Besides, the example demonstrates that on a steep interface with air the transmitted and reflected waves have 
+        exactly the same energy with the choice of permittivity: ((1+.5**.5)/(1-.5**.5))**2, that is roughly 33.97.
+        
         """
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
