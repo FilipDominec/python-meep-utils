@@ -356,6 +356,56 @@ class SphereInDiel(meep_utils.AbstractMeepModel): #{{{
                 return self.return_value             # (do not change this line)
         return 0
 #}}}
+class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
+    def __init__(self, comment="", simtime=30e-12, resolution=2e-6, cellsize=100e-6, cellnumber=1, padding=50e-6, 
+            cornerradius=30e-6, xholesize=80e-6, yholesize=80e-6, slabthick=12e-6, **other_args):
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
+
+        ## Constant parameters for the simulation
+        self.simulation_name = "Fishnet"    
+        self.src_freq, self.src_width = 1000e9, 4000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (10e9, 3000e9)    # Which frequencies will be saved to disk
+        self.pml_thickness = .1*c/self.src_freq
+
+        self.size_x = cellsize
+        if yholesize == "inf" or yholesize == np.inf:
+            self.size_y = resolution/1.8
+            yholesize = np.inf
+        else: 
+            self.size_y = cellsize
+        self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
+        self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
+
+        self.register_locals(locals(), other_args)          ## Remember the parameters
+
+        ## Define materials (with manual Lorentzian clipping) 
+        self.materials = [meep_materials.material_Au(where=self.where_fishnet)]  
+        #au.pol[0]['sigma'] /= 100      # adjust losses
+        #au.pol[0]['gamma'] *= 10000
+        self.fix_material_stability(self.materials[0], verbose=0)
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        self.test_materials()
+
+    def where_fishnet(self, r):
+        dd=self.resolution/4
+        xhr, yhr = self.xholesize/2-self.cornerradius, self.yholesize/2-self.cornerradius
+        for cellc in self.cellcenters:
+            if in_zslab(r, cz=0, d=self.slabthick):
+                if not (in_xslab(r, cx=dd, d=2*xhr) and \
+                        in_yslab(r, cy=dd, d=self.yholesize)) and \
+                   not (in_xslab(r, cx=dd, d=self.xholesize) and \
+                        in_yslab(r, cy=dd, d=2*yhr)) and \
+                   not in_zcyl(r, cx=dd+xhr, cy=dd+yhr, rad=self.cornerradius) and \
+                   not in_zcyl(r, cx=dd-xhr, cy=dd+yhr, rad=self.cornerradius) and \
+                   not in_zcyl(r, cx=dd+xhr, cy=dd-yhr, rad=self.cornerradius) and \
+                   not in_zcyl(r, cx=dd-xhr, cy=dd-yhr, rad=self.cornerradius):
+                   return self.return_value             # (do not change this line)
+        return 0
+#}}}
 class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=200e-15, resolution=20e-9, cellnumber=1, padding=50e-6, 
             tdist=50e-6, ldist=100e-6, rcore1=6e-6, rclad1=0, rcore2=6e-6, tshift=0, **other_args):
@@ -463,5 +513,5 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
-models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':SRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel,  'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
+models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':SRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel, 'Fishnet':Fishnet,  'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
 
