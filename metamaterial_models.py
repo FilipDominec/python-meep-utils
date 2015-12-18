@@ -357,7 +357,7 @@ class SphereInDiel(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
-    def __init__(self, comment="", simtime=30e-12, resolution=2e-6, cellsize=100e-6, cellnumber=1, padding=50e-6, 
+    def __init__(self, comment="", simtime=30e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=50e-6, 
             cornerradius=30e-6, xholesize=80e-6, yholesize=80e-6, slabthick=12e-6, **other_args):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
@@ -513,5 +513,5 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
-models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':SRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel, 'Fishnet':Fishnet,  'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
+models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':ESRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel, 'Fishnet':Fishnet,  'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
 
