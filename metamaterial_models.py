@@ -307,7 +307,7 @@ class SphereInDiel(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
-    def __init__(self, comment="", simtime=150e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=50e-6, 
+    def __init__(self, comment="", simtime=150e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=100e-6, 
             cornerradius=30e-6, xholesize=80e-6, yholesize=80e-6, slabthick=12e-6, slabcdist=0, **other_args):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
@@ -331,8 +331,8 @@ class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
 
         ## Define materials (with manual Lorentzian clipping) 
         au = meep_materials.material_Au(where=self.where_fishnet)
-        au.pol[0]['sigma'] /= 100      # adjust losses
-        au.pol[0]['gamma'] *= 100
+        au.pol[0]['sigma'] /= 10      # adjust losses
+        au.pol[0]['gamma'] *= 10
         self.fix_material_stability(au, verbose=0)
         self.materials = [au]  
 
