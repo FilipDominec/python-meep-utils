@@ -199,43 +199,44 @@ class ESRRArray(meep_utils.AbstractMeepModel): #{{{
         self.test_materials()
 
     def where_wire(self, r):
+        dd=self.resolution/4
         for cellc in self.cellcenters:
             ## define the wires
             if  in_xcyl(r, cy=self.size_y/2, cz=cellc, rad=self.wirethick) or \
                     in_xcyl(r, cy= -self.size_y/2, cz=cellc, rad=self.wirethick):
-                return self.return_value             # (do not change this line)
+                        return self.return_value             # (do not change this line)
 
             if (    # define the first splitting of SRR
-                    not (r.z()>cellc+self.radius/2 and in_xslab(r, cx=self.resolution/4, d=self.splitting))  
+                    not (r.z()>cellc+self.radius/2 and in_xslab(r, cx=dd, d=self.splitting))  
                     # define the 2nd splitting for symmetric SRR
-                    and not (r.z()<cellc-self.radius/2 and in_xslab(r, cx=self.resolution/4, d=self.splitting2))):
+                    and not (r.z()<cellc-self.radius/2 and in_xslab(r, cx=dd, d=self.splitting2))):
                 # make the ring (without the central bar)
-                if (in_ycyl(r, cx=self.resolution/4, cz=cellc, rad=self.radius+self.srrthick/2)          # outer radius
-                        and in_yslab(r, cy=0, d=self.srrthick)                             # delimit to a disc
-                        and not in_ycyl(r, cx=self.resolution/4, cz=cellc, rad=self.radius-self.srrthick/2)):    # subtract inner radius 
+                if (in_ycyl(r, cx=dd, cz=cellc, rad=self.radius+self.srrthick/2)          # outer radius
+                        and in_yslab(r, cy=dd, d=self.srrthick)                             # delimit to a disc
+                        and not in_ycyl(r, cx=dd, cz=cellc, rad=self.radius-self.srrthick/2)):    # subtract inner radius 
                     return self.return_value             # (do not change this line)
                 # optional capacitor pads
                 if (self.splitting > 0
-                        and in_xcyl(r, cy=0, cz=cellc+self.radius, rad=self.capacitorr) 
-                        and in_xslab(r, cx=self.resolution/4, d=self.splitting+2*self.srrthick)):          
+                        and in_xcyl(r, cy=dd, cz=cellc+self.radius, rad=self.capacitorr) 
+                        and in_xslab(r, cx=dd, d=self.splitting+2*self.srrthick)):          
                     return self.return_value             # (do not change this line)
                 # optional capacitor pads on second splitting
                 if (self.splitting2 > 0 
-                        and in_xcyl(r, cy=0, cz=cellc-self.radius, rad=self.capacitorr) 
-                        and in_xslab(r, cx=self.resolution/4, d=self.splitting2+2*self.srrthick)):          
+                        and in_xcyl(r, cy=dd, cz=cellc-self.radius, rad=self.capacitorr) 
+                        and in_xslab(r, cx=dd, d=self.splitting2+2*self.srrthick)):          
                     return self.return_value             # (do not change this line)
 
             if (self.cbarthick > 0 
                     # def splitting in the central bar for ESRR (the bar is completely disabled if insplitting high enough)
-                    and not (in_zslab(r,cz=cellc,d=self.radius) and in_xslab(r, cx=self.resolution/4, d=self.insplitting))):
-                if (in_ycyl(r, cx=self.resolution/4, cz=cellc, rad=self.radius+self.srrthick/2)         # outer radius
-                        and in_yslab(r, cy=0, d=self.srrthick)                          # delimit to a disc
+                    and not (in_zslab(r,cz=cellc,d=self.radius) and in_xslab(r, cx=dd, d=self.insplitting))):
+                if (in_ycyl(r, cx=dd, cz=cellc, rad=self.radius+self.srrthick/2)         # outer radius
+                        and in_yslab(r, cy=dd, d=self.srrthick)                          # delimit to a disc
                         and in_zslab(r,cz=cellc,d=self.cbarthick)):                       # but allow the central bar
                     return self.return_value             # (do not change this line)
 
                 if ((self.insplitting > 0)
-                        and in_xcyl(r, cy=0, cz=cellc, rad=self.incapacitorr) 
-                        and in_xslab(r, cx=self.resolution/4, d=self.insplitting+2*self.srrthick)):          # optional capacitor pads
+                        and in_xcyl(r, cy=dd, cz=cellc, rad=self.incapacitorr) 
+                        and in_xslab(r, cx=dd, d=self.insplitting+2*self.srrthick)):          # optional capacitor pads
                     return self.return_value             # (do not change this line)
 
         return 0
@@ -265,8 +266,8 @@ class SphereInDiel(meep_utils.AbstractMeepModel): #{{{
             if epsilon=="TiO2":     ## use titanium dioxide if permittivity not specified...
                 tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
                 if loss != 1: tio2.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
-            else:           ## ...or define a custom dielectric if permittivity not specified
-                tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=float(self.epsilon)) 
+                else:           ## ...or define a custom dielectric if permittivity not specified
+                    tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=float(self.epsilon)) 
             self.fix_material_stability(tio2, verbose=0) ##f_c=2e13,  rm all osc above the first one, to optimize for speed 
             self.materials.append(tio2)
 
@@ -303,7 +304,7 @@ class SphereInDiel(meep_utils.AbstractMeepModel): #{{{
                 return 0
             if  in_xcyl(r, cy=self.size_y/2+self.resolution/4, cz=cellc, rad=self.wirethick) or \
                     in_xcyl(r, cy= -self.size_y/2+self.resolution/4, cz=cellc, rad=self.wirethick):
-                return self.return_value             # (do not change this line)
+                        return self.return_value             # (do not change this line)
         return 0
 #}}}
 class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
@@ -348,13 +349,13 @@ class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
             if (in_zslab(r, cz=-self.slabcdist/2, d=self.slabthick) or in_zslab(r, cz=+self.slabcdist/2, d=self.slabthick)):
                 if not (in_xslab(r, cx=dd, d=2*xhr) and \
                         in_yslab(r, cy=dd, d=self.yholesize)) and \
-                   not (in_xslab(r, cx=dd, d=self.xholesize) and \
+                        not (in_xslab(r, cx=dd, d=self.xholesize) and \
                         in_yslab(r, cy=dd, d=2*yhr)) and \
-                   not in_zcyl(r, cx=dd+xhr, cy=dd+yhr, rad=self.cornerradius) and \
-                   not in_zcyl(r, cx=dd-xhr, cy=dd+yhr, rad=self.cornerradius) and \
-                   not in_zcyl(r, cx=dd+xhr, cy=dd-yhr, rad=self.cornerradius) and \
-                   not in_zcyl(r, cx=dd-xhr, cy=dd-yhr, rad=self.cornerradius):
-                   return self.return_value             # (do not change this line)
+                        not in_zcyl(r, cx=dd+xhr, cy=dd+yhr, rad=self.cornerradius) and \
+                        not in_zcyl(r, cx=dd-xhr, cy=dd+yhr, rad=self.cornerradius) and \
+                        not in_zcyl(r, cx=dd+xhr, cy=dd-yhr, rad=self.cornerradius) and \
+                        not in_zcyl(r, cx=dd-xhr, cy=dd-yhr, rad=self.cornerradius):
+                            return self.return_value             # (do not change this line)
         return 0
 #}}}
 class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
