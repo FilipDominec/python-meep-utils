@@ -22,6 +22,6 @@ sharedoptions='effparam/*.dat  --paramname incapacitorr --contours yes --numcont
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real N' \
 	--paramlabel 'Inner capacitor radius $\rho_c$' --ylabel 'Refractive index $N_{\text{eff}}^\prime$' --output ${PWD##*/}_nr.pdf  \
     --overlayplot "c/2/$cellsize/x/$thz,2*c/2/$cellsize/x/$thz,3*c/2/$cellsize/x/$thz,4*c/2/$cellsize/x/$thz"  
-../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --yeval '0-y' --ycol 'imag N' --ylim2 5 \
+../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --yeval '0-y' --ycol 'imag N' --ylim1 -2 --ylim2 -0.001 \
 	--paramlabel 'Inner capacitor radius $\rho_c$' --ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.pdf
 
