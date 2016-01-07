@@ -7,7 +7,7 @@ if [ -z "$NP" ] ; then NP=2 ; fi             # number of processors
 
 compare_dispersion() {
     ## scan through the wave vector
-    for Kz in `seq 0  2000 62800` 
+    for Kz in `seq 0  5000 62800` 
 	do 
         mpirun -np $NP ../cdh.py Kz=$Kz simtime=30p "$@" 
 	done
@@ -44,12 +44,16 @@ par=(resolution=4u simtime=60p cellsize=$cellsize )
 #compare_dispersion ${par[@]} model=SRRArray resolution=4.000e-06 capacitorr=1.000e-05 splitting=4.000e-06 wirethick=4.000e-06 splitting2=4.000e-06 radius=3.000e-05 simtime=50p
 #compare_dispersion ${par[@]} model=SRRArray resolution=4.000e-06 capacitorr=1.000e-05 splitting=4.000e-06 wirethick=0.000e-06 splitting2=4.000e-06 radius=3.000e-05 simtime=50p
 
-for icr in 6 8 10 18; do
-compare_dispersion ${par[@]} model=ESRRArray comment="emcSRR" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
-            insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=40e-6 srrthick=10e-6
-done
+#for icr in 6 8 10 18; do
+#compare_dispersion ${par[@]} model=ESRRArray comment="emcSRR" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
+            #insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=40e-6 srrthick=10e-6
+#done
 
-for r in `seq 80 10 120`; do
-	compare_dispersion ${par[@]} model=RodArray radius=${r}e-7
-done
+#for r in `seq 80 10 120`; do
+	#compare_dispersion ${par[@]} model=RodArray radius=${r}e-7
+#done
 
+for icr in 12 14 16 18; do
+compare_dispersion ${par[@]} model=ESRRArray cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
+            insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=30e-6 srrthick=10e-6
+done

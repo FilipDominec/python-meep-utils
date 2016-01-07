@@ -73,11 +73,13 @@ parser.add_argument('--figsizex',   type=float, default=8, help='figure width (i
 parser.add_argument('--figsizey',   type=float, default=4, help='figure height (inches), 4 is default')
 parser.add_argument('--contours',   type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
 parser.add_argument('--usetex',     type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
+parser.add_argument('--verbose',    type=str,   default='', help='explicitly print out what happens')
 parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
 args = parser.parse_args()
 
 ## Plotting style
 if args.usetex.lower() in ('yes', 'true'): 
+    if args.verbose: print "Selecting to use Latex, disable it by setting   --usetex no"
     matplotlib.rc('text', usetex=True)
     matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, \usepackage{upgreek}') #, \usepackage{palatino} \usepackage{lmodern}, 
 matplotlib.rc('font', size=12)
@@ -96,13 +98,17 @@ def get_param(filename):             ## Load header to the 'parameters' dictiona
     parameters = {}
     with open(filename) as datafile:
         for line in datafile:
-            if (line[0:1] in '0123456789') or ('column' in line.lower()): break    # end of parameter list
-            ## key-value separator is either ',' or '='; take the left word from it as the param name, and everything on the right as the param value
-            left, value = line.replace(',', '=').strip().split('=', 1)
-            key = left.split()[-1]
-            try: value = float(value) ## Try to convert to float, if possible
-            except: pass                ## otherwise keep as string
-            parameters[key] = value
+            try:
+                if (line[0:1] in '0123456789.') or ('column' in line.lower()): break    # end of parameter list
+                ## key-value separator is either ',' or '='; take the left word from it as the param name, 
+                ## and everything on the right as the param value
+                left, value = line.replace(',', '=').strip().split('=', 1)
+                key = left.split()[-1]
+                try: value = float(value) ## Try to convert to float, if possible
+                except: pass                ## otherwise keep as string
+                parameters[key] = value
+            except:
+                pass
     return parameters
 #}}}
 def reasonable_ticks(lim1, lim2, density=1, extend_to_lims=False): #{{{
@@ -153,7 +159,7 @@ def get_col_index(col, fn):#{{{
         return int(col), columnnames[int(col)]      ## column number given, find its name
     except ValueError:
         try:
-            return loadtxt_columns(fn).index(col), col      ## column name given, find its number
+            return columnnames.index(col), col      ## column name given, find its number
         except:
             raise ValueError, "Could not find column '%s' for the x-axis in file %s;\n\tIndex it by number 0-%d or by name: '%s'" % (col, fn, len(columnnames), "', '".join(columnnames))
 #}}}
@@ -179,6 +185,8 @@ for color, param, filename in datasets:
     ycol,  ycolname  = get_col_index(args.ycol,  filename)
     ycol2, ycolname2 = get_col_index(args.ycol2, filename) if args.ycol2 else (None,None)
     (x, y) = np.loadtxt(filename, usecols=[xcol, ycol], unpack=True)
+    if args.verbose:
+        print "Loading columns '%s' (%d), '%s' (%d) from the file %s" % (xcolname, xcol, ycolname, ycol, filename)
     x  = eval(args.xeval)
     if args.ycol2: 
         y2 = np.loadtxt(filename, usecols=[ycol2], unpack=True)
