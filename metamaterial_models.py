@@ -332,8 +332,8 @@ class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
 
         ## Define materials (with manual Lorentzian clipping) 
         au = meep_materials.material_Au(where=self.where_fishnet)
-        au.pol[0]['sigma'] /= 10      # adjust losses
-        au.pol[0]['gamma'] *= 10
+        #au.pol[0]['sigma'] /= 1000      # adjust losses
+        #au.pol[0]['gamma'] *= 3000
         self.fix_material_stability(au, verbose=0)
         self.materials = [au]  
 
@@ -356,6 +356,61 @@ class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
                         not in_zcyl(r, cx=dd+xhr, cy=dd-yhr, rad=self.cornerradius) and \
                         not in_zcyl(r, cx=dd-xhr, cy=dd-yhr, rad=self.cornerradius):
                             return self.return_value             # (do not change this line)
+        return 0
+#}}}
+class WiresOnSi(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=30e-12, resolution=4e-6, cellsize=50e-6, cellsizey=30e-6, cellnumber=1,
+            padding=50e-6, wirewidth=6.5e-6, wirelength=29e-6, loss=1, epsilon="Si", **other_args):
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
+
+        ## Constant parameters for the simulation
+        self.simulation_name = "WiresOnSiWire"    
+        self.src_freq, self.src_width = 1000e9, 4000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (10e9, 3000e9)    # Which frequencies will be saved to disk
+        self.pml_thickness = .3*c/self.src_freq
+
+        self.size_x = cellsize
+        self.size_y = cellsizey
+        self.size_z = cellsize + 4*padding + 2*self.pml_thickness
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
+
+        self.register_locals(locals(), other_args)          ## Remember the parameters
+
+        ## Define materials (with manual Lorentzian clipping) 
+        self.materials = []  
+
+        if epsilon=="Si":     ## use silicon if permittivity not specified...
+            si = meep_materials.material_Si_MIR(where=self.where_substr) 
+            if loss != 1: si.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
+        else:           ## ...or define a custom dielectric if permittivity not specified
+            si = meep_materials.material_dielectric(where=self.where_substr, eps=float(self.epsilon)) 
+        self.fix_material_stability(si, verbose=0) ## rm all osc above the first one, to optimize for speed 
+        self.mon2eps =  meep_utils.analytic_eps(mat=si, freq=1e12) ## store what dielectric is the second monitor embedded in
+        print '>>>>>>>>>>>>>>>>>>>>>>>>> self.mon2eps',self.mon2eps
+        #self.mon2eps = 12 ## store what dielectric is the second monitor embedded in
+        self.materials.append(si)
+
+        au = meep_materials.material_Au(where=self.where_wire)
+        #au.pol[0]['sigma'] /= 100
+        #au.pol[0]['gamma'] *= 10000
+        self.fix_material_stability(au, verbose=0)
+        self.materials.append(au)
+
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        self.test_materials()
+
+    def where_substr(self, r):
+        if r.z() > self.resolution:
+                return self.return_value             # (do not change this line)
+        return 0
+    def where_wire(self, r):
+        if in_xslab(r, cx=self.resolution/4, d=self.wirelength) and \
+                in_yslab(r, cy=self.resolution/4, d=self.wirewidth) and \
+                in_zslab(r, cz=0, d=self.resolution*2):
+            return self.return_value             # (do not change this line)
         return 0
 #}}}
 class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
@@ -465,5 +520,5 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
-models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':ESRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel, 'Fishnet':Fishnet,  'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
+models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':ESRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel, 'Fishnet':Fishnet, 'WiresOnSi':WiresOnSi, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
 
