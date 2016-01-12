@@ -167,8 +167,15 @@ def get_col_index(col, fn):#{{{
 
 ## Sort arguments by a the value of the specified parameter, keep the color order
 filenames = args.filenames
-if args.paramname == '':    params, paramname = filenames,                                          'file name'
-else:                       params, paramname = [get_param(n)[args.paramname] for n in filenames],  args.paramname
+if args.paramname == '':    
+    if args.usetex:
+        ## plot underscores correctly in the file names; otherwise LaTeX complains
+        params, paramname = [fn.replace('_', '\_') for fn in filenames],       'file name'
+        print params
+    else:
+        params, paramname = filenames,                                         'file name'
+else:                       
+        params, paramname = [get_param(n)[args.paramname] for n in filenames], args.paramname
 datasets = zip(params, filenames)                               ## sort the files by the parameter
 datasets.sort()
 colors = cmap(np.linspace(0.0,0.9,len(filenames)+1)[:-1]) ## add the colors to sorted files
@@ -197,7 +204,8 @@ for color, param, filename in datasets:
     if type(param) in (float, int):
         param = eval(args.parameval)
     else:
-        if args.contours == 'yes': raise ValueError("Parameter must be a number for contour plot, since it is used at the vertical axis")
+        if args.contours == 'yes': 
+            raise ValueError("Parameter must be a number for contour plot, since it is used at the vertical axis")
 
     if not args.contours == 'yes':
         ## Plot a curve with a nice label, generated from the parameter
