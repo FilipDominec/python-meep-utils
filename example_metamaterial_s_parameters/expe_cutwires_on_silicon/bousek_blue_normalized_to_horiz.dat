@@ -1,4 +1,4 @@
-#param comment,experiment normalized
+#param comment,Experiment normalized
 #x-column freq
 #column |t|
 #column phase(t)

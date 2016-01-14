@@ -1,4 +1,4 @@
-#param comment,experiment
+#param comment,Experiment
 #x-column freq
 #column |t|
 #column phase(t)
