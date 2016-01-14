@@ -43,7 +43,7 @@ class SphereWire(meep_utils.AbstractMeepModel): #{{{
         ## Constant parameters for the simulation
         self.simulation_name = "SphereWire"    
         self.src_freq, self.src_width = 1000e9, 4000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (10e9, 3000e9)    # Which frequencies will be saved to disk
+        self.interesting_frequencies = (0e9, 2000e9)    # Which frequencies will be saved to disk
         self.pml_thickness = .1*c/self.src_freq
 
         self.size_x = cellsize if (radius>0 or wirecut>0) else resolution/1.8
@@ -93,7 +93,7 @@ class SphereWire(meep_utils.AbstractMeepModel): #{{{
 #}}}
 class RodArray(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=100e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=20e-6, 
-            radius=10e-6, eps2=100, **other_args):
+            radius=10e-6, eps2=100, orientation="E", **other_args):
 
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
         self.simulation_name = "RodArray"
@@ -106,7 +106,10 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
         self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
         self.pml_thickness = .1*c/self.src_freq
 
-        self.size_x, self.size_y  = self.resolution*2, cellsize
+        if orientation=="E":
+            self.size_x, self.size_y  = self.resolution*.6, cellsize
+        elif orientation=="H":
+            self.size_x, self.size_y  = cellsize, self.resolution*.6
         self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
@@ -120,8 +123,12 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
 
     def where_TiO2(self, r):
         #if  in_sphere(r, cx=0, cy=0, cz=0, rad=self.radius) and not  in_sphere(r, cx=0, cy=0, cz=0, rad=self.radius*.75):
-        if  in_xcyl(r, cy=0, cz=0, rad=self.radius):
-            return self.return_value             # (do not change this line)
+        if self.orientation=="E":
+            if  in_xcyl(r, cy=self.resolution/4, cz=0, rad=self.radius):
+                return self.return_value             # (do not change this line)
+        elif self.orientation=="H":
+            if  in_ycyl(r, cx=self.resolution/4, cz=0, rad=self.radius):
+                return self.return_value             # (do not change this line)
         return 0
 #}}}
 class Slab(meep_utils.AbstractMeepModel): #{{{
@@ -308,7 +315,7 @@ class SphereInDiel(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
-    def __init__(self, comment="", simtime=150e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=100e-6, 
+    def __init__(self, comment="", simtime=150e-12, resolution=6e-6, cellsize=100e-6, cellnumber=1, padding=100e-6, 
             cornerradius=30e-6, xholesize=80e-6, yholesize=80e-6, slabthick=12e-6, slabcdist=0, **other_args):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
