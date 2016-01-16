@@ -93,7 +93,7 @@ class SphereWire(meep_utils.AbstractMeepModel): #{{{
 #}}}
 class RodArray(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=100e-12, resolution=4e-6, cellsize=100e-6, cellnumber=1, padding=20e-6, 
-            radius=10e-6, eps2=100, orientation="E", **other_args):
+            radius=10e-6, epsilon='TiO2', loss=1, orientation="E", **other_args):
 
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
         self.simulation_name = "RodArray"
@@ -115,10 +115,13 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
 
         ## Define materials
-        self.materials = [meep_materials.material_TiO2(where = self.where_TiO2)]  
-        #self.materials = [meep_materials.material_dielectric(where = self.where_TiO2, eps=eps2)]  
-
-        for m in self.materials: self.fix_material_stability(m)
+        if epsilon=="TiO2":     ## use titanium dioxide if permittivity not specified...
+            tio2 = meep_materials.material_TiO2(where=self.where_TiO2) 
+            if loss != 1: tio2.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
+        else:           ## ...or define a custom dielectric if permittivity not specified
+            tio2 = meep_materials.material_dielectric(where=self.where_TiO2, eps=float(self.epsilon)) 
+        self.fix_material_stability(tio2, verbose=0) ##f_c=2e13,  rm all osc above the first one, to optimize for speed 
+        self.materials = [tio2]
         self.test_materials()
 
     def where_TiO2(self, r):
@@ -273,8 +276,8 @@ class SphereInDiel(meep_utils.AbstractMeepModel): #{{{
             if epsilon=="TiO2":     ## use titanium dioxide if permittivity not specified...
                 tio2 = meep_materials.material_TiO2(where=self.where_sphere) 
                 if loss != 1: tio2.pol[0]['gamma'] *= loss   ## optionally modify the first TiO2 optical phonon to have lower damping
-                else:           ## ...or define a custom dielectric if permittivity not specified
-                    tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=float(self.epsilon)) 
+            else:           ## ...or define a custom dielectric if permittivity not specified
+                tio2 = meep_materials.material_dielectric(where=self.where_sphere, eps=float(self.epsilon)) 
             self.fix_material_stability(tio2, verbose=0) ##f_c=2e13,  rm all osc above the first one, to optimize for speed 
             self.materials.append(tio2)
 
