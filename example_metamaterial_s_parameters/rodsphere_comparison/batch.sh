@@ -4,8 +4,8 @@ thz=1e12
 cellsize=100e-6
 par="cellsize=$cellsize simtime=150p"
 if [ -z "$skipsimulation" ]; then 
-	#mpirun -np $NP ../../scatter.py $par model=RodArray resolution=1.5u orientation=H radius=19e-6 comment='Rods $||\;\mathbf{H}$'
-	#../../effparam.py
+	mpirun -np $NP ../../scatter.py $par model=RodArray resolution=1.5u orientation=H radius=19e-6 comment='Rods $||\;\mathbf{H}$'
+	../../effparam.py
 	mpirun -np $NP ../../scatter.py $par model=SphereWire resolution=3u radius=30e-6 comment='Spheres'
 	../../effparam.py
 fi
