@@ -10,7 +10,6 @@ value of the `param', or simply by the file name if no --paramname option is spe
 
 Or, if the number of files is over 10 or 20, it may be preferable to plot their `y' values as a 2-D contour plot,
 where the `y' value still represents the horizontal coordinate, but the `param' value now serves as the vertical one. 
-The `--xeval' or `--parameval' expressions should return similar order of magnitude so that the data can be triangulated.
 
         1) --contours no              2) --contours yes
                (default)
@@ -62,7 +61,7 @@ parser.add_argument('--plim1',      type=str,   default='', help='start for the 
 parser.add_argument('--plim2',      type=str,   default='', help='end for the plotted parameter range')
 parser.add_argument('--xlabel',     type=str,   default='', help='label of the x-axis (can use LaTeX)')
 parser.add_argument('--ylabel',     type=str,   default='', help='label of the y-axis (use LaTeX)')
-parser.add_argument('--output',     type=str,   default='output.png', help='output file (e.g. output.png or output.pdf)')
+parser.add_argument('--output',     type=str,   default='*.png', help='output file; *.png or *.pdf (etc.) auto-selects a name with the given format')
 parser.add_argument('--colormap',   type=str,   default='default', help='matplotlib colormap, available are: hsv (default for lines), gist_earth (default for contours), jet, greys, dark2, brg...')
 parser.add_argument('--overlayplot',type=str,   default='', help='one or more expressions, separated by comma, that are plotted to help guide the eye (e.g. 1/x)')
 parser.add_argument('--numcontours',type=int,   default=50, help='number of levels in the contour plot (default 50)')
@@ -205,7 +204,7 @@ for color, param, filename in datasets:
         param = eval(args.parameval)
     else:
         if args.contours == 'yes': 
-            raise ValueError("Parameter must be a number for contour plot, since it is used at the vertical axis")
+            raise ValueError("For contour plot, the --paramname option must select a numeric parameter to define the position on vertical axis")
 
     if not args.contours == 'yes':
         ## Plot a curve with a nice label, generated from the parameter
@@ -229,12 +228,16 @@ for color, param, filename in datasets:
         ys      = np.append(ys, y)
         params  = np.append(params, np.ones_like(x)*param) # (fixme: fails if param is string)
 
+    if args.verbose: print "... corresponding value of the '%s' parameter is '%s'" % (paramname, param)
+
 if args.contours == 'yes':
     # Grid the data, produce interpolated quantities:
     from matplotlib.mlab import griddata
-    xi      = np.linspace(min(xs),       max(xs),       args.contourresx)
-    paramsi = np.linspace(min(params),   max(params),   args.contourresp)
-    interp_anisotropy = 1       # value lower than 1. interpolates rather vertically; optimize if plot disintegrates
+    min_xs,       max_xs,    min_params,   max_params = min(xs),       max(xs),    min(params),   max(params)
+    xi      = np.linspace(min_xs,       max_xs,       args.contourresx)
+    paramsi = np.linspace(min_params,   max_params,   args.contourresp)
+    interp_anisotropy = (max_xs-min_xs)/(max_params-min_params) # value lower than 1. interpolates rather vertically; optimize if plot disintegrates
+    print  interp_anisotropy
     yi      = griddata(xs, params*interp_anisotropy, ys, xi, paramsi*interp_anisotropy, interp='linear')
 
     # Standard contour plot
@@ -274,5 +277,8 @@ except:
 
 
 ## ==== Outputting ====
-plt.savefig(args.output, bbox_inches='tight')
-# (todo) optional: plt.savefig('%s_%s.png' % (quantity, os.path.split(os.path.dirname(os.getcwd()))[1]), bbox_inches='tight')
+if args.output[0:1] == '*':
+    outfilename = '%s_%s%s' % (os.path.split(os.getcwd())[1], args.ycol.replace(' ','_'), args.output[1:])
+else:
+    outfilename = args.output
+plt.savefig(outfilename, bbox_inches='tight')
