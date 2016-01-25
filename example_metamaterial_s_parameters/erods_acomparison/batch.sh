@@ -34,10 +34,10 @@ sharedoptions="effparam/*.dat --paramname cellsize  --parameval param*1e6 --figs
 
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real mu' --y2eval '0-y2' --ycol2 'imag mu' \
 	--ylim1 -5 --ylim2 5 \
-	--paramlabel '%s' --ylabel 'Permeability $\mu_{\text{eff}}$' --output ${PWD##*/}_mu.pdf
+	--paramlabel '$a$ = %.1f $\upmu$' --ylabel 'Permeability $\mu_{\text{eff}}$' --output ${PWD##*/}_mu.pdf
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --ycol 'real mu' \
 	--ylim1 -5 --ylim2 5 \
-	--paramlabel '%s' --ylabel 'Permeability $\mu_{\text{eff}}^{\prime}$' --output ${PWD##*/}_mur.pdf
+	--paramlabel '$a$ = %.1f $\upmu$m' --ylabel 'Permeability $\mu_{\text{eff}}^{\prime}$' --output ${PWD##*/}_mur.pdf
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --yeval '0-y' --ycol 'imag mu' \
 	--ylim1 -5 --ylim2 5 \
-	--paramlabel '%s' --ylabel 'Permeability $\mu_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_mui.pdf
+	--paramlabel '$a$ = %.1f $\upmu$m' --ylabel 'Permeability $\mu_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_mui.pdf
