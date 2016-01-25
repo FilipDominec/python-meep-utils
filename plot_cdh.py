@@ -15,7 +15,7 @@ matplotlib.rc('font', size=12)
 matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
 
 # -- settings --
-maxfreq = 2e12
+maxfreq = 4e12
 frequnit = 1e12
 
 plot_FFT = True
