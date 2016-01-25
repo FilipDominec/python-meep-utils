@@ -62,7 +62,7 @@ model_param = meep_utils.process_param(sys.argv[1:])
 model = metamaterial_models.models[model_param.get('model', 'default')](**model_param)
 
 ## Note: in CDH, we do not need any PML, padding nor multiple cells; cellsize thus overrides the dimensions given in model
-model.size_x, model.size_y, model.size_z = model.cellsize, model.cellsize, model.cellsize
+model.size_z = model.cellsize
 
 ## Initialize volume and structure according to the model
 vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
