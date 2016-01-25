@@ -53,7 +53,14 @@ par=(resolution=4u simtime=60p cellsize=$cellsize )
 	#compare_dispersion ${par[@]} model=RodArray radius=${r}e-7
 #done
 
-for icr in 12 14 16 18; do
-compare_dispersion ${par[@]} model=ESRRArray cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
-            insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=30e-6 srrthick=10e-6
+#for icr in 12 14 16 18; do
+#compare_dispersion ${par[@]} model=ESRRArray cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
+            #insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=30e-6 srrthick=10e-6
+#done
+
+for zs in 100 150 200 300; do
+	compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=20u yholesize=200u xholesize=180u cellsizexy=300u resolution=10u cellsize=${zs}u
+done
+for zs in 100 150 200 300; do
+	compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=20u yholesize=255u xholesize=230u cellsizexy=300u resolution=10u cellsize=${zs}u
 done
