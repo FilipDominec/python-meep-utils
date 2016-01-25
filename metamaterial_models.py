@@ -102,7 +102,7 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
 
         ## Constants for the simulation
         self.simtime = simtime      # [s]
-        self.src_freq, self.src_width = 2000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.src_freq, self.src_width = 1000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
         self.pml_thickness = .1*c/self.src_freq
 
@@ -318,8 +318,9 @@ class SphereInDiel(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
-    def __init__(self, comment="", simtime=150e-12, resolution=6e-6, cellsize=100e-6, cellnumber=1, padding=100e-6, 
-            cornerradius=30e-6, xholesize=80e-6, yholesize=80e-6, slabthick=12e-6, slabcdist=0, **other_args):
+    def __init__(self, comment="", simtime=150e-12, resolution=6e-6, cellsize=100e-6, cellsizexy=100e-6, cellnumber=1, 
+            padding=100e-6, 
+            cornerradius=0e-6, xholesize=80e-6, yholesize=80e-6, slabthick=12e-6, slabcdist=0, **other_args):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -328,12 +329,12 @@ class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
         self.interesting_frequencies = (10e9, 4000e9)    # Which frequencies will be saved to disk
         self.pml_thickness = .1*c/self.src_freq
 
-        self.size_x = cellsize
+        self.size_x = cellsizexy
         if yholesize == "inf" or yholesize == np.inf:
             self.size_y = resolution/1.8
             yholesize = np.inf
         else: 
-            self.size_y = cellsize
+            self.size_y = cellsizexy
         self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
         self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
         self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
