@@ -4,18 +4,25 @@
 ## XXX models = {'Slab':Slab, 'SphereArray':SphereArray, 'RodArray':RodArray}
 
 if [ -z "$NP" ] ; then NP=2 ; fi             # number of processors
+Ksampling=10
+Kzones=1
 
 compare_dispersion() {
+	if [ -d cdh ]; then echo "Error: Another simulation has left a 'cdh/' directory; delete it first"; exit; fi
+
     ## scan through the wave vector
-    for Kz in `seq 0  5000 62800` 
+    Kzs=`python -c "import numpy as np; print ' '.join(['%.4e' % x for x in np.linspace(0,$Kzones*np.pi/$cellsize,$Ksampling)])"`
+	echo Will compute dispersion curves by finding all resonances at K in: $Kzs 
+    for Kz in $Kzs
 	do 
+		echo "cs", $cellsize
         mpirun -np $NP ../cdh.py Kz=$Kz simtime=30p "$@" 
 	done
 
     ../plot_cdh.py cdh/*dat ## (preview)
 
     ## compute the dispersion curves using the s-parameter method, (with the same parameters)
-    mpirun -np $NP ../scatter.py  "$@" simtime=200p padding=100u
+    mpirun -np $NP ../scatter.py  "$@" simtime=200p
     ../effparam.py
 
     ## repeat the plot, now comparing also to the curve retrieved above
@@ -32,7 +39,7 @@ compare_dispersion() {
 
 cellsize=100e-6
 thz=1e12
-par=(resolution=4u simtime=60p cellsize=$cellsize )
+par=(resolution=4u simtime=60p cellsize=${cellsize})
 #compare_dispersion ${par[@]} model=SRRArray wirethick=0u radius=30u "comment=SRR only"
 #compare_dispersion ${par[@]} model=SRRArray wirethick=4u radius=30u "comment=SRR with wire"
 #compare_dispersion ${par[@]} model=SRRArray wirethick=0u radius=30u splitting2=16u "comment=symmetric SRR"
@@ -58,9 +65,22 @@ par=(resolution=4u simtime=60p cellsize=$cellsize )
             #insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=30e-6 srrthick=10e-6
 #done
 
-for zs in 100 150 200 300; do
-	compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=20u yholesize=200u xholesize=180u cellsizexy=300u resolution=10u cellsize=${zs}u
-done
-for zs in 100 150 200 300; do
-	compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=20u yholesize=255u xholesize=230u cellsizexy=300u resolution=10u cellsize=${zs}u
-done
+
+## == Fishnets ==
+#thz=1e12
+#par=(resolution=10u simtime=100p cellsize=${cellsize}u )
+#for cellsize in 100e-6 150e-6 200e-6 300e-6; do
+	#compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=20u yholesize=200u xholesize=180u cellsizexy=300u resolution=10u cellsize=${cellsize}
+#done
+#for cellsize in 100e-6 150e-6 200e-6 300e-6; do
+	#compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=20u yholesize=255u xholesize=230u cellsizexy=300u resolution=10u cellsize=${cellsize}
+#done
+
+#for cellsize in 80e-6 70e-6  60e-6 50e-6; do
+	#compare_dispersion ${par[@]} model=Fishnet slabcdist=30u slabthick=12u yholesize=50u xholesize=30u cellsizexy=100u cellsize=${cellsize}
+#done
+
+cellsize=80e-6
+compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=12u yholesize=30u xholesize=60u cellsizexy=100u cellsize=${cellsize}
+compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=12u yholesize=60u xholesize=60u cellsizexy=100u cellsize=${cellsize}
+

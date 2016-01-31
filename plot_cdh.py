@@ -181,8 +181,8 @@ plt.xlim((np.min(ki), np.max(ki))); plt.xscale('linear')
 
 ## ==== Outputting ====
 ## Finish the plot + save 
-plt.xlabel(u"wavenumber $K/\\left(\\frac{2\pi}{a} \\right)$");  # [m$^{-1}$]
-plt.ylabel(u"frequency (THz)"); 
+plt.xlabel(u"Wavenumber $\\frac{Ka}{2\pi}$");  # [m$^{-1}$]
+plt.ylabel(u"Frequency (THz)") ## TODO allow the freq to be normalized 
 plt.grid()
 plt.legend(prop={'size':10}, loc='upper right')
 plt.savefig("cdh_%s.pdf" % filesuffix, bbox_inches='tight')
