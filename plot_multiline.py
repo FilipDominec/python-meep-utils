@@ -170,7 +170,7 @@ if args.paramname == '':
     if args.usetex:
         ## plot underscores correctly in the file names; otherwise LaTeX complains
         params, paramname = [fn.replace('_', '\_') for fn in filenames],       'file name'
-        print params
+        if args.verbose: print "Parameters:" params
     else:
         params, paramname = filenames,                                         'file name'
 else:                       
@@ -237,7 +237,6 @@ if args.contours == 'yes':
     xi      = np.linspace(min_xs,       max_xs,       args.contourresx)
     paramsi = np.linspace(min_params,   max_params,   args.contourresp)
     interp_anisotropy = (max_xs-min_xs)/(max_params-min_params) # value lower than 1. interpolates rather vertically; optimize if plot disintegrates
-    print  interp_anisotropy
     yi      = griddata(xs, params*interp_anisotropy, ys, xi, paramsi*interp_anisotropy, interp='linear')
 
     # Standard contour plot

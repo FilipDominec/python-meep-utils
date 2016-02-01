@@ -1017,11 +1017,12 @@ def get_phase(complex_data):#{{{
 class AmplitudeMonitorPlane(meep.Callback):#{{{
     """ Calculates an average of electric field and perpendicular magnetic field.
 
-    I asked for a similar field-averaging function built in MEEP, but it seems not to be implemented yet.
-    http://www.mail-archive.com/meep-discuss@ab-initio.mit.edu/msg04447.html
-    A field averaging routine written in Python is used, which is very inefficient. 
+    5x5 averaging grid is usually optimal, there is no visible difference between 10x10 grid and 5x5 grid
+    For 2D simulations, the number of averaging points is automatically reduced.
 
-    Note this implementation requires the planes are in vacuum (where impedance = 1.0)
+    Note this implementation requires the planes are in vacuum (where impedance = 1.0) if oblique incidence
+    is to be computed. For perpendicular incidence, the real part permittivity at each monitor plane has to be 
+    specified in the parameters '' and ''
     """
 
 
@@ -1039,14 +1040,8 @@ class AmplitudeMonitorPlane(meep.Callback):#{{{
         ## New way of averaging (removes explicit cycle, few percent faster)
         xcount = min(5, int(np.ceil(size_x/resolution)))
         ycount = min(5, int(np.ceil(size_y/resolution)))
-        print 'xcount, ycount' , xcount, ycount 
         xr = [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]
         yr = [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]
-
-        #for x in [x0*self.size_x/xcount+(self.size_x/2/xcount)-self.size_x/2 for x0 in range(xcount)]:
-            #for y in [y0*self.size_y/ycount+(self.size_y/2/ycount)-self.size_y/2 for y0 in range(ycount)]:
-                #field_sum += (field.get_field(self.comp, meep.vec(x, y, self.z_position)) *  
-                                #np.exp(1j*(self.Kx*x + self.Ky*y)) )
         self.xm, self.ym = np.meshgrid(xr,yr)
         self.xmm, self.ymm = self.xm.flatten(), self.ym.flatten()
         self.points = zip(self.xmm, self.ymm)
@@ -1061,24 +1056,12 @@ class AmplitudeMonitorPlane(meep.Callback):#{{{
     def average_field(self, field):
         """
         Average field component in some plane, return amplitudes 
-        This function is inefficient - it should be implemented in C++ in meep itself
-
-        5x5 grid is usually optimal (no visible difference between 10x10 grid and 5x5 grid)
-
-        TODO:  This class implements a workaround for unavailable amplitude averaging in python-meep.
-        This implementation is inefficient and inflexible, but one would have to edit the MEEP source otherwise.
+        This function is calls repeatedly field.get_field() from Python. It is rather inefficient although I tried to 
+        optimize it as much as I could. The field summation should be implemented in C++ in meep itself.
         """
 
         return sum(map(self.fn, self.points))
 
-        #return sum(map(lambda vec: _meep.fields_get_field(field, self.comp, vec), self.vecs)) # takes the same time
-
-        ## todo for future? Should speed-up the integration!
-        ## def complex_vec(self, r): return 1. # <-- put above init
-        ## meep.Callback.__init__(self); meep.set_CMPL1_Callback(self.__disown__())     # <-- put to init
-        ## v = meep.volume( meep.vec(-self.size_x/2, -self.size_y/2, 0), meep.vec(self.size_x/2, self.size_y/2, 0))
-        ## import ctypes; return field.integrate(1, self.comp, self.complex_vec, ctypes.pointer(ctypes.c_int(0)), v)
-    
     def record(self, field=None):
         """ 
         Useful for time-domain simulation only
