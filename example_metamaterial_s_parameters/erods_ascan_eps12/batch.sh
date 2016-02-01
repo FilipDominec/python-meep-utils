@@ -2,10 +2,10 @@
 if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
 cellsize=100e-6
 thz=1e12
-par="resolution=2u simtime=200p loss=.1"
+par="resolution=2u simtime=200p loss=.1 epsilon=12"
 
 if [ -z "$skipsimulation" ]; then 
-	for a in `seq 20 4 200` `seq 82 4 130`; do
+	for a in `seq 20 4 200` ; do
 		mpirun -np $NP ../../scatter.py $par model=RodArray orientation=E radius=10e-6  cellsize=${a}u 
 		../../effparam.py
 	done
@@ -27,6 +27,6 @@ sharedoptions='effparam/*.dat --paramname cellsize --contours yes --numcontours 
 
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --yeval '0-y' --ycol 'imag N' \
    	--ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.pdf \
-	--ylim1 " -2.3"  --ylim2 " -0.04" \
+	--ylim1 " -3."  --ylim2 0.04 \
 	--paramlabel 'Unit cell size $a$ ($\upmu$m)' --overlayplot "80,95,120"
 
