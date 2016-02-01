@@ -103,7 +103,7 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
         ## Constants for the simulation
         self.simtime = simtime      # [s]
         self.src_freq, self.src_width = 1000e9, 4000e9     # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (0e9, 2000e9)     # Which frequencies will be saved to disk
+        self.interesting_frequencies = (0e9, 3000e9)     # Which frequencies will be saved to disk
         self.pml_thickness = .1*c/self.src_freq
 
         if orientation=="E":
