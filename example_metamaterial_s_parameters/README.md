@@ -21,8 +21,8 @@ __Cut wires__  parallel to __E__
 #### Disconnected metallic resonant structures
 
 __SRRs__ 
- * [ ] spectrum / cdh
- * [ ] with and without wires
+ * [x] spectrum / cdh
+ * [x] with and without wires
 
 __Wire pairs__ 
  * [ ] spectrum / cdh
@@ -40,8 +40,8 @@ __Dielectric spheres__
 
 #### Dielectric resonant structures
 __Rod array__ parallel to __H__
- * [ ] spectrum
- * [ ] modes [1st mode, 2nd mode, 3rd mode]
+ * [x] spectrum compared to spheres
+ * [x] modes
  * [ ] permittivity scan (refer to tunability)
 
 
