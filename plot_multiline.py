@@ -170,7 +170,6 @@ if args.paramname == '':
     if args.usetex:
         ## plot underscores correctly in the file names; otherwise LaTeX complains
         params, paramname = [fn.replace('_', '\_') for fn in filenames],       'file name'
-        if args.verbose: print "Parameters:" params
     else:
         params, paramname = filenames,                                         'file name'
 else:                       
