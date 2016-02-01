@@ -266,7 +266,7 @@ else:
 plt.grid()
 if args.overlayplot:
     for overlayfunc in args.overlayplot.split(','):
-        plt.plot(x, np.ones_like(x)*eval(overlayfunc), color='#808080', lw=.5, ls='-.', scaley=False)
+        plt.plot(x, np.ones_like(x)*eval(overlayfunc), color='k', lw=.5, ls='-.', scaley=False)
 
 try: 
     if not args.contours == 'yes': 
