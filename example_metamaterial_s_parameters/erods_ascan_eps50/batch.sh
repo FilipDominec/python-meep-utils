@@ -27,6 +27,6 @@ sharedoptions='effparam/*.dat --paramname cellsize --contours yes --numcontours 
 
 ../../plot_multiline.py $sharedoptions --xlabel "Frequency (THz)" --yeval '0-y' --ycol 'imag N' \
    	--ylabel 'Refractive index $N_{\text{eff}}^{\prime\prime}$' --output ${PWD##*/}_ni.pdf \
-	--ylim1 " -3."  --ylim2 0.04 \
+	--ylim1 " -1.5"  --ylim2 0.4 \
 	--paramlabel 'Unit cell size $a$ ($\upmu$m)' --overlayplot "80,95,120"
 
