@@ -79,9 +79,10 @@ z_axis -= z_cellofs
 
 ## Plot contours for gridded data
 field_to_plot = np.log10(np.abs(Ef)) if (args.logfield.lower() == 'yes') else Ef 
-fieldlim1 = np.min(Ef) if args.fieldlim1 == "" else float(args.fieldlim1)
-fieldlim2 = np.max(Ef) if args.fieldlim2 == "" else float(args.fieldlim2)
+fieldlim1 = np.min(field_to_plot) if args.fieldlim1 == "" else float(args.fieldlim1)
+fieldlim2 = np.max(field_to_plot) if args.fieldlim2 == "" else float(args.fieldlim2)
 print " fieldlim1, fieldlim2", fieldlim1, fieldlim2
+print field_to_plot
 CS = plt.contourf(freq/args.frequnit, z_axis, field_to_plot,
         levels=np.linspace(fieldlim1, fieldlim2, args.numcontours), cmap=cmap, extend='both')
 for contour in CS.collections: contour.set_antialiased(False)
