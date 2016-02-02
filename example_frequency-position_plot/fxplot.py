@@ -8,12 +8,12 @@ import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('--fieldfile',  type=str,                   help='HDF5 file containing the field record to be Fourier-transformed')
+parser.add_argument('--simtime',    type=float,                 help='time of simulation that provided the field shape')
 parser.add_argument('--nfile',      type=str,   default='',     help='optional data file containing the retrieved index of refraction for comparison')
 parser.add_argument('--title',      type=str,   default='',     help='plot title')
 parser.add_argument('--resolution', type=float, default=2e-6,   help='for realistic scaling of the spatial axis')
 parser.add_argument('--cellnumber', type=int,   default=3,      help='number of cells') ## todo update code
 parser.add_argument('--cellsize',   type=float, default=100e-6, help='z-dimensions of the simulated cells')
-parser.add_argument('--simtime',    type=float, default=500e-12,help='time of simulations provided')
 parser.add_argument('--frequnit',   type=float, default=1e12,   help='unit magnitude on the frequency axis')
 
 parser.add_argument('--freqlim1',   type=str,   default='',     help='start for the plotted parameter range')
@@ -30,11 +30,8 @@ parser.add_argument('--numcontours',type=int,   default=30,     help='number of 
 parser.add_argument('--contourresx',type=int,   default=200,    help='row length of the internal interpolation matrix for contour plot (default 200)')
 parser.add_argument('--contourresp',type=int,   default=200,    help='column height of the internal interpolation matrix for contour plot (default 200)')
 parser.add_argument('--usetex',     type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
+parser.add_argument('--output',     type=str,   default='*.png', help='output file; *.png or *.pdf (etc.) auto-selects a name with the given format')
 args = parser.parse_args()
-
-print args.frequnit
-print args.freqlim1
-print args.freqlim2
 
 ## Plotting style
 if args.usetex.lower() in ('yes', 'true'): 
@@ -73,16 +70,27 @@ for m in range(Ef.shape[0]):                                        ## go throug
 ## Get the simulation dimension along the z-axis
 z_range = args.resolution * data.shape[1] / args.cellsize
 z_cellofs = (z_range - args.cellnumber)/2
-#print 'z_range=', z_range, '*args.cellsize; ', 'z_cellofs', z_cellofs
 z_axis = np.linspace(0, z_range, Ef.shape[0])
 z_axis -= z_cellofs
 
 ## Plot contours for gridded data
 field_to_plot = np.log10(np.abs(Ef)) if (args.logfield.lower() == 'yes') else Ef 
-fieldlim1 = np.min(field_to_plot) if args.fieldlim1 == "" else float(args.fieldlim1)
-fieldlim2 = np.max(field_to_plot) if args.fieldlim2 == "" else float(args.fieldlim2)
-print " fieldlim1, fieldlim2", fieldlim1, fieldlim2
-print field_to_plot
+fmin, fmax = np.min(field_to_plot), np.max(field_to_plot)
+if args.fieldlim1 == "" :
+    fieldlim1 = fmin 
+elif '%' in args.fieldlim1:
+    pct = float(args.fieldlim1[:-1])
+    fieldlim1 = fmin*(pct/100) + fmax*(1-pct/100)
+else: 
+    fieldlim1 = float(args.fieldlim1)
+if args.fieldlim2 == "" :
+    fieldlim2 = fmin 
+elif '%' in args.fieldlim2:
+    pct = float(args.fieldlim2[:-1])
+    fieldlim2 = fmin*(pct/100) + fmax*(1-pct/100)
+else: 
+    fieldlim2 = float(args.fieldlim2)
+fieldlim2 = fmax if args.fieldlim2 == "" else float(args.fieldlim2)
 CS = plt.contourf(freq/args.frequnit, z_axis, field_to_plot,
         levels=np.linspace(fieldlim1, fieldlim2, args.numcontours), cmap=cmap, extend='both')
 for contour in CS.collections: contour.set_antialiased(False)
@@ -122,25 +130,26 @@ plt.annotate('2$^{nd}$ cell', xy = (220e9/args.frequnit, 1.5), xytext = (200e9/a
 plt.annotate('3$^{rd}$ cell', xy = (220e9/args.frequnit, 2.5), xytext = (200e9/args.frequnit, 2.5),
         textcoords='data', ha='center', va='center', bbox=bbox, arrowprops=None)
 
-plt.annotate('', xy = (800e9/args.frequnit, 1.3), xytext = (20,20),
-        textcoords='offset points', ha='center', va='bottom', bbox=bbox, arrowprops=dict(arrowstyle = 'simple', color='k'))
-plt.annotate('', xy = (950e9/args.frequnit, 1.3), xytext = (20,20),
-        textcoords='offset points', ha='center', va='bottom', bbox=bbox, arrowprops=dict(arrowstyle = 'simple', color='k'))
+#plt.annotate('', xy = (800e9/args.frequnit, 1.3), xytext = (20,20),
+        #textcoords='offset points', ha='center', va='bottom', bbox=bbox, arrowprops=dict(arrowstyle = 'simple', color='k'))
+#plt.annotate('', xy = (950e9/args.frequnit, 1.3), xytext = (20,20),
+        #textcoords='offset points', ha='center', va='bottom', bbox=bbox, arrowprops=dict(arrowstyle = 'simple', color='k'))
 
-plt.legend(loc='lower left')
+plt.legend(prop={'size':12}, fancybox=True, framealpha=0.8, loc='lower left')
 
 
 if args.nfile != '':
     ax.label_outer()
     ax = plt.subplot(212, axisbg='w', sharex=ax)
     (f, Nr, Ni) = np.loadtxt(args.nfile, usecols=[0,5,6], unpack=True)
+    if args.Nconj.lower() == 'yes': Ni = -Ni
     Kr = Nr*f*np.pi*2*args.cellsize/c
     Ki = Ni*f*np.pi*2*args.cellsize/c
     zero_axis = np.zeros_like(f)+0
     n_scaling = 1
-    plt.plot(f/args.frequnit,(Nr+zero_axis)/n_scaling, c='b', lw=2, label="real part $N'$")
-    plt.plot(f/args.frequnit,(Ni+zero_axis)/n_scaling, c='b', lw=2,ls='--', label="imaginary part $N''$")
-    plt.legend(loc='lower left')
+    plt.plot(f/args.frequnit,(Nr+zero_axis)/n_scaling, c='b', lw=2, label="real part $N_{\\text{eff}}'$")
+    plt.plot(f/args.frequnit,(Ni+zero_axis)/n_scaling, c='b', lw=2, ls='--', label="imaginary part $N_{\\text{eff}}''$")
+    plt.legend(prop={'size':12}, fancybox=True, framealpha=0.8, loc='best')
     #plt.plot(f/args.frequnit,(Kr+zero_axis)/n_scaling, c='k', lw=2)
     #plt.plot(f/args.frequnit,(Ki+zero_axis)/n_scaling, c='k', lw=2,ls='--')
     #plt.plot(f,zero_axis/n_scaling, c='k', lw=2,ls=':')
@@ -153,6 +162,7 @@ if args.nfile != '':
 
     plt.grid()
     plt.ylabel('Refractive index $N_{\\text{eff}}$')
+    
 
 if args.freqlim1 != '': plt.xlim(left=float(args.freqlim1)/args.frequnit)
 if args.freqlim2 != '': plt.xlim(right=float(args.freqlim2)/args.frequnit) 
@@ -160,4 +170,8 @@ if args.freqlim2 != '': plt.xlim(right=float(args.freqlim2)/args.frequnit)
 plt.xlabel('Frequency [THz]')
 plt.title(args.title)
     
-plt.savefig("fd_ampli_publix.png")
+if args.output[0:1] == '*':
+    outfilename = '%s_%s%s' % (os.path.split(os.getcwd())[1], "fxplot", args.output[1:])
+else:
+    outfilename = args.output
+plt.savefig(outfilename, bbox_inches='tight')
