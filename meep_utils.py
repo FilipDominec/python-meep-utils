@@ -165,7 +165,7 @@ class AbstractMeepModel(meep.Callback):
 
         setattr(self, param, val)
 
-        nondefault = self.named_param_defaults.get(param, None) != val ## XXX
+        nondefault = self.named_param_defaults.get(param, None) != val
         if param in self.named_param_defaults.keys(): 
             if nondefault: infostring = "(user-set value accepted by the model)" 
             else: infostring = "(default value specified by the model)" 
@@ -176,11 +176,11 @@ class AbstractMeepModel(meep.Callback):
 
         ## prepare the parameter to be added into name (if not conversible to float, add it as a string)
         try: 
-            if nondefault: self.simulation_name += ("_%s=%.3e") % (param, float(val))
+            if nondefault and param!='model': self.simulation_name += ("_%s=%.3e") % (param, float(val))
             self.parameterstring += "#param %s,%.3e\n" % (param, float(val))
             meep.master_printf("  <float> %s%s = %.3e %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
         except ValueError: 
-            if nondefault: self.simulation_name += ("_%s=%s") % (param, val)
+            if nondefault and param!='model': self.simulation_name += ("_%s=%s") % (param, val)
             self.parameterstring += "#param %s,%s\n" % (param, val)
             meep.master_printf("  <str>   %s%s = %s %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
         #}}}
