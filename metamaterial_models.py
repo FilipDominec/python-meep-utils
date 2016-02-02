@@ -126,12 +126,13 @@ class RodArray(meep_utils.AbstractMeepModel): #{{{
 
     def where_TiO2(self, r):
         #if  in_sphere(r, cx=0, cy=0, cz=0, rad=self.radius) and not  in_sphere(r, cx=0, cy=0, cz=0, rad=self.radius*.75):
-        if self.orientation=="E":
-            if  in_xcyl(r, cy=self.resolution/4, cz=0, rad=self.radius):
-                return self.return_value             # (do not change this line)
-        elif self.orientation=="H":
-            if  in_ycyl(r, cx=self.resolution/4, cz=0, rad=self.radius):
-                return self.return_value             # (do not change this line)
+        for cellc in self.cellcenters:
+            if self.orientation=="E":
+                if  in_xcyl(r, cy=self.resolution/4, cz=cellc, rad=self.radius):
+                    return self.return_value             # (do not change this line)
+            elif self.orientation=="H":
+                if  in_ycyl(r, cx=self.resolution/4, cz=cellc, rad=self.radius):
+                    return self.return_value             # (do not change this line)
         return 0
 #}}}
 class Slab(meep_utils.AbstractMeepModel): #{{{
