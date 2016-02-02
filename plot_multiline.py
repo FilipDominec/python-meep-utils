@@ -34,10 +34,9 @@ example use:
 """
 
 ## Import common moduli
-import matplotlib, sys, os, time
+import matplotlib, sys, os, argparse
 import matplotlib.pyplot as plt
 import numpy as np
-import argparse
 from scipy.constants import c, hbar, pi
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -67,7 +66,6 @@ parser.add_argument('--overlayplot',type=str,   default='', help='one or more ex
 parser.add_argument('--numcontours',type=int,   default=50, help='number of levels in the contour plot (default 50)')
 parser.add_argument('--contourresx',type=int,   default=200,help='row length of the internal interpolation matrix for contour plot (default 200)')
 parser.add_argument('--contourresp',type=int,   default=200,help='column height of the internal interpolation matrix for contour plot (default 200)')
-
 parser.add_argument('--figsizex',   type=float, default=8, help='figure width (inches), 8 is default')
 parser.add_argument('--figsizey',   type=float, default=4, help='figure height (inches), 4 is default')
 parser.add_argument('--contours',   type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
