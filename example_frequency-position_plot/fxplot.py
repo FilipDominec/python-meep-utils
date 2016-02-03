@@ -9,11 +9,10 @@ import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('--fieldfile',  type=str,                   help='HDF5 file containing the field record to be Fourier-transformed')
 parser.add_argument('--simtime',    type=float,                 help='time of simulation that provided the field shape')
+parser.add_argument('--cellnumber', type=int,                   help='number of cells') ## todo update code
+parser.add_argument('--resolution', type=float,                 help='for realistic scaling of the spatial axis')
+parser.add_argument('--cellsize',   type=float,                 help='z-dimensions of the simulated cells')
 parser.add_argument('--nfile',      type=str,   default='',     help='optional data file containing the retrieved index of refraction for comparison')
-parser.add_argument('--title',      type=str,   default='',     help='plot title')
-parser.add_argument('--resolution', type=float, default=2e-6,   help='for realistic scaling of the spatial axis')
-parser.add_argument('--cellnumber', type=int,   default=3,      help='number of cells') ## todo update code
-parser.add_argument('--cellsize',   type=float, default=100e-6, help='z-dimensions of the simulated cells')
 parser.add_argument('--frequnit',   type=float, default=1e12,   help='unit magnitude on the frequency axis')
 
 parser.add_argument('--freqlim1',   type=str,   default='',     help='start for the plotted parameter range')
@@ -26,10 +25,9 @@ parser.add_argument('--fieldlabel', type=str,   default='Field amplitude $|\math
 parser.add_argument('--Nconj',      type=str,   default='',     help='set to "yes" to plot complex conjugated values') 
 parser.add_argument('--logfield',   type=str,   default='yes',  help='plot the field as logarithmic')
 parser.add_argument('--colormap',   type=str,   default='default', help='matplotlib colormap, available are: gist_earth (default for contours), jet, hsv, greys, dark2, brg...')
-parser.add_argument('--numcontours',type=int,   default=30,     help='number of levels in the contour plot (default 50)')
-parser.add_argument('--contourresx',type=int,   default=200,    help='row length of the internal interpolation matrix for contour plot (default 200)')
-parser.add_argument('--contourresp',type=int,   default=200,    help='column height of the internal interpolation matrix for contour plot (default 200)')
+parser.add_argument('--numcontours',type=int,   default=15,     help='number of levels in the contour plot (default 50)')
 parser.add_argument('--usetex',     type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
+parser.add_argument('--title',      type=str,   default='',     help='plot title')
 parser.add_argument('--output',     type=str,   default='*.png', help='output file; *.png or *.pdf (etc.) auto-selects a name with the given format')
 args = parser.parse_args()
 
@@ -84,13 +82,14 @@ elif '%' in args.fieldlim1:
 else: 
     fieldlim1 = float(args.fieldlim1)
 if args.fieldlim2 == "" :
-    fieldlim2 = fmin 
+    fieldlim2 = fmax
 elif '%' in args.fieldlim2:
     pct = float(args.fieldlim2[:-1])
-    fieldlim2 = fmin*(pct/100) + fmax*(1-pct/100)
+    fieldlim2 = fmin*(1-pct/100) + fmax*(pct/100)
 else: 
     fieldlim2 = float(args.fieldlim2)
-fieldlim2 = fmax if args.fieldlim2 == "" else float(args.fieldlim2)
+print np.min(freq), np.max(freq)
+#print freq/args.frequnit, z_axis, field_to_plot
 CS = plt.contourf(freq/args.frequnit, z_axis, field_to_plot,
         levels=np.linspace(fieldlim1, fieldlim2, args.numcontours), cmap=cmap, extend='both')
 for contour in CS.collections: contour.set_antialiased(False)
