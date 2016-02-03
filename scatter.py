@@ -42,7 +42,7 @@ srcvolume = meep.volume(                    ## (spatial source shape)
         meep.vec( model.size_x/2,  model.size_y/2, -model.size_z/2+model.pml_thickness))
 f.add_volume_source(meep.Ex, src_time_type, srcvolume)
 
-## Define monitors planes and visualisation output
+## Define monitor planes, and the field output for visualisation (controlled by keywords in the 'comment' parameter)
 monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'resolution':model.resolution, 'Kx':getattr(model, 'Kx', 0), 'Ky':getattr(model, 'Ky', 0)}
 monitor1_Ex = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Ex, z_position=model.monitor_z1, **monitor_options)
 monitor1_Hy = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Hy, z_position=model.monitor_z1, **monitor_options)
@@ -50,12 +50,17 @@ monitor2_Ex = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Ex, z_position=model
 monitor2_Hy = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
 
 slices = []
-slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
-#slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_y=0, at_t=np.inf,
-        #name=('At%.3eHz'%getattr(model, 'frequency', None)) if getattr(model, 'frequency', None) else '',
-        #outputpng=True, outputvtk=False)]
-#slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_y=0, name='FieldEvolution', min_timestep=.1/model.src_freq, outputgif=True)]
- #slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
+if not "noepssnapshot" in model.comment:
+    slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
+if "narrowfreq-snapshots" in model.comment:
+    slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_y=0, at_t=np.inf,
+            name=('At%.3eHz'%getattr(model, 'frequency', None)) if getattr(model, 'frequency', None) else '',
+            outputpng=True, outputvtk=False)]
+if "fieldevolution" in model.comment:
+    slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', 
+        min_timestep=.1/model.src_freq, outputgif=True, outputhdf=True)]
+if "snapshote" in model.comment:
+    slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
 
 ## Run the FDTD simulation or the frequency-domain solver
 if not getattr(model, 'frequency', None):       ## time-domain computation
