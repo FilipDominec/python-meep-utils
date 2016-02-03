@@ -26,7 +26,8 @@ parser.add_argument('--Nconj',      type=str,   default='',     help='set to "ye
 parser.add_argument('--logfield',   type=str,   default='yes',  help='plot the field as logarithmic')
 parser.add_argument('--colormap',   type=str,   default='default', help='matplotlib colormap, available are: gist_earth (default for contours), jet, hsv, greys, dark2, brg...')
 parser.add_argument('--numcontours',type=int,   default=15,     help='number of levels in the contour plot (default 50)')
-parser.add_argument('--usetex',     type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
+parser.add_argument('--usetex',     type=str,   default='yes',  help='by default, LaTeX is used for nicer typesetting')
+parser.add_argument('--decimatedata',type=int,  default='1',    help='integer scale to reduce the datasets for smaller PDF file output')
 parser.add_argument('--title',      type=str,   default='',     help='plot title')
 parser.add_argument('--output',     type=str,   default='*.png', help='output file; *.png or *.pdf (etc.) auto-selects a name with the given format')
 args = parser.parse_args()
@@ -41,7 +42,7 @@ matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times'
 cmap = matplotlib.cm.gist_earth if (args.colormap == 'default') else getattr(matplotlib.cm, args.colormap)  
 
 ##Start figure + subplot
-fig = plt.figure(figsize=(6,7))   # for publication
+fig = plt.figure(figsize=(6,6))   # for publication
 ax = plt.subplot(211, axisbg='w')
 fig.subplots_adjust(left=.10, bottom=.08, right=.99, top=.99, wspace=.05, hspace=.05)
 
@@ -78,7 +79,7 @@ if args.fieldlim1 == "" :
     fieldlim1 = fmin 
 elif '%' in args.fieldlim1:
     pct = float(args.fieldlim1[:-1])
-    fieldlim1 = fmin*(pct/100) + fmax*(1-pct/100)
+    fieldlim1 = fmin*(1-pct/100) + fmax*(pct/100)
 else: 
     fieldlim1 = float(args.fieldlim1)
 if args.fieldlim2 == "" :
@@ -88,9 +89,10 @@ elif '%' in args.fieldlim2:
     fieldlim2 = fmin*(1-pct/100) + fmax*(pct/100)
 else: 
     fieldlim2 = float(args.fieldlim2)
-print np.min(freq), np.max(freq)
+print fmin,fmax
+print fieldlim1, fieldlim2
 #print freq/args.frequnit, z_axis, field_to_plot
-CS = plt.contourf(freq/args.frequnit, z_axis, field_to_plot,
+CS = plt.contourf(freq[::args.decimatedata]/args.frequnit, z_axis[::args.decimatedata], field_to_plot[::args.decimatedata,::args.decimatedata],
         levels=np.linspace(fieldlim1, fieldlim2, args.numcontours), cmap=cmap, extend='both')
 for contour in CS.collections: contour.set_antialiased(False)
 if args.fieldlabel != "": plt.plot([],[], lw=0, label=args.fieldlabel)
@@ -108,7 +110,7 @@ if args.fieldlabel != "": plt.plot([],[], lw=0, label=args.fieldlabel)
 for zpos in range(args.cellnumber+1):
     plt.plot([0, np.max(freq)], [zpos,zpos], c='w', lw=1, scaley=False)
 
-plt.ylabel('Position on the $z$-axis [$a$]')
+plt.ylabel('Position on the $z$-axis ($z/a$)')
 
 bbox        = dict(boxstyle='round, pad=.15', fc='white', alpha=1)
 arrowprops  = dict(arrowstyle = '<->', color='w')
@@ -122,11 +124,11 @@ plt.annotate('', xy = (1050e9/args.frequnit, 4), xytext = (1150e9/args.frequnit,
 plt.annotate('band gap', xy = (1050e9/args.frequnit, 4), xytext = (1100e9/args.frequnit, 4),
         textcoords='data', ha='center', va='bottom', bbox=None, arrowprops=None, color='w')
 
-plt.annotate('1$^{st}$ cell', xy = (220e9/args.frequnit, .5), xytext = (200e9/args.frequnit, .5),
+plt.annotate('1$^{st}$ cell', xy = (420e9/args.frequnit, .5), xytext = (410e9/args.frequnit, .5),
         textcoords='data', ha='center', va='center', bbox=bbox, arrowprops=None)
-plt.annotate('2$^{nd}$ cell', xy = (220e9/args.frequnit, 1.5), xytext = (200e9/args.frequnit, 1.5),
+plt.annotate('2$^{nd}$ cell', xy = (420e9/args.frequnit, 1.5), xytext = (410e9/args.frequnit, 1.5),
         textcoords='data', ha='center', va='center', bbox=bbox, arrowprops=None)
-plt.annotate('3$^{rd}$ cell', xy = (220e9/args.frequnit, 2.5), xytext = (200e9/args.frequnit, 2.5),
+plt.annotate('3$^{rd}$ cell', xy = (420e9/args.frequnit, 2.5), xytext = (410e9/args.frequnit, 2.5),
         textcoords='data', ha='center', va='center', bbox=bbox, arrowprops=None)
 
 #plt.annotate('', xy = (800e9/args.frequnit, 1.3), xytext = (20,20),
