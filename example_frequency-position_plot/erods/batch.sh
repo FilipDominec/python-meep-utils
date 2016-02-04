@@ -2,11 +2,11 @@
 if [ -z $NP ] ; then NP=2 ; fi             # number of processors
 
 simtime=100e-12
-resolution=4e-6
+resolution=2e-6
 model=RodArray
 cellnumber=3
 
-for cellsize in 80e-6 95e-6 120e-6 
+for cellsize in 80e-6 90e-6 120e-6 
 do
 	## Preparation
 	rm -r $model* effparam 2> /dev/null
