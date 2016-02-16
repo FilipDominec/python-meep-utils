@@ -2,10 +2,21 @@
 #-*- coding: utf-8 -*-
 
 ## Import common moduli
-import matplotlib, sys, os, time
+import matplotlib, sys, os, time, argparse
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.constants import c, hbar, pi
+
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+parser.add_argument('--xlim1',      type=str,   default='', help='start for the x-axis range')
+parser.add_argument('--xlim2',      type=str,   default='', help='end for the x-axis range')
+parser.add_argument('--ylim1',      type=str,   default='', help='start for the plotted value range')
+parser.add_argument('--ylim2',      type=str,   default='', help='end for the plotteld value range')
+parser.add_argument('--numcontours',type=int,   default=50, help='number of levels in the contour plot (default 50)')
+parser.add_argument('--contourresx',type=int,   default=200,help='row length of the internal interpolation matrix for contour plot (default 200)')
+parser.add_argument('--contourresp',type=int,   default=200,help='column height of the internal interpolation matrix for contour plot (default 200)')
+parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
+args = parser.parse_args()
 
 ## Use LaTeX
 matplotlib.rc('text', usetex=True)
@@ -19,8 +30,8 @@ maxfreq = 4e12
 frequnit = 1e12
 
 plot_FFT = True
-interp_anisotropy = 2e-5    # value lower than 1. interpolates rather vertically; optimize if plot desintegrates
-FFTcutoff = 0.8             # Hann-like window to suppress spectral leakage in FFT (mostly for aesthetical purposes)
+interp_anisotropy = 2e-5    # value lower than 1. interpolates rather vertically; optimize if plot disintegrates
+FFTcutoff = 0.8             # Hann-like window to suppress spectral leakage in FFT (mostly for aesthetic purposes)
 
 plot_FDM = True
 FDMtrunc = (.1, .5)         # Harminv (also known as FDM) may work better when it is supplied a shorter time record
@@ -42,10 +53,10 @@ else:
 
 
 ## Load and prepare data (from multiple files)
-filenames = [x for x in sys.argv[1:] if ('-' not in x[0:1])]
+filenames = args.filenames
 if len(filenames) == 0: print "Error: no data file to be plotted was provided as argument" ; quit()
 Efs = []
-Kzs = []        ## TODO allow also scanning over Kx, Ky (which allows for plotting dispersion curves also along "Γ-M" and other directions in K-space)
+Kzs = []     ## TODO allow also scanning over Kx, Ky (which allows for plotting dispersion curves also along "Γ-M" and other directions in K-space)
 freqs = []
 zfs = []
 
@@ -176,7 +187,7 @@ if plot_FDM:
  
 
 ## Simple axes
-plt.ylim((0,maxfreq/frequnit)); plt.yscale('linear')
+plt.ylim((0, maxfreq/frequnit)); plt.yscale('linear')
 plt.xlim((np.min(ki), np.max(ki))); plt.xscale('linear')
 
 ## ==== Outputting ====
@@ -192,3 +203,9 @@ plt.savefig("cdh_%s.png" % filesuffix, bbox_inches='tight')
     #plt.plot(freq, np.unwrap(np.angle(zf)), color="#FF8800", label=u"$y'$", ls='--')   # (optional) plot phase
 
     ## FFT shift (to plot negative frequencies)
+
+if args.output[0:1] == '*':
+    outfilename = '%s_%s%s' % (os.path.split(os.getcwd())[1], args.ycol.replace(' ','_'), args.output[1:])
+else:
+    outfilename = args.output
+plt.savefig(outfilename, bbox_inches='tight')
