@@ -327,7 +327,7 @@ class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
         ## Constant parameters for the simulation
         self.simulation_name = "Fishnet"    
         self.src_freq, self.src_width = 1000e9, 4000e9    # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (10e9, 4000e9)    # Which frequencies will be saved to disk
+        self.interesting_frequencies = (1e9, 2*c/cellsize)    # Which frequencies will be saved to disk
         self.pml_thickness = .1*c/self.src_freq
 
         self.size_x = cellsizexy
@@ -359,15 +359,13 @@ class Fishnet(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
         xhr, yhr = self.xholesize/2-self.cornerradius, self.yholesize/2-self.cornerradius
         for cellc in self.cellcenters:
             if (in_zslab(r, cz=-self.slabcdist/2, d=self.slabthick) or in_zslab(r, cz=+self.slabcdist/2, d=self.slabthick)):
-                if not (in_xslab(r, cx=dd, d=2*xhr) and \
-                        in_yslab(r, cy=dd, d=self.yholesize)) and \
-                        not (in_xslab(r, cx=dd, d=self.xholesize) and \
-                        in_yslab(r, cy=dd, d=2*yhr)) and \
-                        not in_zcyl(r, cx=dd+xhr, cy=dd+yhr, rad=self.cornerradius) and \
-                        not in_zcyl(r, cx=dd-xhr, cy=dd+yhr, rad=self.cornerradius) and \
-                        not in_zcyl(r, cx=dd+xhr, cy=dd-yhr, rad=self.cornerradius) and \
-                        not in_zcyl(r, cx=dd-xhr, cy=dd-yhr, rad=self.cornerradius):
-                            return self.return_value             # (do not change this line)
+                if  not (in_xslab(r, cx=dd, d=2*xhr) and in_yslab(r, cy=dd, d=self.yholesize)) and \
+                    not (in_xslab(r, cx=dd, d=self.xholesize) and in_yslab(r, cy=dd, d=2*yhr)) and \
+                    not in_zcyl(r, cx=dd+xhr, cy=dd+yhr, rad=self.cornerradius) and \
+                    not in_zcyl(r, cx=dd-xhr, cy=dd+yhr, rad=self.cornerradius) and \
+                    not in_zcyl(r, cx=dd+xhr, cy=dd-yhr, rad=self.cornerradius) and \
+                    not in_zcyl(r, cx=dd-xhr, cy=dd-yhr, rad=self.cornerradius):
+                        return self.return_value             # (do not change this line)
         return 0
 #}}}
 class WiresOnSi(meep_utils.AbstractMeepModel): #{{{
