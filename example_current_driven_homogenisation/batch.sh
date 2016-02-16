@@ -4,7 +4,7 @@
 ## XXX models = {'Slab':Slab, 'SphereArray':SphereArray, 'RodArray':RodArray}
 
 if [ -z "$NP" ] ; then NP=2 ; fi             # number of processors
-Ksampling=10
+Ksampling=20
 Kzones=1
 
 compare_dispersion() {
@@ -65,22 +65,46 @@ par=(resolution=4u simtime=60p cellsize=${cellsize})
             #insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=30e-6 srrthick=10e-6
 #done
 
+#== Y-slabs ==
+#cellsize=50e-6
+#compare_dispersion ${par[@]} model=Fishnet slabthick=12u yholesize=inf xholesize=50u cellsizexy=100u cellsize=${cellsize}
+#cellsize=100e-6
+#compare_dispersion ${par[@]} model=Fishnet slabthick=12u yholesize=inf xholesize=50u cellsizexy=100u cellsize=${cellsize}
 
 ## == Fishnets ==
-#thz=1e12
 #par=(resolution=10u simtime=100p cellsize=${cellsize}u )
-#for cellsize in 100e-6 150e-6 200e-6 300e-6; do
-	#compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=20u yholesize=200u xholesize=180u cellsizexy=300u resolution=10u cellsize=${cellsize}
+#for cellsize in 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do
+	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=180u yholesize=200u cellsizexy=300u resolution=10u cellsize=${cellsize}
+#done                                                                        
+#mkdir RealisticFn_180x200
+#mv CDH* Fishnet* RealisticFn_180x200
+#xc
+#for cellsize in 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do                             
+	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=230u yholesize=255u cellsizexy=300u resolution=10u cellsize=${cellsize}
 #done
-#for cellsize in 100e-6 150e-6 200e-6 300e-6; do
-	#compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=20u yholesize=255u xholesize=230u cellsizexy=300u resolution=10u cellsize=${cellsize}
-#done
+#mkdir RealisticFn_230x255
+#mv CDH* Fishnet* RealisticFn_230x255
+#xc
 
-#for cellsize in 80e-6 70e-6  60e-6 50e-6; do
-	#compare_dispersion ${par[@]} model=Fishnet slabcdist=30u slabthick=12u yholesize=50u xholesize=30u cellsizexy=100u cellsize=${cellsize}
+## == Testing our experimental fishnets made of steel == 
+#for cellsize in 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do
+	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=200u yholesize=180u cellsizexy=300u resolution=10u cellsize=${cellsize}
+#done                                                                                     
+#mkdir RotatedRealisticFn_200x180                                                                
+#mv CDH* Fishnet* RotatedRealisticFn_200x180                                                     
+#xc                                                                                       
+#for cellsize in 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do                              
+	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=255u yholesize=230u cellsizexy=300u resolution=10u cellsize=${cellsize}
 #done
+#mkdir RotatedRealisticFn_255x230
+#mv CDH* Fishnet* RotatedRealisticFn_255x230
+#xc
 
-cellsize=80e-6
-compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=12u yholesize=30u xholesize=60u cellsizexy=100u cellsize=${cellsize}
-compare_dispersion ${par[@]} model=Fishnet slabcdist=0u slabthick=12u yholesize=60u xholesize=60u cellsizexy=100u cellsize=${cellsize}
+## -- Navarro-Cia 2011 --
+# experiment in microwave: 2.5x2.5 mm unit cell, stack periodicity 0.525 mm with 2.43 diel eps, hole radius 0.55 mm
+#compare_dispersion ${par[@]} model=Fishnet slabthick=10u xholesize=110u yholesize=110u cornerradius=55u cellsizexy=250u resolution=5u  cellsize=52.5u
+# mv CDH_Fishnet*pdf CDH-Fn_NavarroCia_div10.pdf
+
+## -- Croenne and Wang 2010 --
+#compare_dispersion ${par[@]} model=Fishnet slabthick=10u xholesize=110u yholesize=110u cornerradius=55u cellsizexy=250u resolution=5u  cellsize=52.5u
 
