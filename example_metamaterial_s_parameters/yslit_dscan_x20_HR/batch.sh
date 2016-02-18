@@ -12,7 +12,7 @@ if [ -z "$skipsimulation" ]; then
     done
 fi
 #
-plotoptions=(effparam/*.dat  --xlabel     'Frequency (THz)'       --xeval x/1e12 \
+plotoptions=(effparam/*.dat  --xlabel     'Frequency (THz)'       --xeval x/1e12 --xlim2 3.0 \
         --paramname slabthick  --paramlabel 'Metal thickness $d_z$' --parameval param*1e6 \
         --contours yes  --numcontours 25  --colormap gist_earth  --figsizex 4  --figsizey 3)
 

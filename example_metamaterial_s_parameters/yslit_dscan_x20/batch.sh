@@ -2,7 +2,6 @@
 if [ -z $NP ] ; then NP=2 ; fi             # number of processors
 if [ -z $ext ] ; then ext=pdf ; fi             # number of processors
 thz=1e12
-cellsize=100e-6
 staticpar=(model=Fishnet resolution=2u simtime=150p cellsize=100u cellsizexy=100u slabcdist=0u xholesize=20u)
 
 if [ -z "$skipsimulation" ]; then 

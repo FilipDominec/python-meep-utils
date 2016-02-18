@@ -10,12 +10,13 @@ from scipy.constants import c, hbar, pi
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('--xlim1',      type=str,   default='', help='start for the x-axis range')
 parser.add_argument('--xlim2',      type=str,   default='', help='end for the x-axis range')
-parser.add_argument('--ylim1',      type=str,   default='', help='start for the plotted value range')
+parser.add_argument('--ylim1',      type=str,   default='0.', help='start for the plotted value range')
 parser.add_argument('--ylim2',      type=str,   default='', help='end for the plotteld value range')
 parser.add_argument('--numcontours',type=int,   default=50, help='number of levels in the contour plot (default 50)')
 parser.add_argument('--contourresx',type=int,   default=200,help='row length of the internal interpolation matrix for contour plot (default 200)')
 parser.add_argument('--contourresp',type=int,   default=200,help='column height of the internal interpolation matrix for contour plot (default 200)')
 parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
+#parser.add_argument('--output',     type=str,   default='*.png', help='output file; *.png or *.pdf (etc.) auto-selects a name with the given format')
 args = parser.parse_args()
 
 ## Use LaTeX
@@ -140,34 +141,15 @@ ki = np.linspace(0, np.max(Kzs), 50)
 
 ## Plot contours for gridded data
 
-if filesuffix == 'phase':
-    z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.angle(Efs), ki*interp_anisotropy, fi, interp='linear')
-    if plot_FFT:
-        contours = plt.contourf(ki, fi, z, levels=np.linspace(-np.pi,np.pi,50), cmap=matplotlib.cm.hsv) 
-        plt.colorbar()
-elif filesuffix == 'ampli':
-    z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.abs(Efs), ki*interp_anisotropy, fi, interp='linear')
-    log_min, log_max = np.log10(np.min(z)), np.log10(np.max(z))
-    log_min, log_max = log_min, log_min*.3 + log_max*.7
-    #log_min, log_max = -5, .5
-    levels = 10**(np.arange(         log_min,          log_max,   .5))       ## where the contours are drawn
-    ticks  = 10**(np.arange(np.floor(log_min), np.ceil(log_max),  1))       ## where a number is printed
-    if plot_FFT:
-        contours = plt.contourf(ki, fi, z, levels=levels, cmap=cmap, norm = matplotlib.colors.LogNorm())
-        #plt.colorbar(ticks=ticks).set_ticklabels(['$10^{%d}$' % int(np.log10(t)) for t in ticks])
-elif filesuffix == 'epsilon':
-    ## TODO: non-logarithmic plotting of the effective spatial-dispersive permittivity ε(ω,K)
-    Y = griddata(Kzs*interp_anisotropy, freqs/frequnit, Efs, ki*interp_anisotropy, fi, interp='linear') 
-    g_min, g_max = 0, 10.05
-    levels = np.linspace(g_min,  g_max,  100)       ## where the contours are drawn
-    ticks  = np.linspace(g_min, g_max, 10)       ## where a number is printed
-    if plot_FFT:
-        contours = plt.contourf(ki, fi, np.abs(Y), levels=levels, cmap=plt.cm.gist_earth)
-        plt.colorbar(ticks=ticks).set_ticklabels(['$%.1f$' % t for t in ticks])
-    #contours = plt.contourf(ki, fi, np.real(Y), levels=levels, cmap=plt.cm.Blues)    # plot full complex function
-    #plt.colorbar(ticks=ticks).set_ticklabels(['$%.1f$' % t for t in ticks])
-    #contours = plt.contourf(ki, fi, np.imag(Y), levels=levels, cmap=plt.cm.Reds, alpha=.3)
-    #plt.colorbar(ticks=ticks).set_ticklabels(['$%.1f$' % t for t in ticks])
+z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.abs(Efs), ki*interp_anisotropy, fi, interp='linear')
+log_min, log_max = np.log10(np.min(z)), np.log10(np.max(z))
+log_min, log_max = log_min, log_min*.3 + log_max*.7
+#log_min, log_max = -5, .5
+levels = 10**(np.linspace(         log_min,          log_max,   args.numcontours))       ## where the contours are drawn
+ticks  = 10**(np.arange(np.floor(log_min), np.ceil(log_max),  1))       ## where a number is printed
+if plot_FFT:
+    contours = plt.contourf(ki, fi, z, levels=levels, cmap=cmap, norm = matplotlib.colors.LogNorm())
+    #plt.colorbar(ticks=ticks).set_ticklabels(['$10^{%d}$' % int(np.log10(t)) for t in ticks])
 
 if plot_FFT:
     for contour in contours.collections: contour.set_antialiased(False)     ## optional: avoid white aliasing (for matplotlib 1.0.1 and older) 
@@ -187,7 +169,8 @@ if plot_FDM:
  
 
 ## Simple axes
-plt.ylim((0, maxfreq/frequnit)); plt.yscale('linear')
+plt.ylim(ymin=float(args.ylim1)) 
+if args.ylim2 != "": plt.ylim(ymax=float(args.ylim2))
 plt.xlim((np.min(ki), np.max(ki))); plt.xscale('linear')
 
 ## ==== Outputting ====
@@ -204,8 +187,8 @@ plt.savefig("cdh_%s.png" % filesuffix, bbox_inches='tight')
 
     ## FFT shift (to plot negative frequencies)
 
-if args.output[0:1] == '*':
-    outfilename = '%s_%s%s' % (os.path.split(os.getcwd())[1], args.ycol.replace(' ','_'), args.output[1:])
-else:
-    outfilename = args.output
-plt.savefig(outfilename, bbox_inches='tight')
+#if args.output[0:1] == '*':
+    #outfilename = 'CDH_%s_%s' % (os.path.split(os.getcwd())[1], args.output[1:])
+#else:
+    #outfilename = args.output
+#plt.savefig(outfilename, bbox_inches='tight')
