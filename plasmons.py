@@ -19,7 +19,7 @@ import meep_mpi as meep
 
 class PlasmonFilm_model(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=100e-15, resolution=100e-9, size_x=16e-6, size_y=5e-6, size_z=5e-6,
-            metalthick=.5e-6, apdisty=0e-6, apdistx=14e-6, aprad=.1e-6, monzd=123.456e-6):
+            metalthick=.5e-6, apdisty=0e-6, apdistx=14e-6, aprad=.1e-6, monzd=123.456e-6, electronmass=1, **other_args):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
@@ -34,12 +34,12 @@ class PlasmonFilm_model(meep_utils.AbstractMeepModel): #{{{
         substrate_z = size_x / 3
         self.simtime = simtime      # [s]
         self.Kx = 0; self.Ky = 0; self.padding=0
-        self.register_locals(locals())          ## Remember the parameters
+        self.register_locals(locals(), other_args)          ## Remember the parameters
         ## Define materials
         f_c = c / np.pi/self.resolution/meep_utils.meep.use_Courant()
 
         self.materials   = [meep_materials.material_Au(where=self.where_metal)]  
-        self.materials[0].pol[0]['sigma'] /= 2. ## effective thin layer TODO test+tune+comment
+        self.materials[0].pol[0]['sigma'] /= electronmass ## effective thin layer TODO test+tune+comment
         self.materials[0].pol[1:] = []      ## rm other osc
 
         #self.materials   = [meep_materials.material_DrudeMetal(lfconductivity=1e8, f_c=.2*f_c, where = self.where_metal)]  
@@ -67,14 +67,13 @@ class PlasmonFilm_model(meep_utils.AbstractMeepModel): #{{{
 #}}}
 
 # Model selection
-sim_param, model_param = meep_utils.process_param(sys.argv[1:])
+model_param = meep_utils.process_param(sys.argv[1:])
 model = PlasmonFilm_model(**model_param)
-if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
 
 ## Initialize volume, structure and the fields according to the model
 vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
 vol.center_origin()
-s = meep_utils.init_structure(model=model, volume=vol, sim_param=sim_param, pml_axes="All")
+s = meep_utils.init_structure(model=model, volume=vol, pml_axes="All")
 
 ## Create fields with Bloch-periodic boundaries 
 f = meep.fields(s)
@@ -93,19 +92,18 @@ slices += [meep_utils.Slice(model=model, field=f, components=meep.Ez, at_y=0, mi
 slices += [meep_utils.Slice(model=model, field=f, components=meep.Ez, at_z=model.metalthick/2+model.resolution, min_timestep=.3e-15, outputgif=True, name='PerpendicularCut')]
 slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_t=100e-15)]
 
-if not sim_param['frequency_domain']:       ## time-domain computation
+
+if not getattr(model, 'frequency', None):       ## time-domain computation
     f.step(); timer = meep_utils.Timer(simtime=model.simtime); meep.quiet(True) # use custom progress messages
     while (f.time()/c < model.simtime):     # timestepping cycle
         f.step()
         timer.print_progress(f.time()/c)
-        #meep.master_printf("%e" % abs(f.get_field(meep.Ex, meep.vec(model.size_x/4, model.size_y/4, model.size_z/4))))
         for slice_ in slices: slice_.poll(f.time()/c)
     for slice_ in slices: slice_.finalize()
     meep_utils.notify(model.simulation_name, run_time=timer.get_time())
 else:                                       ## frequency-domain computation
-    f.step()
-    f.solve_cw(sim_param['MaxTol'], sim_param['MaxIter'], sim_param['BiCGStab']) 
-    for slice_maker in slices: slice_maker.finalize()
+    f.solve_cw(getattr(model, 'MaxTol',0.001), getattr(model, 'MaxIter', 5000), getattr(model, 'BiCGStab', 8)) 
+    for slice_ in slices: slice_.finalize()
     meep_utils.notify(model.simulation_name)
 
 
