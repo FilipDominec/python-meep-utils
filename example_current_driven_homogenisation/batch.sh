@@ -7,7 +7,7 @@
 ## calling the compare_dispersion() procedure
 
 if [ -z "$NP" ] ; then NP=2 ; fi             # number of processors
-Ksampling=20
+Ksampling=6
 Kzones=2
 
 compare_dispersion() {
@@ -40,9 +40,9 @@ compare_dispersion() {
 	mv cdh/ effparam/  NRef.dat "$lastname"
 }
 
-cellsize=100e-6
-ylim2=4 ## in THz
-par=(resolution=4u simtime=30p cellsize=${cellsize})
+#cellsize=100e-6
+#ylim2=4 ## in THz
+#par=(resolution=4u simtime=30p cellsize=${cellsize})
 #compare_dispersion ${par[@]} model=SRRArray wirethick=0u radius=30u "comment=SRR only"
 #compare_dispersion ${par[@]} model=SRRArray wirethick=4u radius=30u "comment=SRR with wire"
 #compare_dispersion ${par[@]} model=SRRArray wirethick=0u radius=30u splitting2=16u "comment=symmetric SRR"
@@ -80,56 +80,46 @@ par=(resolution=4u simtime=30p cellsize=${cellsize})
 
 ## == Fishnets ==
 ## -- Testing our experimental fishnets made of steel -- 
-#ylim2=3.5 ## in THz
-#par=(resolution=10u simtime=100p cellsize=${cellsize}u )
-#for cellsize in 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do
-	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=180u yholesize=200u cellsizexy=300u resolution=10u cellsize=${cellsize}
-#done                                                                        
-#mkdir RealisticFn_180x200; mv CDH* Fishnet* RealisticFn_180x200
+ylim2=1.5 ## in THz
+par=(resolution=4u simtime=100p cellsize=${cellsize}u )
+for cellsize in 100e-6; do # 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do
+	compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=180u yholesize=200u cellsizexy=300u cellsize=${cellsize}
+done                                                                        
+mkdir RealisticFn_180x200_HR; mv CDH* Fishnet* RealisticFn_180x200_HR
 #
-#for cellsize in 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do                             
-	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=230u yholesize=255u cellsizexy=300u resolution=10u cellsize=${cellsize}
+#for cellsize in 100e-6; do                              # 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do                             
+	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=230u yholesize=255u cellsizexy=300u cellsize=${cellsize}
 #done
 #mkdir RealisticFn_230x255; mv CDH* Fishnet* RealisticFn_230x255
 
 #for cellsize in 50e-6 100e-6 200e-6; do                             
-	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=180u yholesize=200u cellsizexy=300u resolution=10u cellsize=${cellsize} slabcdist=30e-6
+	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=180u yholesize=200u cellsizexy=300u cellsize=${cellsize} slabcdist=30e-6
 #done                                                                        
 #mkdir DoubleRealisticFn_180x200; mv CDH* Fishnet* DoubleRealisticFn_180x200
 #
 #for cellsize in 50e-6 100e-6 200e-6; do                             
-	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=230u yholesize=255u cellsizexy=300u resolution=10u cellsize=${cellsize} slabcdist=30e-6
+	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=230u yholesize=255u cellsizexy=300u cellsize=${cellsize} slabcdist=30e-6
 #done
 #mkdir DoubleRealisticFn_230x255; mv CDH* Fishnet* DoubleRealisticFn_230x255
 
 #for cellsize in 50e-6 100e-6 200e-6; do                             
-	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=200u yholesize=180u cellsizexy=300u resolution=10u cellsize=${cellsize}
+	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=200u yholesize=180u cellsizexy=300u cellsize=${cellsize}
 #done
 #mkdir RotatedRealisticFn_200x180; mv CDH* Fishnet* RotatedRealisticFn_200x180
 #
 #for cellsize in 50e-6 100e-6 200e-6; do                             
-	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=255u yholesize=230u cellsizexy=300u resolution=10u cellsize=${cellsize}
+	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=255u yholesize=230u cellsizexy=300u cellsize=${cellsize}
 #done
 #mkdir RotatedRealisticFn_255x230; mv CDH* Fishnet* RotatedRealisticFn_255x230
 
 ## -- Navarro-Cia 2011 --
 ##experiment in microwave: 2.5x2.5 mm unit cell, stack periodicity 0.525 mm with 2.43 diel eps, hole radius 0.55 mm
 #ylim2=3.5 ## in THz
-#par=(resolution=10u simtime=100p cellsize=${cellsize}u )
-#compare_dispersion ${par[@]} model=Fishnet slabthick=10u xholesize=110u yholesize=110u cornerradius=55u cellsizexy=250u resolution=5u  cellsize=52.5u
+#cellsize=52.5e-6
+#par=(resolution=10u simtime=100p cellsize=${cellsize} )
+#compare_dispersion ${par[@]} model=Fishnet slabthick=10u xholesize=110u yholesize=110u cornerradius=55u cellsizexy=250u resolution=5u 
 #mkdir FnNavarroCia; mv CDH* Fishnet* FnNavarroCia
 
 ## -- Croenne and Wang 2010 --
 #compare_dispersion ${par[@]} model=Fishnet slabthick=10u xholesize=110u yholesize=110u cornerradius=55u cellsizexy=250u resolution=5u  cellsize=52.5u
 #mkdir CroenneWang; mv CDH* Fishnet* CroenneWang
-
-
-
-#== Temporary for Michal ==b
-ylim2=4 ## in THz
-for cellsize in `seq 40 10 80` 100 120; do
-	cellsize=100e-6
-	par=(resolution=4u simtime=30p cellsize=${cellsize}u)
-	compare_dispersion ${par[@]} model=SphereWire wirethick=0u radius=30u 'comment=TiO$_2$ sphere'
-done
-mkdir spheres_acomparison; mv CDH* Fishnet* spheres_acomparison
