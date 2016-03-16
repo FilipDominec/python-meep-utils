@@ -391,7 +391,7 @@ band_src_time = meep.band_src_time if ('band_src_time' in dir(meep)) else meep.g
 ## Note: An example of how to define a custom source - put this code into your simulation script 
 #{{{
 """
-## Replace the f.add_volume_source(meep.Ex, srctype, srcvolume) line with following:
+## Replace the f.add_volume_source(meep.Ex, src_time_type, srcvolume) line with following:
 ## Option for a custom source (e.g. exciting some waveguide mode)
 class SrcAmplitudeFactor(meep.Callback): 
     ## The source amplitude is complex -> phase factor modifies its direction
@@ -406,7 +406,7 @@ class SrcAmplitudeFactor(meep.Callback):
         return np.exp(-1j*(self.Kx*vec.x() + self.Ky*vec.y()) - (vec.x()/100e-6)**2 - (vec.y()/100e-6)**2) 
 af = SrcAmplitudeFactor(Kx=model.Kx, Ky=model.Ky) 
 meep.set_AMPL_Callback(af.__disown__())
-f.add_volume_source(meep.Ex, srctype, srcvolume, meep.AMPL)
+f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
 
 ## BTW could one not use an anonymous object here? How does it cope with this? meep.set_AMPL_Callback(af.__disown__())
 ## o = type('AmplitudeFactor', (meep.Callback,), { "complex_vec": lambda xxx})
@@ -947,15 +947,34 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     ##    (Efield+Hfield)/2 ->    forward wave amplitude, 
     ##    (Efield-Hfield)/2 ->    backward wave amplitude
     
-    ## test: works for perp. incidence, and in any dielectric
-    Ex1f, Hy1f = Ex1f*(eps1**.25), Hy1f/(eps1**.25)
-    Ex2f, Hy2f = Ex2f*(eps2**.25), Hy2f/(eps2**.25)
-    in1, out1 =  (Ex1f+Hy1f)/2, (Ex1f-Hy1f)/2 ## old: works only for perp. incidence beta0=0
-    in2, out2 =  (Ex2f-Hy2f)/2, (Ex2f+Hy2f)/2
+    ## OPTION1 works for perpendicular incidence only, but in any dielectric
+    #Ex1f, Hy1f = Ex1f*(eps1**.25), Hy1f/(eps1**.25)
+    #Ex2f, Hy2f = Ex2f*(eps2**.25), Hy2f/(eps2**.25)
+    #in1, out1 =  (Ex1f+Hy1f)/2, (Ex1f-Hy1f)/2 ## old: works only for perp. incidence beta0=0
+    #in2, out2 =  (Ex2f-Hy2f)/2, (Ex2f+Hy2f)/2
 
+    ## OPTION2 works for monitors in air only only, but for any angle of incidence
     #beta0 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c))
     #in1, out1 =  (Ex1f+Hy1f/np.cos(beta0))/2, (Ex1f-Hy1f/np.cos(beta0))/2 ## old: works only for monitors placed in vacuum
     #in2, out2 =  (Ex2f-Hy2f/np.cos(beta0))/2, (Ex2f+Hy2f/np.cos(beta0))/2
+
+    ## OPTION3 should work for all cases
+    #Ex1f, Hy1f = Ex1f*(eps1**.25), Hy1f/(eps1**.25)
+    #Ex2f, Hy2f = Ex2f*(eps2**.25), Hy2f/(eps2**.25)
+    #beta1 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps1**.5)
+    #in1, out1 =  (Ex1f+Hy1f/np.cos(beta1))*np.cos(beta1)**.5, (Ex1f-Hy1f/np.cos(beta1))*np.cos(beta1)**.5
+    #beta2 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps2**.5)
+    #in2, out2 =  (Ex2f-Hy2f/np.cos(beta2))*np.cos(beta2)**.5, (Ex2f+Hy2f/np.cos(beta2))*np.cos(beta2)**.5
+
+    ## OPTION3 should work for all cases
+    beta1 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps1**.5)
+    in1, out1 =  (Ex1f+Hy1f/eps1**.5/np.cos(beta1)), (Ex1f-Hy1f/eps1**.5/np.cos(beta1))
+    beta2 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps2**.5)
+    in2, out2 =  (Ex2f-Hy2f/eps2**.5/np.cos(beta2)), (Ex2f+Hy2f/eps2**.5/np.cos(beta2))
+
+    amplifactor1, amplifactor2 = (eps1**.5 * np.cos(beta1))**.5,  (eps2**.5 * np.cos(beta2))**.5
+    in1, out1 = in1*amplifactor1, out1*amplifactor1
+    in2, out2 = in2*amplifactor2, out2*amplifactor2
 
 
     ## Prepare the angles at which the wave propagates (dependent on frequency, Kx and Ky)
@@ -995,7 +1014,7 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
             plt.xlabel('Frequency'); plt.ylabel('Transmitted amplitude')
             #plt.title('Frequency-domain wave amplitudes')
             plt.yscale("log")
-            plt.savefig("amplitudes_spectra.png", bbox_inches='tight')
+            plt.savefig("amplitudes_spectra_e9o3.png", bbox_inches='tight')
     except:
         meep.master_printf("Wave amplitude freq-domain plot failed %s" % sys.exc_info()[0])
 
