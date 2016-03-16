@@ -18,7 +18,8 @@ Some of the parameters that can be passed to the structure are shared among most
     * comment     -- any user-defined string (which may however also help defining the structure)
     * simtime     -- full simulation time, higher value leads to better spectral resolution
     * resolution  -- the size of one voxel in the FDTD grid; halving the value improves accuracy, but needs 16x CPU time
-    * cellsize    -- the x- and y-dimensions of the simulation
+    * cellsize    -- typically the dimensions of the unit cell of a metamaterial simulation, for flat or nonperiodic structures
+                     may not be applicable
     * padding     -- the z-distance between the monitors and the unit cell; higher values reduce evanescent field artifacts
     * Kx, Ky      -- the reflection and transmission can be also computed for oblique incidence, 
                      which can be defined by forcing nonzero perpendicular components of the K-vector
@@ -466,17 +467,17 @@ class TMathieu_Grating(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class HalfSpace(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=100e-15, resolution=10e-9, cellnumber=1, padding=200e-9, cellsize = 200e-9,
+    def __init__(self, comment="", simtime=100e-15, resolution=5e-9, cellnumber=1, padding=2e-6, cellsize = 200e-9,
             epsilon=33.97, blend=0, **other_args):
-        """ This structure demonstrates that scatter.py can also be used for samples on a substrate with an infinite 
-        thickness. The back side of the substrate is not simulated, and it is assumed there will be no Fabry-Perot
-        interferences between its sides.
+        """ This structure demonstrates that scatter.py can also compute the reflectance and transmittance of samples on 
+        a substrate. The substrate can have an infinite thickness, since its back interface is not included in the simulation 
+        volume. It is assumed that with thick enough substrate there will be no Fabry-Perot interferences between its sides.
 
-        The monitor planes are enabled to be placed also inside a dielectric. In which case the wave amplitude is 
-        adjusted so that the light intensity is maintained. The field amplitudes and phases have physical meaning 
-        only when both monitor planes are in the same medium, though.
+        The monitor planes can also be placed inside a dielectric. In this case the measured waveforms are 
+        rescaled so that the light intensity is maintained in the output. The field amplitudes and phases are easy to interpret 
+        physically only when both monitor planes are in the same medium, though.
 
-        Besides, the example demonstrates that on a steep interface with air the transmitted and reflected waves have 
+        This example also demonstrates that on a steep interface with air the transmitted and reflected waves have 
         exactly the same energy with the choice of permittivity: ((1+.5**.5)/(1-.5**.5))**2, that is roughly 33.97.
         
         """
@@ -484,14 +485,15 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
 
         ## Constant parameters for the simulation
         self.simulation_name = "HalfSpace"    
-        self.src_freq, self.src_width = 500e12, 100e12    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.src_freq, self.src_width = 500e12, 1000e12    # [Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (10e12, 1000e12)    # Which frequencies will be saved to disk
         self.pml_thickness = 500e-9
 
-        self.size_x = resolution*1.8 
-        self.size_y = resolution*1.8
-        self.size_z = blend + 2*padding + 2*self.pml_thickness + 6*resolution
-        self.monitor_z1, self.monitor_z2 = (-padding, padding)
+        self.size_z = blend + 4*padding + 2*self.pml_thickness + 6*resolution
+        self.size_x = resolution*1.8 if other_args.get('Kx',0)==0 else resolution*5  ## allow some space along x if oblique incidence is set
+        self.size_y = resolution*1.8 if other_args.get('Ky',0)==0 else resolution*5  ## dtto
+        print  'self.size_x, self.size_y', self.size_x, self.size_y
+        self.monitor_z1, self.monitor_z2 = (-padding-blend/2, padding+blend/2)
         self.register_locals(locals(), other_args)          ## Remember the parameters
         self.mon2eps = epsilon                  ## store what dielectric is the second monitor embedded in
 
@@ -499,7 +501,7 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         self.materials = []  
         if 'Au' in comment:         self.materials += [meep_materials.material_Au(where=self.where_m)]
         elif 'Ag' in comment:       self.materials += [meep_materials.material_Ag(where=self.where_m)]
-        elif 'metal' in comment:    
+        elif 'metal' in comment.lower():    
             self.materials += [meep_materials.material_Au(where=self.where_m)]
             self.materials[-1].pol[1:] = []
             self.materials[-1].pol[0]['gamma'] = 0
@@ -513,6 +515,8 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
                 draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
         self.test_materials()
 
+        ##  XXX XXX XXX
+        self.simtime=200e-15
     def where_m(self, r):
         ## Just half-space
         #if r.z() > 0: return self.return_value
@@ -521,6 +525,11 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         if r.z()<-self.blend*.5: return 0
         if r.z()> self.blend*.5 or self.blend==0: return self.return_value
         return self.return_value*(1.+np.sin(r.z()/0.5/self.blend*np.pi/2))/2
+
+        ## Inverse sine-like transition from air to dielectric: a broadband anti-reflex layer (do not forget to change to mon1eps=epsilon above)
+        #if r.z()> self.blend*.5: return 0
+        #if r.z()<-self.blend*.5 or self.blend==0: return self.return_value
+        #return self.return_value*(1.+np.sin(-r.z()/0.5/self.blend*np.pi/2))/2
 
         ## Single antireflex layer on substrate
         #if r.z() < 0 and r.z() > -self.padding/2:
