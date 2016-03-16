@@ -40,7 +40,30 @@ else:
 srcvolume = meep.volume(                    ## (spatial source shape)
         meep.vec(-model.size_x/2, -model.size_y/2, -model.size_z/2+model.pml_thickness),
         meep.vec( model.size_x/2,  model.size_y/2, -model.size_z/2+model.pml_thickness))
-f.add_volume_source(meep.Ex, src_time_type, srcvolume)
+
+
+
+#f.add_volume_source(meep.Ex, src_time_type, srcvolume)
+
+## Replace the f.add_volume_source(meep.Ex, srctype, srcvolume) line with following:
+## Option for a custom source (e.g. exciting some waveguide mode)
+class SrcAmplitudeFactor(meep.Callback): 
+    ## The source amplitude is complex -> phase factor modifies its direction
+    ## todo: implement in MEEP: we should define an AmplitudeVolume() object and reuse it for monitors later
+    def __init__(self, Kx=0, Ky=0): 
+        meep.Callback.__init__(self)
+        (self.Kx, self.Ky) = Kx, Ky
+    def complex_vec(self, vec):   ## Note: the 'vec' coordinates are _relative_ to the source center
+        # (oblique) plane wave source:
+        return np.exp(-1j*(self.Kx*vec.x() + self.Ky*vec.y()))
+        # (oblique) Gaussian beam source:
+        #return np.exp(-1j*(self.Kx*vec.x() + self.Ky*vec.y()) - (vec.x()/100e-6)**2 - (vec.y()/100e-6)**2) 
+af = SrcAmplitudeFactor(Kx=getattr(model, 'Kx', 0), Ky=getattr(model, 'Ky', 0))
+meep.set_AMPL_Callback(af.__disown__())
+f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
+
+
+
 
 ## Define monitor planes, and the field output for visualisation (controlled by keywords in the 'comment' parameter)
 monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'resolution':model.resolution, 'Kx':getattr(model, 'Kx', 0), 'Ky':getattr(model, 'Ky', 0)}
@@ -56,9 +79,9 @@ if "narrowfreq-snapshots" in model.comment:
     slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_y=0, at_t=np.inf,
             name=('At%.3eHz'%getattr(model, 'frequency', None)) if getattr(model, 'frequency', None) else '',
             outputpng=True, outputvtk=False)]
-if "fieldevolution" in model.comment:
+if "fXXXieldevolution" in model.comment: ## XXX
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', 
-        min_timestep=.1/model.src_freq, outputgif=True, outputhdf=True)]
+        min_timestep=.1/model.src_freq, outputgif=True, outputvtk=True)]
 if "snapshote" in model.comment:
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
 
