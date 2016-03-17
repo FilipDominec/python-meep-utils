@@ -1,34 +1,16 @@
 ![python-meep-utils logo](./meep_header.png)
 ## Introduction
-MEEP is a library of functions for numerical simulations of how electromagnetic waves propagate and interact with various structures; it is a finite-difference time-domain solver of the Maxwell equations. The simulation is defined by programming, with bindings to C/C++, Scheme, or Python; I chose to use `python-meep` as Python is a user-friendly language that makes simple simulations (relatively) simple, and really complex ones possible. One can also seamlessly intergrate them with powerful modules such as *numpy*, *scipy* and *matplotlib*.
+MEEP is a library of functions for numerical simulations of how electromagnetic waves propagate and interact with various structures; it is a finite-difference time-domain solver of the Maxwell equations. The simulation is defined by programming, with bindings to C/C++, Scheme, or Python; I chose to use `python-meep` as Python is a user-friendly language that makes simple simulations (relatively) simple, and really complex ones possible. One can also seamlessly integrate them with powerful Python modules as *numpy*, *scipy*, *matplotlib* and many others.
 
 After I set up several different realistic simulations with *python-meep*, I noticed that much of the Python code for initialisation, material definition, processing and data output can be shared. I therefore moved such code in the *meep_utils.py* and *meep_materials.py* modules. 
 
 To demonstrate how to use them to simplify the simulation setup, I accompany these modules with several ready-to-use simulations of various typical problems.  I believe the presented scripts can be a great starting point for anybody doing their research on photonic crystals, metamaterials, integrated photonics and nanophotonics, cavity resonators, waveguides, etc. 
 
-You are encouraged to clone this repository and to modify the examples to match your needs. I would be very happy if this project helps you with your thesis, homework or a publication. Do not hesitate to contact me if you need some advice, new functionality or if you find a bug.
+You are encouraged to clone this repository and to modify the examples to match your needs. I would be very happy if this project helps you with your thesis, homework or any publication. Do not hesitate to contact me if you need some advice, new functionality or if you find a bug.
 
 Filip Dominec, filip.dominec@gmail.com,
-2012 - 2015
+2012 - 2016
 
-## Project overview
-#### Installation procedure 
-The scripts require working python-meep environment, recommended compilation procedure is supplied in the `python-meep-install.py` script which is hosted here: https://github.com/FilipDominec/python-meep-install
-
-Some scripts use the matplotlib's binding for LaTeX for nicer plots. You may either install the dependencies using 
-`sudo apt-get install -y texlive-latex-extra dvipng`, or modify the scripts to avoid using the latter.
-
-The procedure is tested on Debian-based Linux distributions. You may have to manually modify it if your system differs. Please read the script for details.
-
-#### General modules and other files
-
- * `meep_utils.py`       - the main module with routines useful for python-meep simulations
- * `meep_materials.py`   - module containing realistic definition of materials used 
- * `README.md`		 - this file
- * `LICENSE`		 - General Public License
- * `metamaterial_models.py` - different metamaterial models (that can be shared by other scripts)
- * `plot_scan_as_contours.py` - if multiple simulations are run as a parametric scan, this allows to present all results in a single contour plot
- * `harminv_wrapper.py` - allows to simply use filter diagonalisation method from Python 
 
 
 ## Examples using the simulation scripts
@@ -94,6 +76,26 @@ Contains my experience with installation requirements and procedure, simulation 
 materials, data postprocessing etc.
 
  * License: GPLv2, http://www.gnu.org/licenses/gpl-2.0.html
+
+
+## Technical notes
+#### Installation procedure 
+The scripts require working python-meep environment, recommended compilation procedure is supplied in the `python-meep-install.py` script which is hosted here: https://github.com/FilipDominec/python-meep-install
+
+Some scripts use the matplotlib's binding for LaTeX for nicer plots. You may either install the dependencies using 
+`sudo apt-get install -y texlive-latex-extra dvipng`, or modify the scripts to avoid using the latter.
+
+The procedure is tested on Debian-based Linux distributions. You may have to manually modify it if your system differs. Please read the script for details.
+
+#### General modules and other files
+
+ * `meep_utils.py`       - the main module with routines useful for python-meep simulations
+ * `meep_materials.py`   - module containing realistic definition of materials used 
+ * `README.md`		 - this file
+ * `LICENSE`		 - General Public License
+ * `metamaterial_models.py` - different metamaterial models (that can be shared by other scripts)
+ * `plot_scan_as_contours.py` - if multiple simulations are run as a parametric scan, this allows to present all results in a single contour plot
+ * `harminv_wrapper.py` - allows to simply use filter diagonalisation method from Python 
 
 ## Troubleshooting - what may happen and what it means
 #### Outright errors
