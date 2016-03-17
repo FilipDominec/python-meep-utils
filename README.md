@@ -92,10 +92,13 @@ materials, data postprocessing etc.
 
 ## Troubleshooting - what may happen and what it means
 #### Outright errors
- * simulation fails, writing out `terminate called after throwing an instance of 'Swig::DirectorMethodException'` and an ugly call trace - _there is some run-time error in the structure definition. Call `meep_utils.testmaterials()` at the end of the model's initialization may help to get a reasonable Python report to find the error._
- * the same as above, but `meep_utils.testmaterials()` did not help - _some other error happens. Make sure not to use an `eps` parameter. _
- * simulation aborts with `lorentzian unstable` although the medium passed the `meep_utils.testmaterials()` function - _the compiled-in check for Lorentzian stability is overly prudent; it sometimes aborts a simulation that would be completely stable. You may either change the material model, or change the meep sources to bypass the `abort` in function `lorentzian_unstable` in `src/susceptibility.cpp` and recompile meep. I consider this to be just an unfixed bug, see also the discussion https://github.com/stevengj/meep/issues/12._
- * time-domain simulation aborts when I try to define a material with a negative permittivity - _such materials can not be computed by the time-domain solver. See, again, https://github.com/stevengj/meep/issues/12. Resort to the frequency-domain solver, or define a proper Drude-Lorentz model.
+ * simulation fails, writing out `terminate called after throwing an instance of 'Swig::DirectorMethodException'` and an ugly call trace 
+   * _there is some run-time error in the structure definition. Call `meep_utils.testmaterials()` at the end of the model's initialization may help to get a reasonable Python report to find the error._
+   * if `meep_utils.testmaterials()` did not help, some other error happens. Make sure  to never set a `eps` variable within the `AbstractMeepModel` class, it is reserved by MEEP.
+ * simulation aborts with `lorentzian unstable` although the medium passed the `meep_utils.testmaterials()` function 
+   * _the compiled-in check for Lorentzian stability is overly prudent; it sometimes aborts a simulation that would be completely stable. You may either change the material model, or change the meep sources to bypass the `abort` in function `lorentzian_unstable` in `src/susceptibility.cpp` and recompile meep. I consider this to be just an unfixed bug, see also the discussion https://github.com/stevengj/meep/issues/12._
+ * time-domain simulation aborts when I try to define a material with a negative permittivity 
+   * _such materials can not be computed by the time-domain solver. See, again, https://github.com/stevengj/meep/issues/12. Resort to the frequency-domain solver, or define a proper Drude-Lorentz model.
  * frequency-domain simulation does not converge when I try to define a material with a negative permittivity - _while the frequency-domain solver worked well with realistic metals up to 10 THz, it ceased not converge 
  * AttributeError: 'unicode' object has no attribute 'shrink' - try avoiding latex in matplotlib?
  * HDF5-DIAG: Error detected in HDF5 (1.8.4-patch1) MPI-process 0: #000: ../../../src/H5F.c line 1514 in H5Fopen(): unable to open file - perhaps you try to export the fields twice to the same file?
