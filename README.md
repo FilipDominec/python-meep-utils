@@ -31,18 +31,34 @@ The procedure is tested on Debian-based Linux distributions. You may have to man
  * `harminv_wrapper.py` - allows to simply use filter diagonalisation method from Python 
 
 
-#### Examples using the simulation scripts
+## Examples using the simulation scripts
 Usually, everything you need to run an example is to change to its directory, and launch `./batch.sh`. In a multiprocessing environment, it is recommended to launch it like `export NP=4; ./batch.sh`. 
 
- * [x]  `example_metamaterial_s_parameters/`, `scatter.py`, `effparam.py` - retrieves the effective behaviour of a metamaterial using the Nichols-Ross-Weir (s-parameters) method. Some of these examples are scans through a parameter of the structure.
- * [x]  `example_frequency_domain_solver/` - runs `scatter.py` multiple times in frequency-domain, and then compares the results to the classical Fourier-transformed time-domain simulation
- * [x]  `example_current_driven_homogenisation/`, `cdh.py`, `plot_cdh.py` - computes and plots data for current-driven homogenization; compares them with those obtained from s-parameters
- * [x]  `example_ringdown_cylindrical_cavity/`, `cylindrical_cavity.py`, `ringdown_analysis.py`,  - in the first part, defines a metallic cylindrical cavity, excites the field by a short pulsed source, and analyzes the ringdown to search for all modes. A comparison of Fourier transform, filter-diagonalisation method and the textbook analytic solution is plotted. 
-   * [ ] TODO In the second part, the ringdown analysis is used to search for terahertz resonances in experimental transmission water vapour.
- * [x]  `example_surface_plasmons/`, `plasmons.py` - an aperture in a thin metal sheet couples incident light to surface plasmons. If the film is surrounded by two media with similar index of refraction, circular interference pattern can be observed between the symmetric and antisymmetric plasmon modes.  A different (hyperbolic) interference pattern can be obtained when the plasmons are coupled by two holes.
+#### example_metamaterial_s_parameters
+Uses `scatter.py` and `effparam.py` to retrieve the effective behaviour of a metamaterial using the Nichols-Ross-Weir (s-parameters) method. Some of these examples are scans through a parameter of the structure.
+
+#### example_frequency_domain_solver 
+runs `scatter.py` multiple times in frequency-domain, and then compares the results to the classical Fourier-transformed time-domain simulation
+
+#### example_current_driven_homogenisation/`
+Using `cdh.py`, `plot_cdh.py`, computes and plots data for current-driven homogenization; compares them with those obtained from s-parameters
+
+#### example_ringdown_cylindrical_cavity/
+The simulation in `cylindrical_cavity.py` defines a metallic cylindrical cavity, excites the field by a short pulsed source, and analyzes the ringdown to search for all modes. 
+
+Then  the data are processed by `ringdown_analysis.py` and a comparison of Fourier transform, filter-diagonalisation (*harminv*) method and the textbook analytic solution is plotted. 
+
+Optionally, by uncommenting  the bottom half of `example_ringdown_cylindrical_cavity/batch.sh`, the ringdown analysis can be used to search for terahertz resonances in experimental transmission water vapour. Quite a good match is obtained, which means that harminv works as expected.
+
+#### example_surface_plasmons/`
+Uses `plasmons.py`: A small aperture in a thin metal sheet couples incident light to surface plasmons. 
+
+If the film is surrounded by two media with similar index of refraction, circular interference pattern can be observed between the symmetric and antisymmetric plasmon modes.  A different (hyperbolic) interference pattern can be obtained when the plasmons are coupled by two holes.
+
    * [ ] TODO add support for metal/diel substrate, 
    * [ ] and try to show the sym-asym interference
- * [x]  `example_aperture_near-field_microscope/` 
+
+#### example_aperture_near-field_microscope/ 
    * [x] detection of field behind the aperture, normalized against free reference
    * [ ] anisotropic permittivity of the dielectric sphere
  * [ ]  `example_dielectric_bars_width_scan/`
@@ -83,6 +99,7 @@ materials, data postprocessing etc.
  * frequency-domain simulation does not converge when I try to define a material with a negative permittivity - _while the frequency-domain solver worked well with realistic metals up to 10 THz, it ceased not converge 
  * AttributeError: 'unicode' object has no attribute 'shrink' - try avoiding latex in matplotlib?
  * HDF5-DIAG: Error detected in HDF5 (1.8.4-patch1) MPI-process 0: #000: ../../../src/H5F.c line 1514 in H5Fopen(): unable to open file - perhaps you try to export the fields twice to the same file?
+ * fix 'ValueError: width and height must each be below 32768' - seems like a bug in certain versions of Matplotlib, try disabling labels
 
 #### Invalid or weird results
  * exported figures show no fields and are black - _infinite values or not-a-numbers resulted from the simulation. This is perhaps due to simulation being unstable (see `amplitudes_time_domain.png`, if available, whether the fields are exponentially decaying or growing. _
@@ -103,10 +120,10 @@ materials, data postprocessing etc.
 - [x] put the models into separate module
 - [x] sync harminv from its module with meep_utils, and remove from the latter
 - [ ] effparam.py does not cope with "plot_freq_max=None" anymore? -- fix
-- [ ] why I do not see interference of sym/asym plasmons in the example? wrong metal model?
-- [ ] plot_contour to read any column from direct sim output / effparam
-- [ ] fix 'ValueError: width and height must each be below 32768'
-- [ ] stability of metals - try to increase 'gamma' until it goes unstable; map the parameters
+- [x] why I do not see interference of sym/asym plasmons in the example? wrong metal model!
+- [x] plot_contour to read any column from direct sim output / effparam
+- [ ] 
+- [ ] stability of metals - try to increase 'gamma' until it goes unstable; map the parameter!
 
 - [ ] from scipy.misc import imsave; imsave('../docs/static/tutorial-epsilon.png', -N.rot90(epsilon)) ? 
 - [ ] Use average_field_function instead of my own averaging!
