@@ -153,7 +153,7 @@ if harmonic_inversion:
         sumosc += osc_y 
     plot_complex(freq_fine, sumosc, color='g', alpha=.6, lw=2, label=u"Harminv modes sum")      # (optional) plot amplitude
     Wh = np.trapz(y=np.abs(sumosc)**2, x=freq_fine); print 'Plancherel theorem test: Energy in Harminv f               :', Wh, '(i.e. %.5g of timedomain)' % (Wh/Wt)
-    print 'All harminv oscillators (frequency, decay and amplitude):\n', np.vstack([hi['frequency'], hi['decay'], hi['amplitude']])
+    #print 'All harminv oscillators (frequency, decay and amplitude):\n', np.vstack([hi['frequency'], hi['decay'], hi['amplitude']])
 
 ## Spectrum 5: If one Lorentzian is defined, we can plot its shape directly
 if analytic_input and analytic_lorentzian:
