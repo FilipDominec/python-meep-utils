@@ -11,7 +11,7 @@ are obviously different: when the _angular_ frequency `omega' is used, its axis 
 accordingly, the values have to be divided by sqrt(2pi) (NB this is due to the Fourier-Plancherel theorem, 
 which is tested below)
 
-The frequency `f' approach is used by numpy.fft, and it can be shown that it gives data nearly identical to the manually computed FT.
+The non-angular frequency `f' approach is used by numpy.fft, and it can be shown that it gives data nearly identical to the manually computed FT.
 
 Public domain, 2014 F. Dominec
 """
@@ -26,7 +26,7 @@ from scipy.constants import c, hbar, pi
 test_kramers_kronig = 0  # Compare data to their Hilbert transform (warning - short time record makes the KKR data ugly)
 harmonic_inversion  = 1
 analytic_lorentzian = 1  # Knowing the oscillator parametres, we can compare to the analytic solution
-annotate            = 1  # Optionally add text labels
+annotate            = 0  # Optionally add text labels
 
 plot_absolute_value = 1
 plot_ylog =           1
@@ -50,7 +50,7 @@ add_delta_function =  0
 #matplotlib.rc('font', size=12)
 #matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, \usepackage{lmodern},')
 #matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
-plt.figure(figsize=(20,10))
+plt.figure(figsize=(10,5))
 
 
 ## == Time domain ==
@@ -62,8 +62,9 @@ if len(sys.argv) <= 1:
     #x, omega0, gamma, ampli = np.linspace(0, 25, 3000), 2*pi*2, 2*pi*.3, 1.
 
     y = ampli * (np.sign(x)/2+.5) * np.sin(x*omega0) * np.exp(-x*gamma/2)           ## damped oscillator
+    ## Note: Delta function is suitable for f-convention only (normalize by 2pi if omega-convention is used)
     if add_delta_function:
-        y[int(len(x)*(-x[0]/(x[-1]-x[0])))] += 1 / (x[1]-x[0])  ## delta function suitable for f-convention only (normalize if omega-convention was used)
+        y[int(len(x)*(-x[0]/(x[-1]-x[0])))] += 1 / (x[1]-x[0])  
     analytic_input = True
 else:
     ## Load time-domain data
@@ -168,6 +169,8 @@ if annotate:
             for line in f:      text, freq = line.split('\t', 1); annotations[float(freq)] = text
             import meep_utils
             meep_utils.annotate_frequency_axis(annotations, label_position_y=np.sum(np.abs(yf[0:2000]))/len(yf)/3, arrow_length=3, log_y=True)
+            #from meep_utils import annotate_frequency_axis #TODO
+            #annotate_frequency_axis(annotations, label_position_y=np.sum(np.abs(yf[0:2000]))/len(yf)/3, arrow_length=3, log_y=True)
     except IOError: 
         print 'Error: the file ./annotate.txt could not be found'
 

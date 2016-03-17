@@ -41,10 +41,7 @@ srcvolume = meep.volume(                    ## (spatial source shape)
         meep.vec(-model.size_x/2, -model.size_y/2, -model.size_z/2+model.pml_thickness),
         meep.vec( model.size_x/2,  model.size_y/2, -model.size_z/2+model.pml_thickness))
 
-
-
 #f.add_volume_source(meep.Ex, src_time_type, srcvolume)
-
 ## Replace the f.add_volume_source(meep.Ex, srctype, srcvolume) line with following:
 ## Option for a custom source (e.g. exciting some waveguide mode)
 class SrcAmplitudeFactor(meep.Callback): 
@@ -79,7 +76,7 @@ if "narrowfreq-snapshots" in model.comment:
     slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_y=0, at_t=np.inf,
             name=('At%.3eHz'%getattr(model, 'frequency', None)) if getattr(model, 'frequency', None) else '',
             outputpng=True, outputvtk=False)]
-if "fXXXieldevolution" in model.comment: ## XXX
+if "fieldevolution" in model.comment: 
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', 
         min_timestep=.1/model.src_freq, outputgif=True, outputvtk=True)]
 if "snapshote" in model.comment:
