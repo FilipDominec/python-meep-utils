@@ -100,6 +100,9 @@ else:                                       ## frequency-domain computation
 
 ## Get the reflection and transmission of the structure
 if meep.my_rank() == 0:
+    #t = monitor1_Ex.get_time()
+    #Ex1, Hy1, Ex2, Hy2 = [mon.get_field_waveform() for mon in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy)]
+
     freq, s11, s12, columnheaderstring = meep_utils.get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, 
             frequency_domain=True if getattr(model, 'frequency', None) else False, 
             frequency=getattr(model, 'frequency', None),     ## procedure compatible with both FDTD and FDFD
@@ -108,6 +111,7 @@ if meep.my_rank() == 0:
             Kx=getattr(model, 'Kx', 0), Ky=getattr(model, 'Ky', 0),                                 ## enable oblique incidence (works only if monitors in vacuum)
             eps1=getattr(model, 'mon1eps', 1), eps2=getattr(model, 'mon2eps', 1))               ## enable monitors inside dielectrics
 
+    print "EVERYTHING OK"
     meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",                            
             X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)),                  ## Save 5 columns: freq, amplitude/phase for reflection/transmission
             header=model.parameterstring+columnheaderstring)     ## Export header

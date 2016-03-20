@@ -853,6 +853,12 @@ class Slice(): #{{{
     #}}}
 
 ## Obtain and process the s-parameters of the structure 
+def smooth_fadeout(time, record, onset=0.8):# {{{
+    if len(time) > 1:
+        tmax = np.max(time)
+        return record * (0.5 + 0.5 * np.maximum(np.sign(onset*tmax - time), -np.cos((np.pi/(1-onset)) * (time-tmax)/tmax)))
+# }}}
+
 def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         frequency_domain=False, frequency=None, pad_zeros=0.0, intf=[0, np.inf], Kx=0, Ky=0, eps1=1, eps2=1, diag=True):
     """ Returns the frequency, s11 (reflection) and s12 (transmission) spectra
@@ -869,15 +875,8 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     ## TODO document function parameters
     ## TODO allow omitting second monitor (-> returns s12=None)
 
-    t, Ex1 = monitor1_Ex.get_waveforms()
-    t, Hy1 = monitor1_Hy.get_waveforms()
-    t, Ex2 = monitor2_Ex.get_waveforms()
-    t, Hy2 = monitor2_Hy.get_waveforms()
-
-    ## Hann-window fadeout to suppress spectral leakage
-    if not frequency_domain:
-        for field in (Ex1, Hy1, Ex2, Hy2):
-            field[t>max(t)*.8] = field[t>max(t)*.8]*(.5 + .5*np.cos(np.pi * (t[t>max(t)*.8]/max(t)-.8)/(1-.8)))
+    t = monitor1_Ex.get_time()
+    Ex1, Hy1, Ex2, Hy2 = [smooth_fadeout(t, mon.get_field_waveform()) for mon in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy)]
 
     try:
         if diag:
@@ -1088,12 +1087,19 @@ class AmplitudeMonitorPlane(meep.Callback):#{{{
         self.t.append(field.time()/c)
         self.waveform.append(self.average_field(field))
 
-    def get_waveforms(self):
+    def get_time(self):
         """ Return the recorded waveform (for time domain simulation only) """
         if len(self.t) <= 1:
-            t, result_wform = np.array(self.t), np.array(self.waveform)
+            t = np.array(self.t)
         else:
             t = np.array(self.t[:-1])
+        print len(self.t), "oeuaoehsunahtoesnuhaosnetuhasoeuhtasnoheuaoehu sanoheusnah oeusaheusah esuha u"
+        return t
+    def get_field_waveform(self):
+        """ Return the recorded waveform (for time domain simulation only) """
+        if len(self.t) <= 1:
+            result_wform = np.array(self.waveform)
+        else:
             ## The FDTD calculation introduces half-step time shift between Ex and Hy. Compensated by averaging the Hy field
             ## with its value in a next timestep. The error is reduced from O1 to O2.
             ## See http://ab-initio.mit.edu/wiki/index.php/Synchronizing_the_magnetic_and_electric_fields
@@ -1101,11 +1107,10 @@ class AmplitudeMonitorPlane(meep.Callback):#{{{
                 result_wform = np.array(self.waveform[:-1])/2. + np.array(self.waveform[1:])/2.
             else: 
                 result_wform = np.array(self.waveform[:-1])
-            
-        return t, result_wform 
-         ## time, 
-        ## TODO this will have to be modified in order to account for oblique incidence
-        ## TODO take into account the medium impedance (... divide the Hfield) XXX should be done elsewhere
+        return result_wform 
+    def get_waveforms(self):
+        """ Return the recorded waveform (for time domain simulation only) """
+        return self.get_time(), self.get_field_waveform() 
 #}}}
 
 

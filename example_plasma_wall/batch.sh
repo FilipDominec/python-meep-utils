@@ -3,12 +3,13 @@ if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
 if [ -z $ext ] ; then ext=png ; fi             # number of processors
 thz=1e12
 cellsize=100e-6
-staticpar=(model=Fishnet resolution=1u simtime=50p cellsize=100u cellsizexy=100u slabcdist=0u xholesize=20u)
+#TODO staticpar=(model=Fishnet resolution=1u simtime=5.32p cellsize=100u cellsizexy=100u slabcdist=0u xholesize=20u)
 
 if [ -z "$skipsimulation" ]; then 
-    for K in `seq 0 500000 5000000` 50000 200000 `seq 6000000 1000000 12000000`; do
+    #for K in `seq 0 500000 5000000` 50000 200000 `seq 6000000 1000000 12000000`; do
+    for K in 5000000; do
         #np ../../scatter.py "${staticpar[@]}" 
-        mpirun -np $NP  ../scatter.py model=HalfSpace simtime=500f resolution=15n blend=0u padding=1u comment=metal-fieldevolution Kx=${K} 
+        mpirun -np $NP  ../scatter.py model=HalfSpace simtime=50f resolution=15n blend=0u padding=1u comment=diel Kx=${K} 
         ../effparam.py
     done
 fi
