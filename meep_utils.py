@@ -859,6 +859,23 @@ def smooth_fadeout(time, record, onset=0.8):# {{{
         return record * (0.5 + 0.5 * np.maximum(np.sign(onset*tmax - time), -np.cos((np.pi/(1-onset)) * (time-tmax)/tmax)))
 # }}}
 
+def diagnostic_plot(x, values_and_labels=(), plotmodulus=False, ylog=True, title="diagnostic plot", xlabel="x", ylabel="y"): # {{{
+    #try:
+        plt.figure(figsize=(7,6))
+        plotmin = None
+        for value, label in values_and_labels:
+            plt.plot(x, np.abs(value) if plotmodulus else value, label=label)
+            if plotmin==None or plotmin > np.min(value):
+                plotmin = max(np.min(value), np.max(value)/1e10)
+        plt.legend(prop={'size':10}, loc='lower left')
+        plt.xlabel(xlabel); plt.ylabel(ylabel); plt.title(title)
+        if ylog and len(values_and_labels)>0: 
+            plt.yscale("log")
+            plt.ylim(bottom=plotmin) ## ensure reasonable extent of values of 10 orders of magnitude
+        plt.savefig("%s.png" % title, bbox_inches='tight')
+    #except:
+        #meep.master_printf("Diagnostic plot %s failed with %s, computation continues" % (title, sys.exc_info()[0]))
+# }}}
 def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         frequency_domain=False, frequency=None, pad_zeros=0.0, intf=[0, np.inf], Kx=0, Ky=0, eps1=1, eps2=1, diag=True):
     """ Returns the frequency, s11 (reflection) and s12 (transmission) spectra
@@ -877,37 +894,18 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
 
     t = monitor1_Ex.get_time()
     Ex1, Hy1, Ex2, Hy2 = [smooth_fadeout(t, mon.get_field_waveform()) for mon in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy)]
-
-    try:
-        if diag:
-            import matplotlib
-            #matplotlib.use('Agg') ## Enable plotting even in the GNU screen session?
-            from matplotlib import pyplot as plt
-            plt.figure(figsize=(7,6))
-            plt.plot(t, abs(Ex1), label="Ex1")
-            plt.plot(t, abs(Hy1), label="Hy1")
-            plt.plot(t, abs(Ex2), label="Ex2", lw=1.5)
-            plt.plot(t, abs(Hy2), label="Hy2")
-
-            plt.gca().set_ylim(ymin=1e-10)
-            plt.legend(prop={'size':10}, loc='upper right')
-            plt.xlabel('Time'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
-            plt.yscale("log")
-            plt.savefig("amplitudes_time_domain.png", bbox_inches='tight')
-    except:
-        meep.master_printf("Timedomain plot failed")
-
+    diagnostic_plot(t, values_and_labels=((Ex1, 'Ex1'), (Hy1, 'Hy1'), (Ex2, 'Ex2'), (Hy2, 'Hy2')), 
+            xlabel="Time", ylabel="Field amplitudes  $|E|$, $|H|$", title="amplitudes_time_domain", plotmodulus=True, ylog=True)
 
     ## Obtain the electric and magnetic fields spectra
     if frequency_domain:            ## No need for FFT in frequency domain, just copy the value
         freq = np.array([frequency])
         (Ex1f, Hy1f, Ex2f, Hy2f) = (Ex1, Hy1, Ex2, Hy2)
     else:
+        ## Optionally extend the data range by zeros (to a power of two - so that FFT algorithm is most efficient)
         if pad_zeros: 
-            ## Extend the data range by zeros so that FFT is efficient; (artificially prolonging stable eff param retrieval)
-            target_len = 2**np.ceil(np.log(len(Ex1)*(1+pad_zeros))/np.log(2))      ## must be power of two for efficient FFT!
-            append_len = target_len - len(Ex1)
-            Ex1, Hy1, Ex2, Hy2  =  map(lambda x: np.append(x, np.zeros(append_len)), (Ex1, Hy1, Ex2, Hy2))
+            target_len = 2**np.ceil(np.log(len(Ex1)*(1+pad_zeros))/np.log(2)) 
+            Ex1, Hy1, Ex2, Hy2  =  map(lambda x: np.append(x, np.zeros(target_len - len(Ex1))), (Ex1, Hy1, Ex2, Hy2))
 
         ## Calculate the Fourier transform of the recorded time-domain waves
         numpoints = len(Ex1)
@@ -924,98 +922,23 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
         (Ex1f, Hy1f, Ex2f, Hy2f, freq) = map(lambda x: x[truncated], (Ex1f, Hy1f, Ex2f, Hy2f, freq))
 
 
-    ## Diagnostics: plot frequency-domain data
-    try:
-        if diag:
-            plt.figure(figsize=(7,6))
-            plt.plot(freq, abs(Ex1f), label="Ex1")
-            plt.plot(freq, abs(Hy1f), label="Hy1")
-            plt.plot(freq, abs(Ex2f), label="Ex2")
-            plt.plot(freq, abs(Hy2f), label="Hy2")
-            plt.yscale("log");   plt.gca().set_ylim(ymin=1e-8)
-            plt.yscale("log");   plt.gca().set_ylim(ymin=1e-8)
-            plt.xlim(0, np.max(freq))
-            plt.legend(prop={'size':10}, loc='upper right')
-            plt.xlabel('Frequency'); plt.ylabel('Field amplitudes, $|E|$, $|H|$')
-            plt.savefig("amplitudes_freq_domain.png", bbox_inches='tight')
-    except:
-        meep.master_printf("Raw freq-domain plot failed %s" % sys.exc_info()[0])
-
+    diagnostic_plot(freq, values_and_labels=((Ex1f, 'Ex1f'), (Hy1f, 'Hy1f'), (Ex2f, 'Ex2f'), (Hy2f, 'Hy2f')), 
+            xlabel="Frequency", ylabel="Field spectral amplitude", title="field_amplitudes_freq_domain", plotmodulus=True, ylog=True)
 
     ## Separate the forward and backward wave in frequency domain 
     ##    (Efield+Hfield)/2 ->    forward wave amplitude, 
     ##    (Efield-Hfield)/2 ->    backward wave amplitude
-    
-    ## OPTION1 works for perpendicular incidence only, but in any dielectric
-    #Ex1f, Hy1f = Ex1f*(eps1**.25), Hy1f/(eps1**.25)
-    #Ex2f, Hy2f = Ex2f*(eps2**.25), Hy2f/(eps2**.25)
-    #in1, out1 =  (Ex1f+Hy1f)/2, (Ex1f-Hy1f)/2 ## old: works only for perp. incidence beta0=0
-    #in2, out2 =  (Ex2f-Hy2f)/2, (Ex2f+Hy2f)/2
-
-    ## OPTION2 works for monitors in air only only, but for any angle of incidence
-    #beta0 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c))
-    #in1, out1 =  (Ex1f+Hy1f/np.cos(beta0))/2, (Ex1f-Hy1f/np.cos(beta0))/2 ## old: works only for monitors placed in vacuum
-    #in2, out2 =  (Ex2f-Hy2f/np.cos(beta0))/2, (Ex2f+Hy2f/np.cos(beta0))/2
-
-    ## OPTION3 should work for all cases
-    #Ex1f, Hy1f = Ex1f*(eps1**.25), Hy1f/(eps1**.25)
-    #Ex2f, Hy2f = Ex2f*(eps2**.25), Hy2f/(eps2**.25)
-    #beta1 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps1**.5)
-    #in1, out1 =  (Ex1f+Hy1f/np.cos(beta1))*np.cos(beta1)**.5, (Ex1f-Hy1f/np.cos(beta1))*np.cos(beta1)**.5
-    #beta2 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps2**.5)
-    #in2, out2 =  (Ex2f-Hy2f/np.cos(beta2))*np.cos(beta2)**.5, (Ex2f+Hy2f/np.cos(beta2))*np.cos(beta2)**.5
-
-    ## OPTION3 should work for all cases
     beta1 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps1**.5)
     in1, out1 =  (Ex1f+Hy1f/eps1**.5/np.cos(beta1)), (Ex1f-Hy1f/eps1**.5/np.cos(beta1))
     beta2 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps2**.5)
     in2, out2 =  (Ex2f-Hy2f/eps2**.5/np.cos(beta2)), (Ex2f+Hy2f/eps2**.5/np.cos(beta2))
 
+    ## Adjust fields so that their modulus square is equal, even when monitors are embedded in different materials
     amplifactor1, amplifactor2 = (eps1**.5 * np.cos(beta1))**.5,  (eps2**.5 * np.cos(beta2))**.5
     in1, out1 = in1*amplifactor1, out1*amplifactor1
     in2, out2 = in2*amplifactor2, out2*amplifactor2
-
-
-    ## Prepare the angles at which the wave propagates (dependent on frequency, Kx and Ky)
-    # **********************
-    # amplitude squared is double Poynting vector (in any medium):   2 S = E H = E**2/Z = E**2 * eps**.5 / mu**.5 = E**2 * c * eps
-
-    # if there are no losses, we assert:   |in1|**2 + |in2|**2 = |out1|**2 + |out2|**2
-    # -> which trivially leads to:    r**2 + t**2 = 1   (if in2=0)
-
-    # **********************
-
-    #n1, n2 = eps1**.5,  eps2**.5
-    #z1, z2 = eps1**-.5, eps2**-.5
-    #Ktot1 = (2*np.pi*freq*n1/c)
-    #angles1 = np.arcsin((Kx**2+Ky**2)**.5 / Ktot1)
-    #in1 =  (Ex1f/z1  +Hy1f/np.cos(angles1))/2/eps1**.5 * n1**.5 
-    #out1 = (Ex1f/z1  -Hy1f/np.cos(angles1))/2/eps1**.5 * n1**.5
-    #
-    #Ktot2 = (2*np.pi*freq*n1/c)
-    #angles2 = np.arcsin((Kx**2+Ky**2)**.5 / Ktot2)
-    #in2  = (Ex2f/z2  -Hy2f/np.cos(angles2))/2/eps2**.5 * n2**.5
-    #out2 = (Ex2f/z2  +Hy2f/np.cos(angles2))/2/eps2**.5 * n2**.5
-    
-    #in2, out2 =  (Ex2f      -Hy2f/np.cos(beta0mon2))/2, (Ex2f  +Hy2f/np.cos(beta0mon2))/2
-    ## Todo optimize cos(arcsin x ) = sqrt(1-x**2)
-
-    ## Diagnostics: Plot spectral profile
-    try:
-        if diag:
-            plt.figure(figsize=(7,6))
-            plt.plot(freq, abs(in1), label="in1")
-            plt.plot(freq, abs(out1), label="out1")
-            plt.plot(freq, abs(in2), label="in2")
-            plt.plot(freq, abs(out2), label="out2")
-            plt.xlim(0, np.max(freq))
-            plt.legend(prop={'size':10}, loc='lower left')
-            plt.xlabel('Frequency'); plt.ylabel('Transmitted amplitude')
-            #plt.title('Frequency-domain wave amplitudes')
-            plt.yscale("log")
-            plt.savefig("amplitudes_spectra_e9o3.png", bbox_inches='tight')
-    except:
-        meep.master_printf("Wave amplitude freq-domain plot failed %s" % sys.exc_info()[0])
+    diagnostic_plot(freq, values_and_labels=((in1, 'in1'), (out1, 'out1'), (in2, 'in2'), (out2, 'out2')), 
+            xlabel="Frequency", ylabel="Spectral amplitude", title="mode_amplitudes_freq_domain", plotmodulus=True, ylog=True)
 
     ## Get the s-parameters 
     s11 = out1 / in1
@@ -1093,7 +1016,6 @@ class AmplitudeMonitorPlane(meep.Callback):#{{{
             t = np.array(self.t)
         else:
             t = np.array(self.t[:-1])
-        print len(self.t), "oeuaoehsunahtoesnuhaosnetuhasoeuhtasnoheuaoehu sanoheusnah oeusaheusah esuha u"
         return t
     def get_field_waveform(self):
         """ Return the recorded waveform (for time domain simulation only) """
