@@ -929,9 +929,15 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     ##    (Efield+Hfield)/2 ->    forward wave amplitude, 
     ##    (Efield-Hfield)/2 ->    backward wave amplitude
     beta1 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps1**.5)
-    in1, out1 =  (Ex1f+Hy1f/eps1**.5/np.cos(beta1)), (Ex1f-Hy1f/eps1**.5/np.cos(beta1))
     beta2 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps2**.5)
-    in2, out2 =  (Ex2f-Hy2f/eps2**.5/np.cos(beta2)), (Ex2f+Hy2f/eps2**.5/np.cos(beta2))
+    if   (abs(Kx)>0 and Ky==0): 
+        EHratio1, EHratio2 = eps1**(-.5)*np.cos(beta1), eps2**(-.5)*np.cos(beta2)  ## Kx>0 means TE incidence, electric field not parallel to monitor
+    elif (Kx==0 and abs(Ky)>0): 
+        EHratio1, EHratio2 = eps1**(-.5)/np.cos(beta1), eps2**(-.5)/np.cos(beta2)  ## Ky>0 means TE incidence, magnetic field not parallel to monitor
+    else:
+        meep.master_printf("WARNING: generic orientation of wave with Kx and Ky components both nonzero. Can not resolve s-parameters reliably!")
+    in1, out1 =  (Ex1f + Hy1f*EHratio1), (Ex1f - Hy1f*EHratio1)
+    in2, out2 =  (Ex2f - Hy2f*EHratio2), (Ex2f + Hy2f*EHratio2)
 
     ## Adjust fields so that their modulus square is equal, even when monitors are embedded in different materials
     amplifactor1, amplifactor2 = (eps1**.5 * np.cos(beta1))**.5,  (eps2**.5 * np.cos(beta2))**.5
