@@ -881,16 +881,15 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     """ Returns the frequency, s11 (reflection) and s12 (transmission) spectra
     (works for both time- and freq-domain simulation) 
 
-    Separate forward and backward waves in time domain                   +-----------------+           
+    Separates forward and backward waves in time domain                  +-----------------+           
     (both electric and magnetic fields needed for this)       -- in1 ->|MP1|--+---s12--->|MP2| -- out2 --> 
          a ... inputs; b ... outputs                                   |MP1| s11         |MP2|       
          1 ... front port, 2 ... rear port (on z-axis)        <- out1 -|MP1|<-'          |MP2| <- in2=0 --
-    MP1 and MP2 are monitor planes provided                              +------structure--+           
+    MP1 and MP2 are monitor planes provided by user                      +------structure--+           
 
-    Allows to separate forward/backward waves even under oblique incidence
+    Allows to separate forward/backward waves even under oblique incidence and in a material of known permittivity
     """
     ## TODO document function parameters
-    ## TODO allow omitting second monitor (-> returns s12=None)
 
     t = monitor1_Ex.get_time()
     Ex1, Hy1, Ex2, Hy2 = [smooth_fadeout(t, mon.get_field_waveform()) for mon in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy)]
@@ -916,24 +915,23 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
 
         #fftshift(x[, axes])	Shift the zero-frequency component to the center of the spectrum.
         (Ex1f, Hy1f, Ex2f, Hy2f) = map(lambda x: np.fft.fft(np.real(x))[0:int(numpoints/2)], (Ex1, Hy1, Ex2, Hy2))
+
+        diagnostic_plot(freq, values_and_labels=((Ex1f, 'Ex1f'), (Hy1f, 'Hy1f'), (Ex2f, 'Ex2f'), (Hy2f, 'Hy2f')), 
+                xlabel="Frequency", ylabel="Field spectral amplitude", title="field_amplitudes_freq_domain", plotmodulus=True, ylog=True)
         
         ## Truncate the data ranges to allowed radiating angles, and possibly to minf<freq<maxf
         truncated = np.logical_and(np.logical_and((Ky**2+Kx**2)<((2*np.pi*freq/c)**2), freq>intf[0]), freq<intf[1])
         (Ex1f, Hy1f, Ex2f, Hy2f, freq) = map(lambda x: x[truncated], (Ex1f, Hy1f, Ex2f, Hy2f, freq))
-
-
-    diagnostic_plot(freq, values_and_labels=((Ex1f, 'Ex1f'), (Hy1f, 'Hy1f'), (Ex2f, 'Ex2f'), (Hy2f, 'Hy2f')), 
-            xlabel="Frequency", ylabel="Field spectral amplitude", title="field_amplitudes_freq_domain", plotmodulus=True, ylog=True)
 
     ## Separate the forward and backward wave in frequency domain 
     ##    (Efield+Hfield)/2 ->    forward wave amplitude, 
     ##    (Efield-Hfield)/2 ->    backward wave amplitude
     beta1 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps1**.5)
     beta2 = np.arcsin((Kx**2+Ky**2)**.5 / (2*np.pi*freq/c)/eps2**.5)
-    if   (abs(Kx)>0 and Ky==0): 
-        EHratio1, EHratio2 = eps1**(-.5)*np.cos(beta1), eps2**(-.5)*np.cos(beta2)  ## Kx>0 means TE incidence, electric field not parallel to monitor
-    elif (Kx==0 and abs(Ky)>0): 
-        EHratio1, EHratio2 = eps1**(-.5)/np.cos(beta1), eps2**(-.5)/np.cos(beta2)  ## Ky>0 means TE incidence, magnetic field not parallel to monitor
+    if Ky==0: 
+        EHratio1, EHratio2 = eps1**(-.5)*np.cos(beta1), eps2**(-.5)*np.cos(beta2) ## Ky=0 means TM incidence, electric field not parallel to monitor
+    elif (abs(Ky)>0 and Kx==0): 
+        EHratio1, EHratio2 = eps1**(-.5)/np.cos(beta1), eps2**(-.5)/np.cos(beta2) ## |Ky|>0 means TE incidence, magnetic field not parallel to mon
     else:
         meep.master_printf("WARNING: generic orientation of wave with Kx and Ky components both nonzero. Can not resolve s-parameters reliably!")
     in1, out1 =  (Ex1f + Hy1f*EHratio1), (Ex1f - Hy1f*EHratio1)
