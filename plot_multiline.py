@@ -66,6 +66,7 @@ parser.add_argument('--overlayplot',type=str,   default='', help='one or more ex
 parser.add_argument('--numcontours',type=int,   default=50, help='number of levels in the contour plot (default 50)')
 parser.add_argument('--contourresx',type=int,   default=200,help='row length of the internal interpolation matrix for contour plot (default 200)')
 parser.add_argument('--contourresp',type=int,   default=200,help='column height of the internal interpolation matrix for contour plot (default 200)')
+parser.add_argument('--interp_aspect', type=float, default=1., help='value lower than 1. interpolates rather vertically')
 parser.add_argument('--figsizex',   type=float, default=8, help='figure width (inches), 8 is default')
 parser.add_argument('--figsizey',   type=float, default=4, help='figure height (inches), 4 is default')
 parser.add_argument('--contours',   type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
@@ -233,7 +234,7 @@ if args.contours == 'yes':
     min_xs,       max_xs,    min_params,   max_params = min(xs),       max(xs),    min(params),   max(params)
     xi      = np.linspace(min_xs,       max_xs,       args.contourresx)
     paramsi = np.linspace(min_params,   max_params,   args.contourresp)
-    interp_anisotropy = (max_xs-min_xs)/(max_params-min_params) # value lower than 1. interpolates rather vertically; optimize if plot disintegrates
+    interp_anisotropy = (max_xs-min_xs)/(max_params-min_params) * args.interp_aspect 
     yi      = griddata(xs, params*interp_anisotropy, ys, xi, paramsi*interp_anisotropy, interp='linear')
 
     # Standard contour plot
