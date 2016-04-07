@@ -515,8 +515,6 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
                 draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
         self.test_materials()
 
-        ##  XXX XXX XXX
-        self.simtime=200e-15
     def where_m(self, r):
         ## Just half-space
         #if r.z() > 0: return self.return_value

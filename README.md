@@ -175,3 +175,4 @@ The procedure is tested on Debian-based Linux distributions. You may have to man
 - [ ] check what functionality is available on Windows (could add the procedure to compile python-meep for Win)
    * probably no run_bash call will work - slice export will fail on Windows?
 - [ ] currently, the materials are composed into a structure only for the permittivity (static value + Lorentzians), shall we do this also for permeability? And for nonlinear effects etc.?
+- [ ] compress video with something like: ffmpeg -i input -c:v libx264 -preset veryslow -qp 0 output.mkv

@@ -70,6 +70,8 @@ monitor2_Ex = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Ex, z_position=model
 monitor2_Hy = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
 
 slices = []
+slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', 
+    min_timestep=.1/model.src_freq, outputgif=True, outputvtk=True)]
 if not "noepssnapshot" in model.comment:
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
 if "narrowfreq-snapshots" in model.comment:
