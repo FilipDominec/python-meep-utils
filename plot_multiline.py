@@ -85,12 +85,20 @@ matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times'
 
 if args.colormap == 'default': 
     cmap = matplotlib.cm.gist_earth if (args.contours=='yes') else matplotlib.cm.hsv
-else:
-    if (args.colormap[-2:] == '/2'):        ## allow palette halving,  (c) unutbu, stackoverflow:18926031
+elif (args.colormap[-2:] == '/2'):        ## allow palette halving,  (c) unutbu, stackoverflow:18926031
         cmap = getattr(matplotlib.cm, args.colormap[:-2]) 
         cmap = matplotlib.colors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=.0, b=.47), cmap(np.linspace(.0, .47, 100)))
-    else: 
-        cmap = getattr(matplotlib.cm, args.colormap)  
+elif args.colormap in dir(matplotlib.cm): 
+    cmap = getattr(matplotlib.cm, args.colormap)  
+elif args.colormap in ['magma', 'inferno', 'plasma', 'viridis']: 
+    try:
+        import colormaps
+        cmap=getattr(colormaps, args.colormap)  
+    except:
+        print "Error: This version of matplotlib does not support the %s colormap, but you can download its definition" % args.colormap 
+        print "from https://raw.githubusercontent.com/BIDS/colormap/master/colormaps.py"
+else:
+    print "Error: could not find '%s'. Please refer to the matplotlib documentation for the list of available colormaps."; quit()
 
 def get_param(filename):             ## Load header to the 'parameters' dictionary#{{{
     parameters = {}
