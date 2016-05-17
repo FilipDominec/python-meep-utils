@@ -40,10 +40,9 @@ import numpy as np
 from scipy.constants import c, hbar, pi
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+parser.add_argument('--contours',   type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
 parser.add_argument('--paramname',  type=str, default='', help='parameter by which the lines are sorted (filename used if omitted)')
 parser.add_argument('--title',      type=str, default='', help='plot title')
-# todo: remove the --xunit --yunit
-parser.add_argument('--yunit',      type=float, default=1., help='prescaling of the y-axis')
 parser.add_argument('--paramlabel', type=str,   default='', help='line label; use standard printf percent substitutes to format the parameter, LaTeX for typesetting')
 parser.add_argument('--xcol',       type=str,   default='0', help='number or exact name of the x-axis column') ## TODO or -- if it is to be generated
 parser.add_argument('--ycol',       type=str,   default='1', help='number or exact name of the y-axis column')
@@ -52,15 +51,15 @@ parser.add_argument('--xeval',      type=str,   default='x', help='Python expres
 parser.add_argument('--yeval',      type=str,   default='y', help='Python expression to preprocess the `y`-values, e.g. `y/x` to normalize against newly computed x') 
 parser.add_argument('--y2eval',     type=str,   default='y2', help='Python expression to preprocess the auxiliary `y`-values (computed before `y` is processed)') 
 parser.add_argument('--parameval',  type=str,   default='param', help='any python expression to preprocess the `param`-values, e.g. `param/1e-9` to convert it to nanometers') 
+parser.add_argument('--xlabel',     type=str,   default='', help='label of the x-axis')
+parser.add_argument('--ylabel',     type=str,   default='', help='label of the y-axis')
+parser.add_argument('--markersize', type=float, default=0,  help='marker point size for each data point')
 parser.add_argument('--xlim1',      type=str,   default='', help='start for the x-axis range')
 parser.add_argument('--xlim2',      type=str,   default='', help='end for the x-axis range')
 parser.add_argument('--ylim1',      type=str,   default='', help='start for the plotted value range')
 parser.add_argument('--ylim2',      type=str,   default='', help='end for the plotteld value range')
-parser.add_argument('--plim1',      type=str,   default='', help='start for the plotted parameter range')
-parser.add_argument('--plim2',      type=str,   default='', help='end for the plotted parameter range')
-parser.add_argument('--xlabel',     type=str,   default='', help='label of the x-axis (can use LaTeX)')
-parser.add_argument('--ylabel',     type=str,   default='', help='label of the y-axis (use LaTeX)')
-parser.add_argument('--output',     type=str,   default='*.png', help='output file; *.png or *.pdf (etc.) auto-selects a name with the given format')
+parser.add_argument('--plim1',      type=str,   default='', help='start for the plotted parameter range (contour plot only)')
+parser.add_argument('--plim2',      type=str,   default='', help='end for the plotted parameter range (contour plot only)')
 parser.add_argument('--colormap',   type=str,   default='default', help='matplotlib colormap, available are: hsv (default for lines), gist_earth (default for contours), jet, greys, dark2, brg...')
 parser.add_argument('--overlayplot',type=str,   default='', help='one or more expressions, separated by comma, that are plotted to help guide the eye (e.g. 1/x)')
 parser.add_argument('--numcontours',type=int,   default=50, help='number of levels in the contour plot (default 50)')
@@ -69,9 +68,9 @@ parser.add_argument('--contourresp',type=int,   default=200,help='column height 
 parser.add_argument('--interp_aspect', type=float, default=1., help='value lower than 1. interpolates rather vertically')
 parser.add_argument('--figsizex',   type=float, default=8, help='figure width (inches), 8 is default')
 parser.add_argument('--figsizey',   type=float, default=4, help='figure height (inches), 4 is default')
-parser.add_argument('--contours',   type=str,   default='no', help='make a 2-D contour plot instead of multiple curves')
 parser.add_argument('--usetex',     type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
 parser.add_argument('--verbose',    type=str,   default='', help='explicitly print out what happens')
+parser.add_argument('--output',     type=str,   default='*.png', help='output file; *.png or *.pdf (etc.) auto-selects a name with the given format')
 parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
 args = parser.parse_args()
 
@@ -225,9 +224,9 @@ for color, param, filename in datasets:
                 label = (args.paramlabel+(" = %s" % param))           # manual label with parameter value appended
         else:
             label = ("%s = %s" % (args.paramname, param))   # automatic formatted label
-
-        if args.ycol2: plt.plot(x, y2, color=color, label='', marker='s', markersize=(3 if len(x)<50 else 0), ls='--')
-        plt.plot(x, y, color=color, label=label, marker='o', markersize=(3 if len(x)<50 else 0))
+        ## Marker for each input data point
+        if args.ycol2: plt.plot(x, y2, color=color, label='', marker='s', markersize=args.markersize, ls='--')
+        plt.plot(x, y, color=color, label=label, marker='o', markersize=args.markersize)
     else:
         ## Store the points for later interpolation and contour plot
         xs      = np.append(xs, x)
@@ -252,8 +251,6 @@ if args.contours == 'yes':
     contours = plt.contourf(xi, paramsi, yi, cmap=cmap, levels=levels, extend='both')  
     for contour in contours.collections: contour.set_antialiased(False) ## fix aliasing for old Matplotlib
     cb=plt.colorbar().set_ticks(reasonable_ticks(cmaprange1, cmaprange2, density=.8)) 
-    if args.plim1 != "": plt.ylim(ymin=float(args.plim1))
-    if args.plim2 != "": plt.ylim(ymax=float(args.plim2))
 
 ## ==== Plot tuning and labeling ====
 if args.xlim1 != "": plt.xlim(left=float(args.xlim1))
@@ -261,6 +258,8 @@ if args.xlim2 != "": plt.xlim(right=float(args.xlim2))
 plt.xlabel(xcolname if args.xlabel == '' else args.xlabel) 
 
 if args.contours == 'yes':
+    if args.plim1 != "": plt.ylim(ymin=float(args.plim1))
+    if args.plim2 != "": plt.ylim(ymax=float(args.plim2))
     plt.ylabel(args.paramname if args.paramlabel == '' else args.paramlabel) 
     plt.title(args.title if args.title else (ycolname if args.ylabel == '' else args.ylabel)) 
 else:
