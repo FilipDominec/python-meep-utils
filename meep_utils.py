@@ -815,14 +815,14 @@ class Slice(): #{{{
                 (now > self.at_t[0] and self.images_number==0)):
             self.images_number += 1 
             for component in self.components:
-                self.field.output_hdf5(component, self.volume, self.openfile, 1) 
+                self.field.output_hdf5(component, self.volume, self.openfile, True) 
             self.last_slice_time = now
 
     def finalize(self, forcesave=True):
         if forcesave:
             self.images_number += 1 
             for component in self.components:
-                self.field.output_hdf5(component, self.volume, self.openfile, 1) 
+                self.field.output_hdf5(component, self.volume, self.openfile, True) 
         del(self.openfile)          ## all processes must release the HDF5 file
         meep.all_wait()
         if meep.my_rank() == 0:        ## but postprocessing is to be done by a single process
