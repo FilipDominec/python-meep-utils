@@ -2,7 +2,7 @@
 if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
 cellsize=100e-6
 thz=1e12
-par="model=SphereArray resolution=5u simtime=100p cellsize=$cellsize"
+par="model=SphereWire resolution=5u simtime=100p cellsize=$cellsize"
 
 if [ -z "$skipsimulation" ]; then 
 	mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=30u comment='TiO$_2$ spheres with wires'
