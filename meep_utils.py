@@ -482,7 +482,7 @@ class MyConductivity(meep.Callback):#{{{            %% TODO rename to Conductivi
         else: return 0
 #}}}
 
-def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y=False):#{{{
+def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y=False, freq_range=None):#{{{
     """
     """
     import matplotlib.pyplot as plt
@@ -495,17 +495,21 @@ def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y
             mfreqtxt=mfreqtxt[1:-1]; 
         bboxprops   = dict(boxstyle='round, pad=.15', fc='white', alpha=1, lw=0)
         arrowprops  = dict(arrowstyle=('->', '-|>', 'simple', 'fancy')[0], connectionstyle = 'arc3,rad=0', lw=1, ec='k', fc='w')
-        plt.annotate(mfreqtxt,                    
-                xy      = (mfreq, label_y2),    xycoords  ='data',
-                xytext  = (mfreq, label_y2*arrow_length if log_y else label_y+arrow_length),  textcoords='data',        # (delete this if text without arrow is used)
-                ha='center', va='bottom', size=15, color='k',
-                bbox        = bboxprops,        # comment out to disable bounding box
-                arrowprops  = arrowprops,       # comment out to disable arrow
-                )
+        if not freq_range  or  mfreqtxt > freq_range[0] and mfreqtxt < freq_range[1]:
+            plt.annotate(mfreqtxt,                    
+                    xy      = (mfreq, label_y2),    xycoords  ='data',
+                    # (delete following line if text without arrow is used)
+                    xytext  = (mfreq, label_y2*arrow_length if log_y else label_y+arrow_length),  textcoords='data',        
+                    ha='center', va='bottom', size=15, color='k',
+                    bbox        = bboxprops,        # comment out to disable bounding box
+                    arrowprops  = arrowprops,       # comment out to disable arrow
+                    )
 #}}}
 def plot_eps(*args, **kwargs):#{{{
-    try: plot_eps_(*args, **kwargs)
-    except: meep.master_printf("Could not plot the material permittivity spectra, probably matplotlib bug. Skipping it...")
+    plot_eps_(*args, **kwargs)
+    #try: 
+            #
+    #except: meep.master_printf("Could not plot the material permittivity spectra, probably matplotlib bug. Skipping it...")
     #}}}
 def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range=(1e10, 1e18), mark_freq=[], draw_instability_area=None):#{{{
     """ Plots complex permittivity of the materials to a PNG file
@@ -519,7 +523,7 @@ def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_rang
 
     frequency = 10**np.arange(np.log10(freq_range[0]), np.log10(freq_range[1]), .01)
 
-    plt.figure(figsize=(7,6))
+    plt.figure(figsize=(7,10))
     #colors = ['#000000', '#004400', '#003366', '#000088', '#440077', '#661100', 
               #'#aa8800', '#00aa00', '#0099dd', '#0000EE', '#2200DD', '#aa0000']
     colors = ['#000000', '#004400', '#003366', '#000088', '#440077', '#661100', 
@@ -588,10 +592,12 @@ def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_rang
     plt.ylabel(u"relative permittivity $\\varepsilon_r$")
     plt.grid(True)
     plt.xscale('log')
-    ylim = (-1e7, 1e6); plt.ylim(ylim); plt.yscale('symlog')
-    annotate_frequency_axis(mark_freq, log_y=True, arrow_length=50) # TODO , print_freq=True
+    ylim = (np.min(np.real(eps)), np.max(np.real(eps)))
+    plt.ylim(ylim)
+    plt.yscale('symlog')
+    annotate_frequency_axis(mark_freq, log_y=True, arrow_length=50, freq_range=freq_range) 
     if draw_instability_area:
-        plt.gca().add_patch(plt.Rectangle((draw_instability_area[0], ylim[0]), 1e20, draw_instability_area[1]-ylim[0], color='#bbbbbb'))
+        plt.gca().add_patch(plt.Rectangle((draw_instability_area[0], ylim[0]), freq_range[1], draw_instability_area[1]-ylim[0], color='#bbbbbb'))
 
     if plot_conductivity:
         plt.subplot(subplotnumber,1,2)
