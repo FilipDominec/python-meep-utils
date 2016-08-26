@@ -495,7 +495,7 @@ def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y
             mfreqtxt=mfreqtxt[1:-1]; 
         bboxprops   = dict(boxstyle='round, pad=.15', fc='white', alpha=1, lw=0)
         arrowprops  = dict(arrowstyle=('->', '-|>', 'simple', 'fancy')[0], connectionstyle = 'arc3,rad=0', lw=1, ec='k', fc='w')
-        if not freq_range  or  mfreqtxt > freq_range[0] and mfreqtxt < freq_range[1]:
+        if not freq_range  or  (mfreq > freq_range[0] and mfreq < freq_range[1]):
             plt.annotate(mfreqtxt,                    
                     xy      = (mfreq, label_y2),    xycoords  ='data',
                     # (delete following line if text without arrow is used)
@@ -506,26 +506,16 @@ def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y
                     )
 #}}}
 def plot_eps(*args, **kwargs):#{{{
-    plot_eps_(*args, **kwargs)
-    #try: 
-            #
-    #except: meep.master_printf("Could not plot the material permittivity spectra, probably matplotlib bug. Skipping it...")
+    try:    plot_eps_(*args, **kwargs)
+    except: meep.master_printf("Could not plot the material permittivity spectra, probably matplotlib bug. Skipping it...")
     #}}}
 def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range=(1e10, 1e18), mark_freq=[], draw_instability_area=None):#{{{
     """ Plots complex permittivity of the materials to a PNG file
 
     Accepts list of materials
     """
-
-    #for material in list(to_plot): ## autoscale x axis?
-        #for pol in material.pol:
-            #if freq_range[1] < pol['omega']: freq_range[1] = pol['omega']*2
-
     frequency = 10**np.arange(np.log10(freq_range[0]), np.log10(freq_range[1]), .01)
-
     plt.figure(figsize=(7,10))
-    #colors = ['#000000', '#004400', '#003366', '#000088', '#440077', '#661100', 
-              #'#aa8800', '#00aa00', '#0099dd', '#0000EE', '#2200DD', '#aa0000']
     colors = ['#000000', '#004400', '#003366', '#000088', '#440077', '#661100', 
               '#aa8800', '#0044dd', '#00bb00', '#aaaa00', '#bb6600', '#dd0000']
 
@@ -537,10 +527,7 @@ def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_rang
         else: color = 'black'
         label = getattr(material, 'shortname', material.name)
         plt.subplot(subplotnumber,1,1)
-
         eps = np.conj(analytic_eps(material, frequency)) ## FIXME eps should be computed as conjugated by default
-
-        plt.subplot(subplotnumber,1,1)
         plt.plot(frequency, np.real(eps), color=color, label=material.name, ls='-') #  
         plt.plot(frequency, np.imag(eps), color=color, label='', ls='--') # 
         #R = abs((1-eps**.5)/(1+eps**.5))**2     ## Intensity reflectivity
@@ -582,8 +569,6 @@ def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_rang
             #plt.ylabel(u"negative valued")
             #plt.yscale('log'); 
             #plt.xscale('log'); plt.legend(); plt.grid(True)
-
-
 
     ## Annotate frequencies and finish the graph 
     plt.subplot(subplotnumber,1,1)
