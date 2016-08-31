@@ -178,7 +178,7 @@ class AbstractMeepModel(meep.Callback):
         try: 
             if nondefault and param!='model': self.simulation_name += ("_%s=%.3e") % (param, float(val))
             self.parameterstring += "#param %s,%.3e\n" % (param, float(val))
-            meep.master_printf("  <float> %s%s = %.3e %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
+            meep.master_printf("  <float> %s%s = %.3e %s\n" % (param, " "*max(10-len(param), 0), float(val), infostring))
         except ValueError: 
             if nondefault and param!='model': self.simulation_name += ("_%s=%s") % (param, val)
             self.parameterstring += "#param %s,%s\n" % (param, val)
