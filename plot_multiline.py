@@ -122,7 +122,7 @@ def reasonable_ticks(lim1, lim2, density=1, extend_to_lims=False): #{{{
 
     By default, about 7 to 14 human-friendly intermediate values are generated between lim1 and lim2. 
     Their mantissa increases by 1, 2, or 5 as usual in hand-made plots. Their total number can be adjusted by 
-    the `density' parameter.
+    the relative `density' parameter.
 
     If the value of lim1 or lim2 is nice enough, it is included in the range, too. 
     This behaviour can be forced by setting `extend_to_lims' is set to True, in which case the first and last 
