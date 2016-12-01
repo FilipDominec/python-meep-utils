@@ -25,36 +25,18 @@ Features and conventions:
 
 import numpy as np
 import time, sys, os
-from scipy.constants import pi, c
-import meep_utils
+import numpy as np
+from scipy.constants import c, epsilon_0, mu_0
 
+import meep_utils, meep_materials, metamaterial_models
+from meep_utils import in_sphere, in_xcyl, in_ycyl, in_zcyl, in_xslab, in_yslab, in_zslab, in_ellipsoid
 import meep_mpi as meep
 #import meep
 
-meep.master_printf("=== Initialisation ===\n")
-sim_param, model_param = meep_utils.process_param(sys.argv[1:])
-print model_param
+# Model selection
+model_param = meep_utils.process_param(sys.argv[1:])
+model = metamaterial_models.models[model_param.get('model', 'default')](**model_param)
 
-## Model selection
-#from model_SphereWireNew import *;     model = SphereWire_model(**model_param) ## OK
-#from model_SphereWireNew import *;     model = SphereFishnet_model(**model_param) ## OK
-#from model_SphereWireNew import *;     model = SphereElliptic_model(**model_param)
-#from model_SphereWireNew import *;     model = SimpleEllipsoid_model(**model_param)
-
-#from model_CKEBars import *       
-#model = CKEBars_model_test(**model_param)
-#from model_PKCutSheet import *       
-#model = PKCutSheet_model(**model_param)
-
-from model_simple_structures import *       
-#model = XCylWire_model(**model_param)
-#model = YCylWire_model(**model_param)
-#model = XRectWire_model(**model_param)
-#model = XRectWireMet_model(**model_param)
-#model = XCylWire_model_test(**model_param)
-#model = dielbar_model(**model_param);      #  meep.use_averaging(True)
-#model = PKCutSheet_model_test(**model_param)
-#model = Fishnet_model(**model_param)
 model = Wedge_model(**model_param)
 
 #from model_SapphireBars import *       
