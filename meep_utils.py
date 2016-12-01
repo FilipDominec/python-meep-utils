@@ -184,7 +184,7 @@ class AbstractMeepModel(meep.Callback):
             self.parameterstring += "#param %s,%s\n" % (param, val)
             meep.master_printf("  <str>   %s%s = %s %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
         #}}}
-    def register_locals(self, params, other_args):#{{{
+    def register_locals(self, params, *other_args):#{{{
         """ Scans through the parameters and calls register_local() for each """
 
         ## Automatically detect whether some argument differs from its default 
@@ -198,10 +198,11 @@ class AbstractMeepModel(meep.Callback):
             if (type(val) in (str, int, float, complex)):
                 self.register_local(param_name, val)
 
-        ## Then add other parameters that are not specified in the __init__ function
-        for (param_name, val) in other_args.iteritems():
-            if param_name != 'self':
-                self.register_local(param_name, val)
+        ## Then add other parameters (if supplied as a list of strings) that are not specified in the __init__ function
+        if len(other_args) != []:
+            for (param_name, val) in other_args[0].iteritems():
+                if param_name != 'self':
+                    self.register_local(param_name, val)
         #}}}
     def f_c(self):#{{{
         """ critical_frequency for FDTD stability """
@@ -327,6 +328,7 @@ class AbstractMeepModel(meep.Callback):
         (SWIG callback does not report where the error occured, it just crashes) 
         """
         f_c = self.f_c()
+        if not getattr(self, 'materials', None): meep.master_printf('Warning: model __init__ function should define materials (as a list of objects)')
         for n, material in enumerate(self.materials): 
             ## Check the stability criterion that no oscillator may be above the cricital frequency f_c (MEEP checks this, but perhaps in a wrong way)
             for osc in material.pol:
