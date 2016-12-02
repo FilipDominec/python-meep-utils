@@ -78,7 +78,7 @@ if "narrowfreq-snapshots" in model.comment:
             outputpng=True, outputvtk=False)]
 if "fieldevolution" in model.comment: 
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', 
-        min_timestep=.1/model.src_freq, outputgif=True, outputvtk=True)]
+        min_timestep=.1/model.src_freq, outputgif=True, outputhdf=True, outputvtk=True)]
 if "snapshote" in model.comment:
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
 

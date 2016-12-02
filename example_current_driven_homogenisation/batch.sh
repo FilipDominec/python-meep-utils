@@ -40,6 +40,15 @@ compare_dispersion() {
 	mv cdh/ effparam/  NRef.dat "$lastname"
 }
 
+
+## === Rod array ===
+cellsize=100e-6
+#for r in `seq 80 10 120`; do
+for r in 100; do
+	compare_dispersion ${par[@]} model=RodArray radius=${r}e-7
+done
+
+## === Ordinary split-ring resonator === 
 #cellsize=100e-6
 #ylim2=4 ## in THz
 #par=(resolution=4u simtime=30p cellsize=${cellsize})
@@ -60,9 +69,6 @@ compare_dispersion() {
             #insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=40e-6 srrthick=10e-6
 #done
 
-#for r in `seq 80 10 120`; do
-	#compare_dispersion ${par[@]} model=RodArray radius=${r}e-7
-#done
 
 #for icr in 12 14 16 18; do
 #compare_dispersion ${par[@]} model=ESRRArray cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
@@ -80,12 +86,12 @@ compare_dispersion() {
 
 ## == Fishnets ==
 ## -- Testing our experimental fishnets made of steel -- 
-ylim2=1.5 ## in THz
-par=(resolution=4u simtime=100p cellsize=${cellsize}u )
-for cellsize in 100e-6; do # 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do
-	compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=180u yholesize=200u cellsizexy=300u cellsize=${cellsize}
-done                                                                        
-mkdir RealisticFn_180x200_HR; mv CDH* Fishnet* RealisticFn_180x200_HR
+#ylim2=1.5 ## in THz
+#par=(resolution=4u simtime=100p cellsize=${cellsize}u )
+#for cellsize in 100e-6; do # 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do
+	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=180u yholesize=200u cellsizexy=300u cellsize=${cellsize}
+#done                                                                        
+#mkdir RealisticFn_180x200_HR; mv CDH* Fishnet* RealisticFn_180x200_HR
 #
 #for cellsize in 100e-6; do                              # 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do                             
 	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=230u yholesize=255u cellsizexy=300u cellsize=${cellsize}
