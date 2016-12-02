@@ -95,169 +95,115 @@ import model_simple_structures
 model_param = meep_utils.process_param(sys.argv[1:])
 model = Wedge_model(**model_param)
 
-
-if sim_param['frequency_domain']: model.simulation_name += ("_frequency=%.4e" % sim_param['frequency'])
-meep.master_printf("Simulation name:\n\t%s\n" % model.simulation_name) ## TODO print parameters in a table
-
-## Initialize volume
+## Initialize volume, structure and the fields according to the model
 vol = meep.vol3d(model.size_x, model.size_y, model.size_z, 1./model.resolution)
-volume_except_pml = meep.volume(
-                meep.vec(-model.size_x/2, -model.size_y/2, -model.size_z/2+model.pml_thickness*0), 
-                meep.vec(model.size_x/2,   model.size_y/2,  model.size_z/2-model.pml_thickness*0))
 vol.center_origin()
-
-## Define the Perfectly Matched Layers
-perfectly_matched_layers = meep.pml(model.pml_thickness)          ## PML on both faces at Z axis
-
-if not sim_param['frequency_domain']:
-    meep.master_printf("== Time domain structure setup ==\n")
-    ## Define each polarizability by redirecting the callback to the corresponding "where_material" function
-    ## Define the frequency-independent epsilon for all materials (needed here, before defining s, or unstable)
-    model.double_vec = model.get_static_permittivity; meep.set_EPS_Callback(model.__disown__())
-    s = meep.structure(vol, meep.EPS, perfectly_matched_layers, meep.identity())
-
-    ## Add all the materials
-    model.build_polarizabilities(s)
-
-    ## Add the source dependence
-    #srctype = meep.band_src_time(model.srcFreq/c, model.srcWidth/c, model.simtime*c/1.1)
-    srctype = meep.gaussian_src_time(model.srcFreq/c, model.srcWidth/c) ## , 0, 1000e-12    ?? 
-
-else:
-    meep.master_printf("== Frequency domain structure setup (for frequency of %g Hz) ==\n" % sim_param['frequency'])
-    if (model.Kx!=0 or model.Ky!=0): print "Warning: frequency-domain solver may be broken for nonperpendicular incidence"
-    ## Frequency-domain simulation does not support dispersive materials yet. We must define each material by 
-    ## using the nondispersive permittivity and the nondispersive conductivity 
-    ## (both calculated from polarizabilities at given frequency)
-
-    ## Define the frequency-independent epsilon for all materials (has to be done _before_ defining s, or unstable)
-    my_eps = meep_utils.MyHiFreqPermittivity(model, sim_param['frequency'])
-    meep.set_EPS_Callback(my_eps.__disown__())
-    s = meep.structure(vol, meep.EPS, perfectly_matched_layers, meep.identity()) 
-
-    ## Create callback to set nondispersive conductivity (depends on material polarizabilities and frequency)
-    mc = meep_utils.MyConductivity(model, sim_param['frequency'])
-    meep.set_COND_Callback(mc.__disown__())
-    s.set_conductivity(meep.E_stuff, meep.COND)  ## only "E_stuff" worked here for me
-    srctype = meep.continuous_src_time(sim_param['frequency']/c)
+s = meep_utils.init_structure(model=model, volume=vol, pml_axes=meep.Z)
 
 
-## Create fields with Bloch-periodic boundaries (any nonzero transversal component of k-vector is possible)
+## Create fields without Bloch-periodic boundaries
 f = meep.fields(s)
-f.use_bloch(meep.X, -model.Kx/(2*np.pi))
-f.use_bloch(meep.Y, -model.Ky/(2*np.pi))
 
-## Add a source of a plane wave (with possibly oblique incidence)
-## Todo implement in MEEP: we should define an AmplitudeVolume() object and reuse it for monitors later
-srcvolume = meep.volume( 
-        meep.vec(-model.size_x/2, -model.size_y/2, -model.size_z/2+model.pml_thickness),  ## TODO try from -inf to +inf
-        meep.vec(model.size_x/2, model.size_y/2, -model.size_z/2+model.pml_thickness))
-## TODO  move whole amplitude factor to meep_utils, exp(-1j*(a*x+b*y) - ((c*x)**2 + (d*y)**2))
-class AmplitudeFactor(meep.Callback): 
+
+
+
+# Add the field source (see meep_utils for an example of how an arbitrary source waveform is defined)
+if not getattr(model, 'frequency', None):       ## (temporal source shape)
+    #src_time_type = meep.band_src_time(model.src_freq/c, model.src_width/c, model.simtime*c/1.1)
+    src_time_type = meep.gaussian_src_time(model.src_freq/c, model.src_width/c)
+else:
+    src_time_type = meep.continuous_src_time(getattr(model, 'frequency', None)/c)
+srcvolume = meep.volume(                    ## (spatial source shape)
+        meep.vec(-model.size_x/2, -model.size_y/2, -model.size_z/2+model.pml_thickness),
+        meep.vec( model.size_x/2,  model.size_y/2, -model.size_z/2+model.pml_thickness))
+
+#f.add_volume_source(meep.Ex, src_time_type, srcvolume)
+## Replace the f.add_volume_source(meep.Ex, srctype, srcvolume) line with following:
+## Option for a custom source (e.g. exciting some waveguide mode)
+class SrcAmplitudeFactor(meep.Callback): 
+    ## The source amplitude is complex -> phase factor modifies its direction
+    ## todo: implement in MEEP: we should define an AmplitudeVolume() object and reuse it for monitors later
     def __init__(self, Kx=0, Ky=0): 
         meep.Callback.__init__(self)
         (self.Kx, self.Ky) = Kx, Ky
     def complex_vec(self, vec):   ## Note: the 'vec' coordinates are _relative_ to the source center
-        ## The source amplitude is complex and has the form of an oblique plane wave
+        # (oblique) Gaussian beam
         return np.exp(-1j*(self.Kx*vec.x() + self.Ky*vec.y()) - (vec.x()/.5e-3)**2 - (vec.y()/.5e-3)**2)
-af = AmplitudeFactor(Kx=model.Kx, Ky=model.Ky)
+af = SrcAmplitudeFactor(Kx=getattr(model, 'Kx', 0), Ky=getattr(model, 'Ky', 0))
 meep.set_AMPL_Callback(af.__disown__())
-f.add_volume_source(meep.Ex, srctype, srcvolume, meep.AMPL)
-#f.add_volume_source(meep.Ex, srctype, srcvolume)
-
-## Define monitors and visualisation output
-monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'Kx':model.Kx, 'Ky':model.Ky}
-monitor1_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.monitor_z1, **monitor_options)
-monitor1_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.monitor_z1, **monitor_options)
-monitor2_Ex = meep_utils.AmplitudeMonitorPlane(comp=meep.Ex, z_position=model.monitor_z2, **monitor_options)
-monitor2_Hy = meep_utils.AmplitudeMonitorPlane(comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
-snapshot_maker = meep_utils.SnapshotMaker(snapshot_times=[model.simtime-float(X)/4/model.srcFreq for X in range(1)], 
-        field=f, outputdir=model.simulation_name, volume=volume_except_pml)
-#snapshot_maker = meep_utils.SnapshotMaker(snapshot_times=[], 
-        #field=f, outputdir=model.simulation_name, volume=volume_except_pml)
-
-#slice_makers = [meep_utils.SliceMaker(field=f, component=meep.Ex, timestep=.1e-12, normal="x", 
-    #position=0., model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputHDF=True, outputVTK=True, outputGIF=False)]
-#slice_makers = [meep_utils.SliceMaker(field=f, component=meep.Ex, timestep=.1e-12, normal="y", 
-    #position=0., model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputHDF=True, outputVTK=True, outputGIF=False)]
+f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
 
 
-pad = model.pml_thickness
-slice_makers = [
-        #meep_utils.SliceMaker(field=f, component=meep.Ex, timestep=.1e-12, normal="z", 
-    #position=model.metalpos-2e-6, model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputHDF=True, outputVTK=True, outputGIF=False),
 
-        #meep_utils.SliceMaker(field=f, component=meep.Ex, timestep=.1e-12, normal="z", 
-    #position=15e-6, model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputHDF=True, outputVTK=True, outputGIF=False),
-        #meep_utils.SliceMaker(field=f, component=meep.Ex, timestep=.1e-12, normal="z", 
-    #position=20e-6, model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputHDF=True, outputVTK=True, outputGIF=False),
-        #meep_utils.SliceMaker(field=f, component=meep.Ex, timestep=.1e-12, normal="z", 
-    #position=25e-6, model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputHDF=True, outputVTK=True, outputGIF=False),
 
-        #meep_utils.SliceMaker(field=f, component=meep.Ex, timestep=.1e-12, normal="x", 
-    #position=0e-6, model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputHDF=True, outputVTK=True, outputGIF=False),
+## Define monitor planes, and the field output for visualisation (controlled by keywords in the 'comment' parameter)
+monitor_options = {'size_x':model.size_x, 'size_y':model.size_y, 'resolution':model.resolution, 'Kx':getattr(model, 'Kx', 0), 'Ky':getattr(model, 'Ky', 0)}
+monitor1_Ex = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Ex, z_position=model.monitor_z1, **monitor_options)
+monitor1_Hy = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Hy, z_position=model.monitor_z1, **monitor_options)
+monitor2_Ex = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Ex, z_position=model.monitor_z2, **monitor_options)
+monitor2_Hy = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
 
-        ## 1D record - for the wedge numerical experiment
-        meep_utils.SliceMaker(field=f, component=meep.Ex, timestep=.1e-12, 
+slices = []
+if not "noepssnapshot" in model.comment:
+    slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
+if "narrowfreq-snapshots" in model.comment:
+    slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_y=0, at_t=np.inf,
+            name=('At%.3eHz'%getattr(model, 'frequency', None)) if getattr(model, 'frequency', None) else '',
+            outputpng=True, outputvtk=False)]
+if "fieldevolution" in model.comment: 
+    slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', 
+        min_timestep=.1/model.src_freq, outputgif=True, outputvtk=True)]
+if "snapshote" in model.comment:
+    slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
+
+slices += [meep_utils.Slice(field=f, component=meep.Ex, timestep=.1e-12, 
                 volume=meep.volume( 
-                        meep.vec(0, -model.size_y/2+pad,  model.size_z/2-model.pml_thickness), 
-                        meep.vec(0,  model.size_y/2-pad,  model.size_z/2-model.pml_thickness)),
-                model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputHDF=True, outputVTK=True, outputGIF=True),
+                        meep.vec(0, -model.size_y/2+model.pml_thickness,  model.size_z/2-model.pml_thickness), 
+                        meep.vec(0,  model.size_y/2-model.pml_thickness,  model.size_z/2-model.pml_thickness)),
+                model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputHDF=True, outputVTK=True, outputGIF=True)]
 
-        ]
-#slice_makers = []
+        #pad = model.pml_thickness
+        # 1D record - for the wedge numerical experiment
+        #meep_utils.SliceMaker(field=f, component=meep.Ex, timestep=.1e-12, 
+                #volume=meep.volume( 
+                        #meep.vec(0, -model.size_y/2+pad,  model.size_z/2-model.pml_thickness), 
+                        #meep.vec(0,  model.size_y/2-pad,  model.size_z/2-model.pml_thickness)),
+                #model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputHDF=True, outputVTK=True, outputGIF=True),
 
-meep.master_printf("=== Starting computation ===\n")
-
-if not sim_param['frequency_domain']:
-    tmptime = time.time()
-    f.step()
-    print 'setup took ', -tmptime + time.time() , 's'
-    dt = (f.time()/c)
-    meep_utils.lorentzian_unstable_check_new(model, dt)
-    timer = meep_utils.Timer(simtime=model.simtime)
-    #meep.quiet(True)
-    count = 0
-    while (f.time()/c < model.simtime):     ## timestepping cycle
+## Run the FDTD simulation or the frequency-domain solver
+if not getattr(model, 'frequency', None):       ## time-domain computation
+    f.step(); timer = meep_utils.Timer(simtime=model.simtime); meep.quiet(True) # use custom progress messages
+    while (f.time()/c < model.simtime):     # timestepping cycle
         f.step()
         timer.print_progress(f.time()/c)
         for monitor in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy): monitor.record(field=f)
-        for slice_maker in slice_makers: slice_maker.poll(f.time()/c)
-        snapshot_maker.poll(f.time()/c)
-        #print f.get_field(meep.Ex, meep.vec(0,0,0))
-    meep.all_wait() ## FIXME needed?
-    for slice_maker in slice_makers: slice_maker.finalize()
+        for slice_ in slices: slice_.poll(f.time()/c)
+    for slice_ in slices: slice_.finalize()
     meep_utils.notify(model.simulation_name, run_time=timer.get_time())
-else:
-    f.step()
-    print sim_param['MaxIter']
-    f.solve_cw(sim_param['MaxTol'], sim_param['MaxIter'], sim_param['BiCGStab']) 
+else:                                       ## frequency-domain computation
+    f.solve_cw(getattr(model, 'MaxTol',0.001), getattr(model, 'MaxIter', 5000), getattr(model, 'BiCGStab', 8)) 
     for monitor in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy): monitor.record(field=f)
-    snapshot_maker.take_snapshot(0)
+    for slice_ in slices: slice_.finalize()
     meep_utils.notify(model.simulation_name)
 
-with open("./last_simulation_name.txt", "w") as outfile: outfile.write(model.simulation_name) 
-
-meep.master_printf("=== Processing recorded fields ===\n")
 ## Get the reflection and transmission of the structure
-meep.master_printf("   getting s-params\n")
-import time
 if meep.my_rank() == 0:
-    time1 = time.time()
-    freq, s11, s12 = meep_utils.get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, 
-            frequency_domain=sim_param['frequency_domain'], 
-            frequency=sim_param['frequency'], 
-            maxf=model.srcFreq+model.srcWidth, 
-            pad_zeros=1.0,
-            Kx=model.Kx,
-            Ky=model.Ky)
-            #side_wavenumber=2*pi*modenumber*1/model.size_y)
-    print "S-parameter retrieval (FFT etc.) took", time.time()-time1, "s" 
-    #meep.master_printf("   saving\n")
-    meep_utils.savetxt(freq=freq, s11=s11, s12=s12, model=model)
-    import effparam
-    #meep.master_printf("   done.\n")
+    #t = monitor1_Ex.get_time()
+    #Ex1, Hy1, Ex2, Hy2 = [mon.get_field_waveform() for mon in (monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy)]
 
-print "All processes finishing", meep.my_rank()
+    freq, s11, s12, columnheaderstring = meep_utils.get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, 
+            frequency_domain=True if getattr(model, 'frequency', None) else False, 
+            frequency=getattr(model, 'frequency', None),     ## procedure compatible with both FDTD and FDFD
+            intf=getattr(model, 'interesting_frequencies', [0, model.src_freq+model.src_width]),  ## clip the frequency range for plotting
+            pad_zeros=1.0,                                                                        ## speed-up FFT, and stabilize eff-param retrieval
+            Kx=getattr(model, 'Kx', 0), Ky=getattr(model, 'Ky', 0),                                 ## enable oblique incidence (works only if monitors in vacuum)
+            eps1=getattr(model, 'mon1eps', 1), eps2=getattr(model, 'mon2eps', 1))               ## enable monitors inside dielectrics
+
+    print "EVERYTHING OK"
+    meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",                            
+            X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)),                  ## Save 5 columns: freq, amplitude/phase for reflection/transmission
+            header=model.parameterstring+columnheaderstring)     ## Export header
+
+    with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
 
 meep.all_wait()         # Wait until all file operations are finished
