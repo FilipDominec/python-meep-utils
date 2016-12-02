@@ -14,7 +14,7 @@ compare_dispersion() {
 	if [ -d cdh ]; then rm -r cdh/ ;  echo "Error: Another simulation has left a 'cdh/' directory; deleting it"; fi
 
     ## scan through the wave vector
-    Kzs=`python -c "import numpy as np; print ' '.join(['%.4e' % x for x in np.linspace(0,$Kzones*np.pi/$cellsize,$Ksampling)])"`
+    Kzs=`python -c "import numpy as np; print ' '.join(['%.4e' % x for x in np.linspace(0,$Kzones*np.pi/$cellsize,$Kzones*$Ksampling)])"`
 	echo Will compute dispersion curves by finding all resonances at K in: $Kzs 
     for Kz in $Kzs
 	do 
@@ -42,6 +42,7 @@ compare_dispersion() {
 
 
 ## === Rod array ===
+ylim2=4 ## in THz
 cellsize=100e-6
 #for r in `seq 80 10 120`; do
 for r in 100; do
