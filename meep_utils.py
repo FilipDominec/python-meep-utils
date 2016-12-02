@@ -328,7 +328,8 @@ class AbstractMeepModel(meep.Callback):
         (SWIG callback does not report where the error occured, it just crashes) 
         """
         f_c = self.f_c()
-        if not getattr(self, 'materials', None): meep.master_printf('Warning: model __init__ function should define materials (as a list of objects)')
+        for expected_key in 'monitor_z1', 'monitor_z2', 'simtime', 'src_width', 'src_freq', 'interesting_frequencies', 'materials':
+            if not getattr(self, expected_key, None): meep.master_printf('Warning: model __init__ function should define the "%s" variable (see examples for details)' % expected_key)
         for n, material in enumerate(self.materials): 
             ## Check the stability criterion that no oscillator may be above the cricital frequency f_c (MEEP checks this, but perhaps in a wrong way)
             for osc in material.pol:

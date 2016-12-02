@@ -72,12 +72,17 @@ class Wedge_model(meep_utils.AbstractMeepModel): #{{{
         ## constants for the simulation
         (self.monitor_z1, self.monitor_z2) = (-(monzd*cells)/2+monzc - padding, (monzd*cells)/2+monzc + padding)  
         self.simtime = simtime      # [s]
-        self.srcWidth = 3000e9     
-        self.srcFreq = 4e9 + self.srcWidth/2 + (Ky**2+Kx**2)**.5 / (2*np.pi/3e8)  ## cutoff for oblique incidence
+        self.src_width = 3000e9     
+        self.src_freq = 4e9 + self.src_width/2 + (Ky**2+Kx**2)**.5 / (2*np.pi/3e8)  ## cutoff for oblique incidence
         self.interesting_frequencies = (0., 2000e9) 
 
-        #meep_utils.plot_eps(self.materials, freq_range=(1e10, 1e14), plot_conductivity=True)
-        self.test_materials() ## catches (most) errors in structure syntax, before they crash the callback
+        ## Test the validity of the model
+        #meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                #draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        try:
+            self.test_materials() ## catches (most) errors in structure syntax, before they crash the callback
+        except:
+            print(sys.exc())
 
     def where_wire(self, r):
         y,z = r.y(), r.z()
@@ -156,11 +161,11 @@ if "fieldevolution" in model.comment:
 if "snapshote" in model.comment:
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
 
-slices += [meep_utils.Slice(field=f, component=meep.Ex, timestep=.1e-12, 
+slices += [meep_utils.Slice(field=f, components=(meep.Ex), min_timestep=.1e-12, 
                 volume=meep.volume( 
                         meep.vec(0, -model.size_y/2+model.pml_thickness,  model.size_z/2-model.pml_thickness), 
                         meep.vec(0,  model.size_y/2-model.pml_thickness,  model.size_z/2-model.pml_thickness)),
-                model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputHDF=True, outputVTK=True, outputGIF=True)]
+                model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputhdf=True, outputvtk=True, outputgif=True)]
 
         #pad = model.pml_thickness
         # 1D record - for the wedge numerical experiment
