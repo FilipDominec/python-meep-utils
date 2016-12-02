@@ -161,11 +161,11 @@ if "fieldevolution" in model.comment:
 if "snapshote" in model.comment:
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
 
-#slices += [meep_utils.Slice(field=f, components=(meep.Ex), min_timestep=.1e-12, 
-                #volume=meep.volume( 
-                        #meep.vec(0, -model.size_y/2+model.pml_thickness,  model.size_z/2-model.pml_thickness), 
-                        #meep.vec(0,  model.size_y/2-model.pml_thickness,  model.size_z/2-model.pml_thickness)),
-                #model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputhdf=True, outputvtk=True, outputgif=True)]
+slices += [meep_utils.Slice(field=f, components=(meep.Ex), min_timestep=.1e-12, 
+                volume=meep.volume( 
+                        meep.vec(0, -model.size_y/2+model.pml_thickness, 0* model.size_z/2-model.pml_thickness), 
+                        meep.vec(0,  model.size_y/2-model.pml_thickness, 0* model.size_z/2-model.pml_thickness)),
+                model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputhdf=True, outputvtk=True, outputgif=True)]
 
         #pad = model.pml_thickness
         # 1D record - for the wedge numerical experiment
