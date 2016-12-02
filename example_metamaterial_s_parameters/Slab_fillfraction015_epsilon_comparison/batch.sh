@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ -z $NP ] ; then NP=2 ; fi             # number of processors
-model=SphereArray
+model=SphereWire
 cellsize=300e-6
 thz=1e12
 if [ -z "$skipsimulation" ]; then 

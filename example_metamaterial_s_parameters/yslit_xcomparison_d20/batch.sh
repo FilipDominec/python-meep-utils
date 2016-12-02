@@ -6,7 +6,7 @@ staticpar=(model=Fishnet resolution=2u simtime=350p cellsize=100u cellsizexy=100
 
 if [ -z "$skipsimulation" ]; then 
 	for	xhs in 4 10 20 40 80; do
-		np ../../scatter.py "${staticpar[@]}" yholesize=inf xholesize=${xhs}u
+		mpirun -np $NP ../../scatter.py "${staticpar[@]}" yholesize=inf xholesize=${xhs}u
 		../../effparam.py --numstabcoef .97
 	done
 fi

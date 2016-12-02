@@ -178,13 +178,13 @@ class AbstractMeepModel(meep.Callback):
         try: 
             if nondefault and param!='model': self.simulation_name += ("_%s=%.3e") % (param, float(val))
             self.parameterstring += "#param %s,%.3e\n" % (param, float(val))
-            meep.master_printf("  <float> %s%s = %.3e %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
+            meep.master_printf("  <float> %s%s = %.3e %s\n" % (param, " "*max(10-len(param), 0), float(val), infostring))
         except ValueError: 
             if nondefault and param!='model': self.simulation_name += ("_%s=%s") % (param, val)
             self.parameterstring += "#param %s,%s\n" % (param, val)
             meep.master_printf("  <str>   %s%s = %s %s\n" % (param, " "*max(10-len(param), 0), val, infostring))
         #}}}
-    def register_locals(self, params, other_args):#{{{
+    def register_locals(self, params, *other_args):#{{{
         """ Scans through the parameters and calls register_local() for each """
 
         ## Automatically detect whether some argument differs from its default 
@@ -198,10 +198,11 @@ class AbstractMeepModel(meep.Callback):
             if (type(val) in (str, int, float, complex)):
                 self.register_local(param_name, val)
 
-        ## Then add other parameters that are not specified in the __init__ function
-        for (param_name, val) in other_args.iteritems():
-            if param_name != 'self':
-                self.register_local(param_name, val)
+        ## Then add other parameters (if supplied as a list of strings) that are not specified in the __init__ function
+        if len(other_args) != []:
+            for (param_name, val) in other_args[0].iteritems():
+                if param_name != 'self':
+                    self.register_local(param_name, val)
         #}}}
     def f_c(self):#{{{
         """ critical_frequency for FDTD stability """
@@ -327,6 +328,7 @@ class AbstractMeepModel(meep.Callback):
         (SWIG callback does not report where the error occured, it just crashes) 
         """
         f_c = self.f_c()
+        if not getattr(self, 'materials', None): meep.master_printf('Warning: model __init__ function should define materials (as a list of objects)')
         for n, material in enumerate(self.materials): 
             ## Check the stability criterion that no oscillator may be above the cricital frequency f_c (MEEP checks this, but perhaps in a wrong way)
             for osc in material.pol:
@@ -482,7 +484,7 @@ class MyConductivity(meep.Callback):#{{{            %% TODO rename to Conductivi
         else: return 0
 #}}}
 
-def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y=False):#{{{
+def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y=False, freq_range=None):#{{{
     """
     """
     import matplotlib.pyplot as plt
@@ -495,16 +497,18 @@ def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y
             mfreqtxt=mfreqtxt[1:-1]; 
         bboxprops   = dict(boxstyle='round, pad=.15', fc='white', alpha=1, lw=0)
         arrowprops  = dict(arrowstyle=('->', '-|>', 'simple', 'fancy')[0], connectionstyle = 'arc3,rad=0', lw=1, ec='k', fc='w')
-        plt.annotate(mfreqtxt,                    
-                xy      = (mfreq, label_y2),    xycoords  ='data',
-                xytext  = (mfreq, label_y2*arrow_length if log_y else label_y+arrow_length),  textcoords='data',        # (delete this if text without arrow is used)
-                ha='center', va='bottom', size=15, color='k',
-                bbox        = bboxprops,        # comment out to disable bounding box
-                arrowprops  = arrowprops,       # comment out to disable arrow
-                )
+        if not freq_range  or  (mfreq > freq_range[0] and mfreq < freq_range[1]):
+            plt.annotate(mfreqtxt,                    
+                    xy      = (mfreq, label_y2),    xycoords  ='data',
+                    # (delete following line if text without arrow is used)
+                    xytext  = (mfreq, label_y2*arrow_length if log_y else label_y+arrow_length),  textcoords='data',        
+                    ha='center', va='bottom', size=15, color='k',
+                    bbox        = bboxprops,        # comment out to disable bounding box
+                    arrowprops  = arrowprops,       # comment out to disable arrow
+                    )
 #}}}
 def plot_eps(*args, **kwargs):#{{{
-    try: plot_eps_(*args, **kwargs)
+    try:    plot_eps_(*args, **kwargs)
     except: meep.master_printf("Could not plot the material permittivity spectra, probably matplotlib bug. Skipping it...")
     #}}}
 def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_range=(1e10, 1e18), mark_freq=[], draw_instability_area=None):#{{{
@@ -512,16 +516,8 @@ def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_rang
 
     Accepts list of materials
     """
-
-    #for material in list(to_plot): ## autoscale x axis?
-        #for pol in material.pol:
-            #if freq_range[1] < pol['omega']: freq_range[1] = pol['omega']*2
-
     frequency = 10**np.arange(np.log10(freq_range[0]), np.log10(freq_range[1]), .01)
-
-    plt.figure(figsize=(7,6))
-    #colors = ['#000000', '#004400', '#003366', '#000088', '#440077', '#661100', 
-              #'#aa8800', '#00aa00', '#0099dd', '#0000EE', '#2200DD', '#aa0000']
+    plt.figure(figsize=(7,10))
     colors = ['#000000', '#004400', '#003366', '#000088', '#440077', '#661100', 
               '#aa8800', '#0044dd', '#00bb00', '#aaaa00', '#bb6600', '#dd0000']
 
@@ -533,10 +529,7 @@ def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_rang
         else: color = 'black'
         label = getattr(material, 'shortname', material.name)
         plt.subplot(subplotnumber,1,1)
-
         eps = np.conj(analytic_eps(material, frequency)) ## FIXME eps should be computed as conjugated by default
-
-        plt.subplot(subplotnumber,1,1)
         plt.plot(frequency, np.real(eps), color=color, label=material.name, ls='-') #  
         plt.plot(frequency, np.imag(eps), color=color, label='', ls='--') # 
         #R = abs((1-eps**.5)/(1+eps**.5))**2     ## Intensity reflectivity
@@ -579,8 +572,6 @@ def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_rang
             #plt.yscale('log'); 
             #plt.xscale('log'); plt.legend(); plt.grid(True)
 
-
-
     ## Annotate frequencies and finish the graph 
     plt.subplot(subplotnumber,1,1)
     plt.legend(prop={'size':8}, loc='lower right') 
@@ -588,10 +579,12 @@ def plot_eps_(to_plot, filename="epsilon.png", plot_conductivity=True, freq_rang
     plt.ylabel(u"relative permittivity $\\varepsilon_r$")
     plt.grid(True)
     plt.xscale('log')
-    ylim = (-1e7, 1e6); plt.ylim(ylim); plt.yscale('symlog')
-    annotate_frequency_axis(mark_freq, log_y=True, arrow_length=50) # TODO , print_freq=True
+    ylim = (np.min(np.real(eps)), np.max(np.real(eps)))
+    plt.ylim(ylim)
+    plt.yscale('symlog')
+    annotate_frequency_axis(mark_freq, log_y=True, arrow_length=50, freq_range=freq_range) 
     if draw_instability_area:
-        plt.gca().add_patch(plt.Rectangle((draw_instability_area[0], ylim[0]), 1e20, draw_instability_area[1]-ylim[0], color='#bbbbbb'))
+        plt.gca().add_patch(plt.Rectangle((draw_instability_area[0], ylim[0]), freq_range[1], draw_instability_area[1]-ylim[0], color='#bbbbbb'))
 
     if plot_conductivity:
         plt.subplot(subplotnumber,1,2)
@@ -815,14 +808,14 @@ class Slice(): #{{{
                 (now > self.at_t[0] and self.images_number==0)):
             self.images_number += 1 
             for component in self.components:
-                self.field.output_hdf5(component, self.volume, self.openfile, 1) 
+                self.field.output_hdf5(component, self.volume, self.openfile, True) 
             self.last_slice_time = now
 
     def finalize(self, forcesave=True):
         if forcesave:
             self.images_number += 1 
             for component in self.components:
-                self.field.output_hdf5(component, self.volume, self.openfile, 1) 
+                self.field.output_hdf5(component, self.volume, self.openfile, True) 
         del(self.openfile)          ## all processes must release the HDF5 file
         meep.all_wait()
         if meep.my_rank() == 0:        ## but postprocessing is to be done by a single process

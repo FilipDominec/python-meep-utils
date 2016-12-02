@@ -6,7 +6,7 @@ staticpar=(model=Fishnet resolution=2u simtime=150p cellsize=100u cellsizexy=100
 
 if [ -z "$skipsimulation" ]; then 
     for    xhs in `seq 2 8 45` `seq 6 8 100`; do
-        np ../../scatter.py "${staticpar[@]}" yholesize=inf slabthick=${xhs}e-6
+        mpirun -np $NP ../../scatter.py "${staticpar[@]}" yholesize=inf slabthick=${xhs}e-6
         ../../effparam.py --numstabcoef .97
     done
 fi

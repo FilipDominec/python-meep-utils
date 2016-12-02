@@ -122,7 +122,7 @@ def reasonable_ticks(lim1, lim2, density=1, extend_to_lims=False): #{{{
 
     By default, about 7 to 14 human-friendly intermediate values are generated between lim1 and lim2. 
     Their mantissa increases by 1, 2, or 5 as usual in hand-made plots. Their total number can be adjusted by 
-    the `density' parameter.
+    the relative `density' parameter.
 
     If the value of lim1 or lim2 is nice enough, it is included in the range, too. 
     This behaviour can be forced by setting `extend_to_lims' is set to True, in which case the first and last 
@@ -251,6 +251,9 @@ if args.contours == 'yes':
     contours = plt.contourf(xi, paramsi, yi, cmap=cmap, levels=levels, extend='both')  
     for contour in contours.collections: contour.set_antialiased(False) ## fix aliasing for old Matplotlib
     cb=plt.colorbar().set_ticks(reasonable_ticks(cmaprange1, cmaprange2, density=.8)) 
+    if args.markersize: 
+        for xx,pp in zip(xs,params): 
+            plt.plot([xx,xx],[pp,pp],marker='o', ms=args.markersize, alpha=.3)
 
 ## ==== Plot tuning and labeling ====
 if args.xlim1 != "": plt.xlim(left=float(args.xlim1))

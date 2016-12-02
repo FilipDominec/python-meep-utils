@@ -2,7 +2,7 @@
 if [ -z $NP ] ; then NP=2 ; fi             # number of processors
 cellsize=100e-6
 thz=1e12
-par="model=SphereArray resolution=4u radius=30e-6 wirethick=0"
+par="model=SphereWire resolution=4u radius=30e-6 wirethick=0"
 
 if [ -z "$skipsimulation" ]; then 
 	for cellsize in `seq 60 10 200` `seq 220 20 400`; do

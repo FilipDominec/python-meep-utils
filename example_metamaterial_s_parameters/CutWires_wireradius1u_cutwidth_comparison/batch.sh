@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ -z $NP ] ; then NP=2 ; fi             # number of processors
-model=SphereArray
+model=SphereWire
 cellsize=100e-6
 thz=1e12
 par='model=SphereArray resolution=2u simtime=100p radius=0u'
