@@ -31,6 +31,7 @@ maxfreq = 4e12
 frequnit = 1e12
 
 plot_FFT = True
+use_vacuum_ref = True
 interp_anisotropy = 2e-5    # value lower than 1. interpolates rather vertically; optimize if plot disintegrates
 FFTcutoff = 0.8             # Hann-like window to suppress spectral leakage in FFT (mostly for aesthetic purposes)
 
@@ -54,81 +55,87 @@ else:
 
 
 ## Load and prepare data (from multiple files)
-filenames = args.filenames
 if len(filenames) == 0: print "Error: no data file to be plotted was provided as argument" ; quit()
 Efs = []
+EfsRef = []
 Kzs = []     ## TODO allow also scanning over Kx, Ky (which allows for plotting dispersion curves also along "Γ-M" and other directions in K-space)
 freqs = []
-zfs = []
+fs = []
 
 FDM_freqs = []
 FDM_amplis = []
 FDM_phases = []
 FDM_Kzs = []
 
-for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(filenames)))): 
-    Kz = None
-    cellsize = None
-    with open(filename) as datafile:
-        for line in datafile:
-            if line[0:1] in "0123456789": break         # end of file header
-            value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
-            if not Kz and ("Kz" in line): Kz = float(value)
-            if not cellsize and ("cellsize" in line): cellsize = float(value)
-    Kz = Kz*cellsize/2/np.pi
-    (t, E) = np.loadtxt(filename, usecols=list(range(2)), unpack=True, )
+for vacuum_ref in [True, False] if use_vacuum_ref else [False]:
+    if vacuum_ref:  filenames = os.listdir(path='ref')
+    else:           filenames = args.filenames
+    for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(filenames)))): 
+        Kz = None
+        cellsize = None
+        with open(filename) as datafile:
+            for line in datafile:
+                if line[0:1] in "0123456789": break         # end of file header
+                value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
+                if not Kz and ("Kz" in line): Kz = float(value)
+                if not cellsize and ("cellsize" in line): cellsize = float(value)
+        Kz = Kz*cellsize/2/np.pi
+        (t, E) = np.loadtxt(filename, usecols=list(range(2)), unpack=True, )
 
-    if plot_FDM:
-        import harminv_wrapper
-        tscale = 3e9            ## TODO check again that this prescaling is needed
-        t1 = t[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]*tscale
-        t1 -= np.min(t1)
-        E1 = E[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]
-        try:
-            hi = harminv_wrapper.harminv(t1, E1, d=.1, f=15)
-            hi['frequency'] *= tscale /frequnit
-            hi['amplitude'] /= np.max(hi['amplitude'])
-            hi['error'] /= np.max(hi['amplitude'])
-            FDM_freqs = np.append(FDM_freqs,  hi['frequency'])
-            FDM_amplis= np.append(FDM_amplis,  hi['amplitude'])
-            FDM_phases= np.append(FDM_phases,  hi['phase'])
-            FDM_Kzs   = np.append(FDM_Kzs,    Kz*np.ones_like(hi['frequency'])) 
-        except: 
-            print "Error: Harminv did not find any oscillator in %s" % filename
+        if plot_FDM and not vacuum_ref:
+            import harminv_wrapper
+            tscale = 3e9            ## TODO check again that this prescaling is needed
+            t1 = t[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]*tscale
+            t1 -= np.min(t1)
+            E1 = E[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]
+            try:
+                hi = harminv_wrapper.harminv(t1, E1, d=.1, f=15)
+                hi['frequency'] *= tscale /frequnit
+                hi['amplitude'] /= np.max(hi['amplitude'])
+                hi['error'] /= np.max(hi['amplitude'])
+                FDM_freqs = np.append(FDM_freqs,  hi['frequency'])
+                FDM_amplis= np.append(FDM_amplis,  hi['amplitude'])
+                FDM_phases= np.append(FDM_phases,  hi['phase'])
+                FDM_Kzs   = np.append(FDM_Kzs,    Kz*np.ones_like(hi['frequency'])) 
+            except: 
+                print "Error: Harminv did not find any oscillator in %s" % filename
 
 
-    if plot_FFT:
-        for field in (E,):
-            field[t>max(t)*FFTcutoff] = field[t>max(t)*FFTcutoff]*(.5 + .5*np.cos(np.pi * (t[t>max(t)*FFTcutoff]/max(t)-FFTcutoff)/(1-FFTcutoff)))
-        ## 1D FFT with cropping for useful frequencies
-        freq    = np.fft.fftfreq(len(t), d=(t[1]-t[0]))         # calculate the frequency axis with proper spacing
-        Ef      = np.fft.fft(E, axis=0) / len(t) * 2*np.pi     # calculate the FFT values
-        truncated = np.logical_and(freq>0, freq<maxfreq)         # (optional) get the frequency range
-        (Ef, freq) = map(lambda x: x[truncated], (Ef, freq))    # (optional) truncate the data points
+        if plot_FFT:
+            for field in (E,):
+                field[t>max(t)*FFTcutoff] = field[t>max(t)*FFTcutoff]*(.5 + .5*np.cos(np.pi * (t[t>max(t)*FFTcutoff]/max(t)-FFTcutoff)/(1-FFTcutoff)))
+            ## 1D FFT with cropping for useful frequencies
+            freq    = np.fft.fftfreq(len(t), d=(t[1]-t[0]))         # calculate the frequency axis with proper spacing
+            Ef      = np.fft.fft(E, axis=0) / len(t) * 2*np.pi     # calculate the FFT values
+            truncated = np.logical_and(freq>0, freq<maxfreq)         # (optional) get the frequency range
+            (Ef, freq) = map(lambda x: x[truncated], (Ef, freq))    # (optional) truncate the data points
 
-        freq    = np.fft.fftshift(freq)
-        pulsedelay  = 9.2e-12
-        Y      = np.fft.fftshift(Ef) / np.exp(-1j*pulsedelay*freq) * 100
+            freq    = np.fft.fftshift(freq)
+            pulsedelay  = 9.2e-12 ## obsolete
+            Y      = np.fft.fftshift(Ef) / np.exp(-1j*pulsedelay*freq) * 100
+            if not vacuum_ref:
+                Ef = Y
+                Efs     = np.append(Efs,    Ef)
 
-        ## TODO: implement retrieval of the effective spatial-dispersive permittivity ε(ω,K)
-        # if [sqrt(mu_r eps) c k / omega] - 1 = Y
-        #Ef = ((freq*2*np.pi) / (Kz * c))**2 * (Y + 1)**2
-        Ef = Y
+                Kzs     = np.append(Kzs,    Kz*np.ones_like(freq))
+                freqs   = np.append(freqs,  freq)
+            else:
+                EfsRef  = np.append(Efs,    Y)
+                ## TODO: implement retrieval of the effective spatial-dispersive permittivity ε(ω,K)
+                # if [sqrt(mu_r eps) c k / omega] - 1 = Y
+                #Ef = ((freq*2*np.pi) / (Kz * c))**2 * (Y + 1)**2
 
-        # if [sqrt(mu_r eps) c k / omega] - 1 = Y omega eps
-        # then   a * q**2  +  b * q  +  c = 0
-        # Where
-        #omega = freq * 2*np.pi
-        #A = 1/omega
-        #B = c * Kz / omega**2
-        #C = Y
-        #q1 = -B  +  (B**2 - 4 * A * C)**.5
-        #Ef = q1 ** (-1./2)
-        #print Ef
+                # if [sqrt(mu_r eps) c k / omega] - 1 = Y omega eps
+                # then   a * q**2  +  b * q  +  c = 0
+                # Where
+                #omega = freq * 2*np.pi
+                #A = 1/omega
+                #B = c * Kz / omega**2
+                #C = Y
+                #q1 = -B  +  (B**2 - 4 * A * C)**.5
+                #Ef = q1 ** (-1./2)
+                #print Ef
 
-        Kzs     = np.append(Kzs,    Kz*np.ones_like(freq))
-        freqs   = np.append(freqs,  freq)
-        Efs     = np.append(Efs,    Ef)
 
 
 
@@ -140,8 +147,12 @@ fi = np.linspace(0, maxfreq/frequnit, 200)
 ki = np.linspace(0, np.max(Kzs), 50)
 
 ## Plot contours for gridded data
+if use_vacuum_ref:
+    contour_data = Efs/EfsRef
+else:
+    contour_data = Efs
 
-z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.abs(Efs), ki*interp_anisotropy, fi, interp='linear')
+z = griddata(Kzs*interp_anisotropy, freqs/frequnit, np.abs(contour_data), ki*interp_anisotropy, fi, interp='linear')
 log_min, log_max = np.log10(np.min(z)), np.log10(np.max(z))
 log_min, log_max = log_min, log_min*.3 + log_max*.7
 #log_min, log_max = -5, .5
