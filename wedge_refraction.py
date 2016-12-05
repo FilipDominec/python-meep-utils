@@ -96,7 +96,6 @@ class Wedge_model(meep_utils.AbstractMeepModel): #{{{
 
 
 # Model selection
-import model_simple_structures
 model_param = meep_utils.process_param(sys.argv[1:])
 model = Wedge_model(**model_param)
 
