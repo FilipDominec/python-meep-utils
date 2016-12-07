@@ -31,7 +31,7 @@ maxfreq = 4e12
 frequnit = 1e12
 
 plot_FFT = True
-use_vacuum_ref = True
+use_vacuum_ref = False
 interp_anisotropy = 2e-5    # value lower than 1. interpolates rather vertically; optimize if plot disintegrates
 FFTcutoff = 0.8             # Hann-like window to suppress spectral leakage in FFT (mostly for aesthetic purposes)
 
@@ -55,7 +55,8 @@ else:
 
 
 ## Load and prepare data (from multiple files)
-if len(filenames) == 0: print "Error: no data file to be plotted was provided as argument" ; quit()
+#filenames = args.filenames
+#if len(filenames) == 0: print "Error: no data file to be plotted was provided as argument" ; quit()
 Efs = []
 EfsRef = []
 Kzs = []     ## TODO allow also scanning over Kx, Ky (which allows for plotting dispersion curves also along "Γ-M" and other directions in K-space)
@@ -68,7 +69,7 @@ FDM_phases = []
 FDM_Kzs = []
 
 for vacuum_ref in [True, False] if use_vacuum_ref else [False]:
-    if vacuum_ref:  filenames = os.listdir(path='ref')
+    if vacuum_ref:  filenames = os.listdir('ref')
     else:           filenames = args.filenames
     for filename, color in zip(filenames, matplotlib.cm.hsv(np.linspace(0,1,len(filenames)))): 
         Kz = None

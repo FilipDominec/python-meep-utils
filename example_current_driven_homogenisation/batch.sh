@@ -7,7 +7,7 @@
 ## calling the compare_dispersion() procedure
 
 if [ -z "$NP" ] ; then NP=2 ; fi             # number of processors
-Ksampling=6
+Ksampling=16
 Kzones=2
 
 compare_dispersion() {
@@ -30,7 +30,7 @@ compare_dispersion() {
 
     ## repeat the plot, now comparing also to the curve retrieved above
     mv effparam/*dat NRef.dat
-    ../plot_cdh.py cdh/*dat --ylim2 $ylim2
+    ../plot_cdh.py cdh/*dat --ylim1 0.5 --ylim2 1.0 ## XXX
 
 	## final cleanup
 	lastname=`cat last_simulation_name.dat`
@@ -45,9 +45,9 @@ compare_dispersion() {
 ylim2=4 ## in THz
 cellsize=100e-6
 #for r in `seq 80 10 120`; do
-for r in 100; do
-	compare_dispersion ${par[@]} model=RodArray radius=${r}e-7
-done
+#for r in 100; do
+	#compare_dispersion ${par[@]} model=RodArray radius=${r}e-7
+#done
 
 ## === Ordinary split-ring resonator === 
 #cellsize=100e-6
@@ -66,9 +66,10 @@ done
 
 ## === Electro-magnetic symmetric split-ring resonator
 #for icr in 6 8 10 18; do
-#compare_dispersion ${par[@]} model=ESRRArray comment="emcSRR" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
-            #insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=40e-6 srrthick=10e-6
-#done
+for icr in 10 12 14 16 18; do
+compare_dispersion ${par[@]} model=ESRRArray comment="emcSRR" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
+            insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=40e-6 srrthick=10e-6
+done
 
 
 #for icr in 12 14 16 18; do
