@@ -66,6 +66,10 @@ cellsize=100e-6
 
 ## === Electro-magnetic symmetric split-ring resonator
 #for icr in 6 8 10 18; do
+
+compare_dispersion ${par[@]} model=ESRRArray comment="vacuum" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
+            insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=0e-6 srrthick=0e-6
+
 for icr in 10 12 14 16 18; do
 compare_dispersion ${par[@]} model=ESRRArray comment="emcSRR" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
             insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=40e-6 srrthick=10e-6
