@@ -22,15 +22,13 @@ compare_dispersion() {
         mpirun -np $NP ../cdh.py Kz=$Kz "$@" 
 	done
 
-    #../plot_cdh.py cdh/*dat --ylim2 $ylim2 ## (preview)
-
     ## compute the dispersion curves using the s-parameter method, (with the same parameters)
     mpirun -np $NP ../scatter.py  "$@" simtime=200p
     ../effparam.py
 
     ## repeat the plot, now comparing also to the curve retrieved above
     mv effparam/*dat NRef.dat
-    ../plot_cdh.py cdh/*dat --ylim1 0.5 --ylim2 1.0 ## XXX
+    ../plot_cdh.py cdh/*dat --ylim2 $ylim2
 
 	## final cleanup
 	lastname=`cat last_simulation_name.dat`
