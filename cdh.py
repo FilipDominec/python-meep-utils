@@ -111,7 +111,7 @@ if not getattr(model, 'frequency_domain', None):       ## time-domain computatio
         f.step()
         timer.print_progress(f.time()/c)
         for monitor in (monitor1_Ex,): monitor.record(field=f)
-    meep_utils.notify(model.simulation_name, run_time=timer.get_time())
+    #meep_utils.notify(model.simulation_name, run_time=timer.get_time())
 else:                                       ## frequency-domain computation
     f.solve_cw(getattr(model, 'MaxTol',0.001), getattr(model, 'MaxIter', 5000), getattr(model, 'BiCGStab', 8)) 
     for monitor in (monitor1_Ex,): monitor.record(field=f)
