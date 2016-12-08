@@ -22,7 +22,7 @@ compare_dispersion() {
         mpirun -np $NP ../cdh.py Kz=$Kz "$@" 
 	done
 
-    ../plot_cdh.py cdh/*dat --ylim2 $ylim2 ## (preview)
+    #../plot_cdh.py cdh/*dat --ylim2 $ylim2 ## (preview)
 
     ## compute the dispersion curves using the s-parameter method, (with the same parameters)
     mpirun -np $NP ../scatter.py  "$@" simtime=200p
@@ -42,7 +42,7 @@ compare_dispersion() {
 
 
 ## === Rod array ===
-ylim2=4 ## in THz
+ylim2=4e12 ## in Hz
 cellsize=100e-6
 #for r in `seq 80 10 120`; do
 #for r in 100; do
@@ -51,7 +51,7 @@ cellsize=100e-6
 
 ## === Ordinary split-ring resonator === 
 #cellsize=100e-6
-#ylim2=4 ## in THz
+#ylim2=4 ## in Hz
 #par=(resolution=4u simtime=30p cellsize=${cellsize})
 #compare_dispersion ${par[@]} model=SRRArray wirethick=0u radius=30u "comment=SRR only"
 #compare_dispersion ${par[@]} model=SRRArray wirethick=4u radius=30u "comment=SRR with wire"
@@ -67,10 +67,9 @@ cellsize=100e-6
 ## === Electro-magnetic symmetric split-ring resonator
 #for icr in 6 8 10 18; do
 
-compare_dispersion ${par[@]} model=ESRRArray comment="vacuum" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
-            insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=0e-6 srrthick=0e-6
 
-for icr in 10 12 14 16 18; do
+ylim2=1e12 ## in Hz
+for icr in `seq 9 2 17`; do
 compare_dispersion ${par[@]} model=ESRRArray comment="emcSRR" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
             insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=40e-6 srrthick=10e-6
 done
@@ -82,7 +81,7 @@ done
 #done
 
 #== Y-slits ==
-#ylim2=4 ## in THz
+#ylim2=4e12 ## in Hz
 #for cellsize in 50e-6 60e-6 75e-6; do
 	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u yholesize=inf xholesize=20u cellsizexy=100u cellsize=${cellsize}
 #done
@@ -92,7 +91,7 @@ done
 
 ## == Fishnets ==
 ## -- Testing our experimental fishnets made of steel -- 
-#ylim2=1.5 ## in THz
+#ylim2=1.5e12 ## in Hz
 #par=(resolution=4u simtime=100p cellsize=${cellsize}u )
 #for cellsize in 100e-6; do # 50e-6 75e-6 100e-6 150e-6 200e-6 300e-6; do
 	#compare_dispersion ${par[@]} model=Fishnet slabthick=20u xholesize=180u yholesize=200u cellsizexy=300u cellsize=${cellsize}
@@ -126,7 +125,7 @@ done
 
 ## -- Navarro-Cia 2011 --
 ##experiment in microwave: 2.5x2.5 mm unit cell, stack periodicity 0.525 mm with 2.43 diel eps, hole radius 0.55 mm
-#ylim2=3.5 ## in THz
+#ylim2=3.5e12 ## in Hz
 #cellsize=52.5e-6
 #par=(resolution=10u simtime=100p cellsize=${cellsize} )
 #compare_dispersion ${par[@]} model=Fishnet slabthick=10u xholesize=110u yholesize=110u cornerradius=55u cellsizexy=250u resolution=5u 

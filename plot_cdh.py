@@ -12,6 +12,7 @@ parser.add_argument('--xlim1',      type=str,   default='', help='start for the 
 parser.add_argument('--xlim2',      type=str,   default='', help='end for the x-axis range')
 parser.add_argument('--ylim1',      type=str,   default='0.', help='start for the plotted value range')
 parser.add_argument('--ylim2',      type=str,   default='', help='end for the plotteld value range')
+parser.add_argument('--comment',    type=str,   default='', help='will be added to the output file name')
 parser.add_argument('--numcontours',type=int,   default=50, help='number of levels in the contour plot (default 50)')
 parser.add_argument('--contourresx',type=int,   default=200,help='row length of the internal interpolation matrix for contour plot (default 200)')
 parser.add_argument('--contourresp',type=int,   default=200,help='column height of the internal interpolation matrix for contour plot (default 200)')
@@ -27,8 +28,8 @@ matplotlib.rc('font', size=12)
 matplotlib.rc('font',**{'family':'serif','serif':['Computer Modern Roman, Times']})  ## select fonts
 
 # -- settings --
-minfreq = .5e12
-maxfreq = 1e12 
+minfreq = float(args.ylim1) if args.ylim1 != '' else 0
+maxfreq = float(args.ylim2) if args.ylim2 != '' else np.infty
 frequnit = 1
 
 plot_FFT = True
@@ -81,7 +82,7 @@ for vacuum_ref in [True, False] if use_vacuum_ref else [False]:
                 value = line.replace(",", " ").split()[-1]  # the value of the parameter will be separated by space or comma
                 if not Kz and ("Kz" in line): Kz = float(value)
                 if not cellsize and ("cellsize" in line): cellsize = float(value)
-        Kz = Kz*cellsize/2/np.pi
+        Kz = Kz*cellsize/2/np.pi ## K-vector is used in its normalized form (i.e. Brillouin zone ends at 0.5)
         (t, E) = np.loadtxt(filename, usecols=list(range(2)), unpack=True, )
 
         if plot_FDM and not vacuum_ref:
@@ -92,7 +93,7 @@ for vacuum_ref in [True, False] if use_vacuum_ref else [False]:
             E1 = E[len(t)*FDMtrunc[0]:len(t)*FDMtrunc[1]]
             try:
                 hi = harminv_wrapper.harminv(t1, E1, d=.1, f=15)
-                hi['frequency'] *= tscale /frequnit  * cellsize/3e8/2/np.pi
+                hi['frequency'] *= tscale /frequnit  * cellsize/c
                 hi['amplitude'] /= np.max(hi['amplitude'])
                 hi['error'] /= np.max(hi['amplitude'])
                 FDM_freqs = np.append(FDM_freqs,  hi['frequency'])
@@ -107,9 +108,10 @@ for vacuum_ref in [True, False] if use_vacuum_ref else [False]:
             for field in (E,):
                 field[t>max(t)*FFTcutoff] = field[t>max(t)*FFTcutoff]*(.5 + .5*np.cos(np.pi * (t[t>max(t)*FFTcutoff]/max(t)-FFTcutoff)/(1-FFTcutoff)))
             ## 1D FFT with cropping for useful frequencies
-            freq    = np.fft.fftfreq(len(t), d=(t[1]-t[0]))  * cellsize/c/2/np.pi       # calculate the frequency axis with proper spacing
+            freq    = np.fft.fftfreq(len(t), d=(t[1]-t[0]))  * cellsize/c       # calculate the frequency axis with proper spacing
             Ef      = np.fft.fft(E, axis=0) / len(t) * 2*np.pi     # calculate the FFT values
-            truncated = np.logical_and(freq>(minfreq*cellsize/3e8/2/np.pi), freq<(maxfreq*cellsize/3e8/2/np.pi))         # (optional) get the frequency range
+            print(freq, minfreq, maxfreq)
+            truncated = np.logical_and(freq>(minfreq*cellsize/c), freq<(maxfreq*cellsize/c))         # (optional) get the frequency range
             (Ef, freq) = map(lambda x: x[truncated], (Ef, freq))    # (optional) truncate the data points
 
             freq    = np.fft.fftshift(freq)
@@ -118,8 +120,8 @@ for vacuum_ref in [True, False] if use_vacuum_ref else [False]:
             if not vacuum_ref:
                 Ef = Y
                 Efs     = np.append(Efs,    Ef)
-
                 Kzs     = np.append(Kzs,    Kz*np.ones_like(freq))
+
                 freqs   = np.append(freqs,  freq)
             else:
                 EfsRef  = np.append(Efs,    Y)
@@ -146,7 +148,8 @@ plt.figure(figsize=(4,8))
 ax = plt.subplot(111)
 ## Interpolate 2D grid from scattered data
 from matplotlib.mlab import griddata
-fi = np.linspace(0, maxfreq * cellsize/c/2/np.pi, 200)
+fi = np.linspace(0, maxfreq * cellsize/c, 200)
+print('Number of K-points %d' % len(Kzs))
 ki = np.linspace(0, np.max(Kzs), 50)
 
 ## Plot contours for gridded data
@@ -172,26 +175,28 @@ if plot_FFT:
 if plot_NRef:
     try:
         f, Nre = np.loadtxt('NRef.dat', usecols=(0,5), unpack=True)
-        plt.plot( Nre*f/c *cellsize, f * cellsize/c/2/np.pi, color='g', lw=1.5)               # positive-direction branches
-        plt.plot(-Nre*f/c *cellsize, f * cellsize/c/2/np.pi, color='g', ls='--', lw=1.5)      # negative-direction branches
+        plt.plot( Nre*f/c *cellsize, f * cellsize/c, color='g', lw=1.5)               # positive-direction branches
+        plt.plot(-Nre*f/c *cellsize, f * cellsize/c, color='g', ls='--', lw=1.5)      # negative-direction branches
     except IOError:
         print "File NRef.dat was not found - not plotting the curve for comparison"
 
 
+       
 if plot_FDM:
+    truncated = np.logical_and(FDM_freqs>minfreq, FDM_freqs<maxfreq)         # (optional) get the frequency range
+    (FDM_freqs, FDM_amplis, FDM_phases, FDM_Kzs) = map(lambda x: x[truncated], (FDM_freqs, FDM_amplis, FDM_phases, FDM_Kzs))    # (optional) truncate the data points
     plt.scatter(FDM_Kzs, FDM_freqs, s=FDM_amplis*30+1, c=FDM_amplis) #, c=FDM_phases, cmap=plt.cm.hsv
  
 
 ## Simple axes
-plt.ylim(ymin=minfreq * cellsize/c/2/np.pi, ymax=maxfreq * cellsize/c/2/np.pi) 
-if args.ylim2 != "": plt.ylim(ymax=float(args.ylim2))
+plt.ylim(ymin=minfreq * cellsize/c, ymax=maxfreq * cellsize/c) 
 plt.xlim((np.min(ki), np.max(ki)))
 
 plt.grid(True)
 
 
 ## Here we define the desired nonlinear dependence between dual y-axes:
-def right_tick_function(p): return p/(cellsize/c/2/np.pi)/1e12
+def right_tick_function(p): return p/(cellsize/c)/1e12
 ax2 = ax.twinx()
 #ax2.axis['right'].major_ticklabels.set_visible(False)
 ax2.set_ylim(np.array(ax.get_ylim()))
@@ -223,11 +228,7 @@ ax3 = ax.twiny()
 ax3.set_xlim(np.array(ax.get_xlim()))
 ax3.set_xlabel('photon wavelength (nm)')
 ## If we wish nice round numbers on the secondary axis ticks...
-print(ax.get_xlim())
-print(top_tick_function(1.0))
-print([top_tick_function(lim) for lim in ax.get_xlim()])
 top_ax_limits = sorted([top_tick_function(lim) for lim in ax.get_xlim()])
-print(top_ax_limits)
 xticks2 = matplotlib.ticker.MaxNLocator(nbins=8, steps=[1,2,5]).tick_values(*top_ax_limits)
 ## ... we must give them correct positions. To do so, we need to numerically invert the tick values:
 from scipy.optimize import brentq
@@ -249,11 +250,11 @@ ax3.xaxis.set_major_formatter(FixedFormatter(["%g" % toptick for toptick in vali
 ## Finish the plot + save 
 ax.set_xlabel(u"Wavenumber $Ka/(2\pi)$");  # [m$^{-1}$]
 ax3.set_xlabel(u"Wavenumber cm$^{-1}$");  # [m$^{-1}$]
-ax.set_ylabel(u"Frequency $fa/(2\pi c)$") ## freq normalized 
+ax.set_ylabel(u"Frequency $fa/c$") ## freq normalized 
 ax2.set_ylabel(u"Frequency (THz)") ## freq normalized 
 plt.legend(prop={'size':10}, loc='upper right')
-plt.savefig("cdh_%s.pdf" % filesuffix, bbox_inches='tight')
-plt.savefig("cdh_%s.png" % filesuffix, bbox_inches='tight')
+plt.savefig("cdh_%s%s.pdf" % (args.comment, filesuffix), bbox_inches='tight')
+plt.savefig("cdh_%s%s.png" % (args.comment, filesuffix), bbox_inches='tight')
 
     #plt.plot(freq, np.log10(np.abs(zf)+1e-10), color=color, label=u"$y'$", ls='-')      # (optional) plot amplitude
     #plt.plot(freq, np.unwrap(np.angle(zf)), color="#FF8800", label=u"$y'$", ls='--')   # (optional) plot phase
