@@ -10,7 +10,7 @@ from scipy.constants import c, hbar, pi
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('--xlim1',      type=str,   default='', help='start for the x-axis range')
 parser.add_argument('--xlim2',      type=str,   default='', help='end for the x-axis range')
-parser.add_argument('--ylim1',      type=str,   default='0.', help='start for the plotted value range')
+parser.add_argument('--ylim1',      type=str,   default='', help='start for the plotted value range')
 parser.add_argument('--ylim2',      type=str,   default='', help='end for the plotteld value range')
 parser.add_argument('--comment',    type=str,   default='', help='will be added to the output file name')
 parser.add_argument('--numcontours',type=int,   default=50, help='number of levels in the contour plot (default 50)')
