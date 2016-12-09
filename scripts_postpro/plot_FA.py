@@ -35,7 +35,7 @@ import h5py
 h5file = h5py.File(filename, "r")
 print "Found datasets:", h5file.keys()
 time1 = time.time()
-data  = np.array(h5file['ex.r'])
+data  = np.array(h5file['ex.r']) * (1+0j)
 data += np.array(h5file['ex.i']) * 1j
 print "Loaded dataset with shape:", data.shape, 'in %04d s.' % (time.time()-time1)
 try:
@@ -53,6 +53,8 @@ Efy     = np.fft.fft(Et, axis=1) / len(t) * 2*np.pi     # calculate the FFT valu
 
 freq    = np.fft.fftshift(freq) #+ freq[len(freq)/2]
 Efy     = np.fft.fftshift(Efy)
+
+print("debug", len(t), (t[1]-t[0]), freq, Efy) 
 
 ## Fourier transform along the spatial axis
 kT      = np.fft.fftfreq(len(y), d=(y[1]-y[0]))        # calculate the frequency axis with proper spacing
@@ -73,7 +75,7 @@ if timedomain:
     contours = plt.contourf(t, y, Et, cmap=matplotlib.cm.RdBu, extend='both') # levels=np.arange(0.,1,.01), 
 else:
     toplot = np.log10(np.abs(Ef))
-    contours = plt.contourf(freq, kT, toplot,  cmap=matplotlib.cm.gist_earth, levels=np.linspace(np.min(toplot)*.8+np.max(toplot)*.2,np.max(toplot),200) ,extend='both') #  
+    contours = plt.contourf(freq, kT, toplot,  cmap=matplotlib.cm.gist_earth, levels=np.linspace(np.min(toplot)*.5+np.max(toplot)*.5,np.max(toplot),200) ,extend='both') #  
     #contours = plt.contourf(freq, kT, np.abs(Ef), cmap=matplotlib.cm.gist_earth, extend='both') # levels=np.arange(0.,1,.01), 
     plt.plot([0, maxfreq], [0, 0], c='w',lw=.5)
     plt.plot([0, maxfreq], [0, maxfreq/c], c='w',lw=.5)
