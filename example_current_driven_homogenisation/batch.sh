@@ -64,6 +64,7 @@ ylim2=2e12 ## in Hz
 
 ## === Electro-magnetic symmetric split-ring resonator
 
+cellsize=100e-6
 ylim2=1.3e12 ## in Hz
 #for icr in `seq 9 2 17`; do
 #for icr in 6 8 10 14 18; do
