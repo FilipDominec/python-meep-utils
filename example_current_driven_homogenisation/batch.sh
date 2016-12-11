@@ -9,6 +9,7 @@
 if [ -z "$NP" ] ; then NP=2 ; fi             # number of processors
 Ksampling=16
 Kzones=2
+ylim1=0
 
 compare_dispersion() {
 	if [ -d cdh ]; then rm -r cdh/ ;  echo "Error: Another simulation has left a 'cdh/' directory; deleting it"; fi
@@ -28,7 +29,7 @@ compare_dispersion() {
 
     ## repeat the plot, now comparing also to the curve retrieved above
     mv effparam/*dat NRef.dat
-    ../plot_cdh.py cdh/*dat --ylim2 $ylim2
+    ../plot_cdh.py cdh/*dat --ylim1 $ylim1 --ylim2 $ylim2
 
 	## final cleanup
 	lastname=`cat last_simulation_name.dat`
@@ -41,11 +42,10 @@ compare_dispersion() {
 
 ## === Rod array ===
 ylim2=2e12 ## in Hz
-cellsize=100e-6
 #for r in `seq 80 10 120`; do
-for r in 100; do
-	compare_dispersion ${par[@]} model=RodArray radius=${r}e-7
-done
+	#cellsize=100e-6
+	#compare_dispersion ${par[@]} model=RodArray radius=${r}e-7
+#done
 
 ## === Ordinary split-ring resonator === 
 #cellsize=100e-6
@@ -64,8 +64,6 @@ done
 
 ## === Electro-magnetic symmetric split-ring resonator
 
-
-ylim2=0.3e12
 ylim2=1.3e12 ## in Hz
 #for icr in `seq 9 2 17`; do
 #for icr in 6 8 10 14 18; do

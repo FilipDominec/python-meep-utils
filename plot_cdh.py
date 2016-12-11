@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
+
+
 ## Import common moduli
 import matplotlib, sys, os, time, argparse
 import matplotlib.pyplot as plt
@@ -10,7 +12,7 @@ from scipy.constants import c, hbar, pi
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('--xlim1',      type=str,   default='', help='start for the x-axis range')
 parser.add_argument('--xlim2',      type=str,   default='', help='end for the x-axis range')
-parser.add_argument('--ylim1',      type=str,   default='', help='start for the plotted value range')
+parser.add_argument('--ylim1',      type=str,   default='', help='start for the plotted value range') ##  FIXME breaks harminv plotting!
 parser.add_argument('--ylim2',      type=str,   default='', help='end for the plotteld value range')
 parser.add_argument('--comment',    type=str,   default='', help='will be added to the output file name')
 parser.add_argument('--numcontours',type=int,   default=50, help='number of levels in the contour plot (default 50)')
@@ -111,7 +113,8 @@ for vacuum_ref in [True, False] if use_vacuum_ref else [False]:
             freq    = np.fft.fftfreq(len(t), d=(t[1]-t[0]))  * cellsize/c       # calculate the frequency axis with proper spacing
             Ef      = np.fft.fft(E, axis=0) / len(t) * 2*np.pi     # calculate the FFT values
             print(freq, minfreq, maxfreq)
-            truncated = np.logical_and(freq>(minfreq*cellsize/c), freq<(maxfreq*cellsize/c))         # (optional) get the frequency range
+            #truncated = np.logical_and(freq>(minfreq*cellsize/c), freq<(maxfreq*cellsize/c))         # (optional) get the frequency range
+            truncated = np.logical_and(freq>0, freq<(maxfreq*cellsize/c))         # setting minfreq>0 made harminv fail
             (Ef, freq) = map(lambda x: x[truncated], (Ef, freq))    # (optional) truncate the data points
 
             freq    = np.fft.fftshift(freq)
@@ -183,6 +186,7 @@ if plot_NRef:
 
        
 if plot_FDM:
+    print(FDM_freqs,minfreq)
     truncated = np.logical_and(FDM_freqs>minfreq, FDM_freqs<maxfreq)         # (optional) get the frequency range
     (FDM_freqs, FDM_amplis, FDM_phases, FDM_Kzs) = map(lambda x: x[truncated], (FDM_freqs, FDM_amplis, FDM_phases, FDM_Kzs))    # (optional) truncate the data points
     plt.scatter(FDM_Kzs, FDM_freqs, s=FDM_amplis*30+1, c=FDM_amplis) #, c=FDM_phases, cmap=plt.cm.hsv
