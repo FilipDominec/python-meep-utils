@@ -42,8 +42,8 @@ compare_dispersion() {
 ## === Rod array ===
 ylim2=2e12 ## in Hz
 cellsize=100e-6
-for r in `seq 80 10 120`; do
-#for r in 100; do
+#for r in `seq 80 10 120`; do
+for r in 100; do
 	compare_dispersion ${par[@]} model=RodArray radius=${r}e-7
 done
 
@@ -65,9 +65,11 @@ done
 ## === Electro-magnetic symmetric split-ring resonator
 
 
-ylim2=1e12 ## in Hz
+ylim2=0.3e12
+ylim2=1.3e12 ## in Hz
 #for icr in `seq 9 2 17`; do
-for icr in 6 7 8; do
+#for icr in 6 8 10 14 18; do
+for icr in 7 9 11 12 13 15 17 ; do
 compare_dispersion ${par[@]} model=ESRRArray comment="emcSRR" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
             insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=40e-6 srrthick=10e-6
 done
