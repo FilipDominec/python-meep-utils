@@ -33,7 +33,7 @@ import h5py
 h5file = h5py.File(filename, "r")
 print "Found datasets:", h5file.keys()
 time1 = time.time()
-data  = np.array(h5file['ex.r'])
+data  = np.array(h5file['ex.r']) * (1+0j)
 data += np.array(h5file['ex.i']) * 1j
 print "Loaded dataset with shape:", data.shape, 'in %04d s.' % (time.time()-time1)
 try:

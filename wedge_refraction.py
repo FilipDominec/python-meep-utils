@@ -34,7 +34,7 @@ import meep_mpi as meep
 #import meep
 
 class Wedge_model(meep_utils.AbstractMeepModel): #{{{
-    """  Array of circular metallic wires along electric field
+    """  Array of circular wires parallel to the electric field
     FD 2013-07-13
     """
     def cell_centers(self):
@@ -160,10 +160,10 @@ if "fieldevolution" in model.comment:
 if "snapshote" in model.comment:
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
 
-slices += [meep_utils.Slice(field=f, components=(meep.Ex), min_timestep=.1e-12, name='wedge',
-                volume=meep.volume( 
-                        meep.vec(0, -model.size_y/2+model.pml_thickness, model.size_z/2-model.pml_thickness), 
-                        meep.vec(0,  model.size_y/2-model.pml_thickness, model.size_z/2-model.pml_thickness)),
+                #volume=meep.volume( 
+                        #meep.vec(0, -model.size_y/2+model.pml_thickness, model.size_z/2-model.pml_thickness), 
+                        #meep.vec(0,  model.size_y/2-model.pml_thickness, model.size_z/2-model.pml_thickness)),
+slices += [meep_utils.Slice(field=f, components=(meep.Ex), min_timestep=.1e-12, name='wedge', at_x=0, at_z=model.size_z/2-model.pml_thickness,
                 model=model, outputdir=model.simulation_name, pad=model.pml_thickness, outputhdf=True, outputvtk=True, outputgif=True)]
 
         #pad = model.pml_thickness
