@@ -5,8 +5,8 @@ if [ -z $ext ] ; then ext=png ; fi             # number of processors
 staticpar=(model=HalfSpace simtime=250f resolution=15n padding=.5u epsilon=2)
 
 if [ -z "$skipsimulation" ]; then 
-    #for K in 0.1 0.3 `seq 0 1 9` `seq 10 2 20`; do    ## transverse wavenumber in 1/um
-    for K in 0.1 0.3 `seq 0 1 9` `seq 10 2 20` `seq .5 1 9 | tr , .` `seq 11 2 20`; do    ## transverse wavenumber in 1/um
+    for K in 0.1 0.3 `seq 0 1 9` `seq 10 2 20`; do    ## transverse wavenumber in 1/um
+    #for K in 0.1 0.3 `seq 0 1 9` `seq 10 2 20` `seq .5 1 9 | tr , .` `seq 11 2 20`; do    ## transverse wavenumber in 1/um
         mpirun -np $NP  ../../scatter.py "${staticpar[@]}" blend=${blend} comment=${comment} epsilon=2 $Kcomponent=${K}e6
     done
 fi
