@@ -25,6 +25,9 @@ Runs `scatter.py` multiple times in frequency-domain, and then compares the resu
 #### example_current_driven_homogenisation
 Using `cdh.py`, `plot_cdh.py`, computes and plots data for current-driven homogenization; compares them with those obtained from s-parameters
 
+#### example_angle_frequency_scan
+Sets up both the source and the monitor planes such that they have a growing phase in space (done simply by harmonic modulation of the source amplitude). This way, an oblique wave is excited and recorded. Using arccosine, the angle can be computed from our knowledge of the frequency and the transverse component of the wavevector. By several time-domain simulations with different transverse wavevectors, we can efficiently build a 2D map of angle- and frequency-dependent reflectance of a sample. 
+
 #### example_ringdown_cylindrical_cavity
 The simulation in `cylindrical_cavity.py` defines a metallic cylindrical cavity, excites the field by a short pulsed source, and analyzes the ringdown to search for all modes. 
 
