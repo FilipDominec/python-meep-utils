@@ -103,6 +103,10 @@ The procedure is tested on Debian-based Linux distributions. You may have to man
    * Perhaps you left some run-time error in the structure definition. Calling `meep_utils.testmaterials()` at the end of the model's initialization may trigger the error first, and help to obtain a reasonable Python report to find the problem.
    * Make sure  to never set a `eps` variable within the `AbstractMeepModel` class, since it is reserved for MEEP callback.
    * If `meep_utils.testmaterials()` did not help, some other error happens within some callback routine. 
+ * Simulation hard-crashes during model initialization with the 'memory not mapped' error  (observed with Matplotlib 1.5.1 on Ubuntu 16.10)
+   * This happens at the point when matplotlib tries to plot the permittivity spectrum, and to place a label at some high-frequency position like 10^16
+   * I reported this error here https://github.com/matplotlib/matplotlib/issues/6984; the solution is in installing a newer fixed version of matplotlib. I suggest picking the freshest one from git: http://matplotlib.org/faq/installing_faq.html#source-install-from-git
+   * One little annoyance is that uninstalling the original `python-matplotlib` package one also has to uninstall `paraview`. Compile the new version, then install `paraview` back and everything will be fine.
  * Simulation aborts with `lorentzian unstable` although the medium passed the `meep_utils.testmaterials()` function 
    * The compiled-in check for Lorentzian stability is overly prudent; it sometimes aborts a simulation that would be completely stable. You may either change the material model as MEEP suggests. 
    * I consider this to be just an unfixed bug, see also the discussion https://github.com/stevengj/meep/issues/12. So even better is to change the MEEP source code to bypass the `abort` in function `lorentzian_unstable` in `src/susceptibility.cpp` and recompile it. My branch of MEEP does it.
