@@ -2,7 +2,8 @@
 if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
 if [ -z $ext ] ; then ext=png ; fi             # number of processors
 
-staticpar=(model=HalfSpace simtime=250f resolution=15n padding=2.5u)
+if [ -z "$model" ] ; then model=HalfSpace ; fi
+staticpar=(model=$model simtime=250f resolution=15n padding=2.5u)
 
 if [ -z "$skipsimulation" ]; then 
     for K in 0.1 0.3 `seq 0 1 9` `seq 10 2 20`; do    ## transverse wavenumber in 1/um

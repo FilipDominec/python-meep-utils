@@ -525,7 +525,60 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         if r.z()> self.blend*.5 or self.blend==0: return self.return_value
         return self.return_value*(1.+np.sin(r.z()/0.5/self.blend*np.pi/2))/2
 
-        ## Inverse sine-like transition from air to dielectric: a broadband anti-reflex layer (do not forget to change to mon1eps=epsilon above)
+        ## Inverse sine-like transition from dielectric to air: a broadband anti-reflex layer (do not forget to change above to "mon1eps,mon2eps=epsilon,1")
+        #if r.z()> self.blend*.5: return 0
+        #if r.z()<-self.blend*.5 or self.blend==0: return self.return_value
+        #return self.return_value*(1.+np.sin(-r.z()/0.5/self.blend*np.pi/2))/2
+
+        ## Single antireflex layer on substrate
+        #if r.z() < 0 and r.z() > -self.padding/2:
+            #return self.return_value**.5
+        #if r.z() > 0:
+            #return self.return_value
+        return 0
+#}}}
+class DUVGrating(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=5e-15, resolution=.25e-9, cellnumber=1, padding=100e-9, cellsize = 10e-9,
+            epsilon=33.97, blend=0, **other_args):
+        """ Similar to the HalfSpace model, but defines a deep ultraviolet grating        """
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
+
+        ## Constant parameters for the simulation
+        self.simulation_name = "DUVGrating"    
+        self.src_freq, self.src_width = 24e15, 48e15    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (.1e15, 48e15)    # Which frequencies will be saved to disk
+        self.pml_thickness = 20e-9
+
+        self.size_z = blend + 4*padding + 2*self.pml_thickness + 6*resolution
+        self.size_x = resolution*1.8 if other_args.get('Kx',0)==0 else resolution*5  ## allow some space along x if oblique incidence is set
+        self.size_y = resolution*1.8 if other_args.get('Ky',0)==0 else resolution*5  ## dtto
+        print  'self.size_x, self.size_y', self.size_x, self.size_y
+        self.monitor_z1, self.monitor_z2 = (-padding-blend/2, padding+blend/2)
+        self.register_locals(locals(), other_args)          ## Remember the parameters
+        self.mon2eps = epsilon                  ## store what dielectric is the second monitor embedded in
+
+        ## Define materials
+        self.materials = []  
+        self.materials += [meep_materials.material_dielectric(where=self.where_m, eps=self.epsilon)]
+
+        for m in self.materials: 
+            self.fix_material_stability(m, f_c=60e15) ## rm all osc above the first one, to optimize for speed 
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2))
+        self.test_materials()
+
+    def where_m(self, r):
+        ## Just half-space
+        #if r.z() > 0: return self.return_value
+
+        ## Smooth sine-like transition from air to dielectric: a broadband anti-reflex layer
+        if r.z()<-self.blend*.5: return 0
+        if r.z()> self.blend*.5 or self.blend==0: return self.return_value
+        return self.return_value*(1.+np.sin(r.z()/0.5/self.blend*np.pi/2))/2
+
+        ## Inverse sine-like transition from dielectric to air: a broadband anti-reflex layer (do not forget to change above to "mon1eps,mon2eps=epsilon,1")
         #if r.z()> self.blend*.5: return 0
         #if r.z()<-self.blend*.5 or self.blend==0: return self.return_value
         #return self.return_value*(1.+np.sin(-r.z()/0.5/self.blend*np.pi/2))/2
@@ -538,5 +591,5 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
-models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':ESRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel, 'Fishnet':Fishnet, 'WiresOnSi':WiresOnSi, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
+models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':ESRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel, 'Fishnet':Fishnet, 'WiresOnSi':WiresOnSi, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace, 'DUVGrating':DUVGrating}
 

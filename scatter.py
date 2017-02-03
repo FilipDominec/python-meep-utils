@@ -57,7 +57,8 @@ class SrcAmplitudeFactor(meep.Callback):
         #return np.exp(-1j*(self.Kx*vec.x() + self.Ky*vec.y()) - (vec.x()/100e-6)**2 - (vec.y()/100e-6)**2) 
 af = SrcAmplitudeFactor(Kx=getattr(model, 'Kx', 0), Ky=getattr(model, 'Ky', 0))
 meep.set_AMPL_Callback(af.__disown__())
-f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
+#f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
+f.add_volume_source(meep.Ez, src_time_type, srcvolume, meep.AMPL)
 
 
 
