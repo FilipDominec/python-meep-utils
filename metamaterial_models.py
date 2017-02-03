@@ -540,16 +540,20 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
 class DUVGrating(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=2e-15, resolution=.5e-9, cellnumber=1, padding=100e-9, cellsize=10e-9, cellsizex=0, cellsizey=0, 
             epsilon=.9, gdepth=10e-9, gwidth=10e-9,  **other_args):
-        """ Similar to the HalfSpace model, but defines a deep ultraviolet grating        """
+        """ Similar to the HalfSpace model, but defines a deep ultraviolet grating    
+        Rear side does not define any padding - useful for reflective surfaces/gratings only
+        """
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
+
+        ## TODO: test out the effect of halving simtime, halving resolution, halving padding...
 
         ## Constant parameters for the simulation
         self.simulation_name = "DUVGrating"    
         self.src_freq, self.src_width = 24e15, 48e15    # [Hz] (note: gaussian source ends at t=10/src_width)
-        self.interesting_frequencies = (.1e15, 48e15)    # Which frequencies will be saved to disk
+        self.interesting_frequencies = (.1e15, 40e15)    # Which frequencies will be saved to disk
         self.pml_thickness = 20e-9
 
-        self.size_z = 4*padding + gdepth + 2*self.pml_thickness + 6*resolution
+        self.size_z = 2*padding + gdepth + 2*self.pml_thickness + 6*resolution
 
         if cellsizex != 0:
             self.size_x = cellsizex         ## non-flat periodic structure (grating?) with user-defined pitch
@@ -583,7 +587,7 @@ class DUVGrating(meep_utils.AbstractMeepModel): #{{{
 
     def where_m(self, r):
         ## grooves parallel to the x-axis (perpendicular to the incident magnetic field):
-        if r.z()>self.gdepth/2 or (r.z()>-self.gdepth/2 and np.abs(r.y())<self.gwidth/2): return self.return_value 
+        if r.z()>(self.gdepth+self.padding)/2 or (r.z()>(self.padding-self.gdepth)/2 and np.abs(r.y())<self.gwidth/2): return self.return_value 
         return 0
 #}}}
 
