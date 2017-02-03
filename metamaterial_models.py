@@ -538,8 +538,8 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class DUVGrating(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=5e-15, resolution=.25e-9, cellnumber=1, padding=100e-9, cellsize = 10e-9,
-            epsilon=33.97, blend=0, **other_args):
+    def __init__(self, comment="", simtime=5e-15, resolution=.25e-9, cellnumber=1, padding=100e-9, cellsize=10e-9, cellsizex=0, cellsizey=0, 
+            epsilon=.9, gdepth=10e-9, gwidth=25e-9,  **other_args):
         """ Similar to the HalfSpace model, but defines a deep ultraviolet grating        """
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
@@ -549,11 +549,23 @@ class DUVGrating(meep_utils.AbstractMeepModel): #{{{
         self.interesting_frequencies = (.1e15, 48e15)    # Which frequencies will be saved to disk
         self.pml_thickness = 20e-9
 
-        self.size_z = blend + 4*padding + 2*self.pml_thickness + 6*resolution
-        self.size_x = resolution*1.8 if other_args.get('Kx',0)==0 else resolution*5  ## allow some space along x if oblique incidence is set
-        self.size_y = resolution*1.8 if other_args.get('Ky',0)==0 else resolution*5  ## dtto
+        self.size_z = 4*padding + gdepth + 2*self.pml_thickness + 6*resolution
+
+        if cellsizex != 0:
+            self.size_x = cellsizex         ## non-flat periodic structure (grating?) with user-defined pitch
+        elif other_args.get('Kx',0) != 0:
+            self.size_x = resolution*5      ## flat structure, but oblique incidence requires several-pixel with 
+        else:
+            self.size_x = resolution*1.8    ## flat structure, zero component of K-vector, so we can make the structure as flat as possible
+        if cellsizey != 0:
+            self.size_y = cellsizey         ## dtto as for size_x above
+        elif other_args.get('Ky',0) != 0:
+            self.size_y = resolution*5      
+        else:
+            self.size_y = resolution*1.8 
+
         print  'self.size_x, self.size_y', self.size_x, self.size_y
-        self.monitor_z1, self.monitor_z2 = (-padding-blend/2, padding+blend/2)
+        self.monitor_z1, self.monitor_z2 = (-padding-gdepth/2, padding+gdepth/2)
         self.register_locals(locals(), other_args)          ## Remember the parameters
         self.mon2eps = epsilon                  ## store what dielectric is the second monitor embedded in
 
@@ -570,24 +582,8 @@ class DUVGrating(meep_utils.AbstractMeepModel): #{{{
         self.test_materials()
 
     def where_m(self, r):
-        ## Just half-space
-        #if r.z() > 0: return self.return_value
-
         ## Smooth sine-like transition from air to dielectric: a broadband anti-reflex layer
-        if r.z()<-self.blend*.5: return 0
-        if r.z()> self.blend*.5 or self.blend==0: return self.return_value
-        return self.return_value*(1.+np.sin(r.z()/0.5/self.blend*np.pi/2))/2
-
-        ## Inverse sine-like transition from dielectric to air: a broadband anti-reflex layer (do not forget to change above to "mon1eps,mon2eps=epsilon,1")
-        #if r.z()> self.blend*.5: return 0
-        #if r.z()<-self.blend*.5 or self.blend==0: return self.return_value
-        #return self.return_value*(1.+np.sin(-r.z()/0.5/self.blend*np.pi/2))/2
-
-        ## Single antireflex layer on substrate
-        #if r.z() < 0 and r.z() > -self.padding/2:
-            #return self.return_value**.5
-        #if r.z() > 0:
-            #return self.return_value
+        if r.z()>self.gdepth/2 or (r.z()>-self.gdepth/2 and np.abs(r.x())<self.gwidth/2): return self.return_value
         return 0
 #}}}
 
