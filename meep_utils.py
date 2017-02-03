@@ -499,7 +499,7 @@ def annotate_frequency_axis(mark_freq, label_position_y=1, arrow_length=3, log_y
         bboxprops   = dict(boxstyle='round, pad=.15', fc='white', alpha=1, lw=0)
         arrowprops  = dict(arrowstyle=('->', '-|>', 'simple', 'fancy')[0], connectionstyle = 'arc3,rad=0', lw=1, ec='k', fc='w')
         if not freq_range  or  (mfreq > freq_range[0] and mfreq < freq_range[1]):
-            plt.annotate(mfreqtxt,                    
+            plt.annotate(mfreqtxt,                    clip_on=True,
                     xy      = (mfreq, label_y2),    xycoords  ='data',
                     # (delete following line if text without arrow is used)
                     xytext  = (mfreq, label_y2*arrow_length if log_y else label_y+arrow_length),  textcoords='data',        

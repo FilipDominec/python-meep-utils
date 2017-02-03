@@ -566,7 +566,7 @@ class DUVGrating(meep_utils.AbstractMeepModel): #{{{
 
         ## Test the validity of the model
         meep_utils.plot_eps(self.materials, plot_conductivity=True, 
-                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2))
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
         self.test_materials()
 
     def where_m(self, r):
