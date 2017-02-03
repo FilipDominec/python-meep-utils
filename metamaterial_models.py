@@ -538,8 +538,8 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 class DUVGrating(meep_utils.AbstractMeepModel): #{{{
-    def __init__(self, comment="", simtime=5e-15, resolution=.25e-9, cellnumber=1, padding=100e-9, cellsize=10e-9, cellsizex=0, cellsizey=0, 
-            epsilon=.9, gdepth=10e-9, gwidth=25e-9,  **other_args):
+    def __init__(self, comment="", simtime=2e-15, resolution=.5e-9, cellnumber=1, padding=100e-9, cellsize=10e-9, cellsizex=0, cellsizey=0, 
+            epsilon=.9, gdepth=10e-9, gwidth=10e-9,  **other_args):
         """ Similar to the HalfSpace model, but defines a deep ultraviolet grating        """
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
@@ -582,8 +582,8 @@ class DUVGrating(meep_utils.AbstractMeepModel): #{{{
         self.test_materials()
 
     def where_m(self, r):
-        ## Smooth sine-like transition from air to dielectric: a broadband anti-reflex layer
-        if r.z()>self.gdepth/2 or (r.z()>-self.gdepth/2 and np.abs(r.x())<self.gwidth/2): return self.return_value
+        ## grooves parallel to the x-axis (perpendicular to the incident magnetic field):
+        if r.z()>self.gdepth/2 or (r.z()>-self.gdepth/2 and np.abs(r.y())<self.gwidth/2): return self.return_value 
         return 0
 #}}}
 

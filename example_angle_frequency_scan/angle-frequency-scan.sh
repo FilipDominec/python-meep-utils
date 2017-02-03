@@ -2,13 +2,14 @@
 if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
 if [ -z $ext ] ; then ext=png ; fi             # number of processors
 
-if [ -z "$model" ] ; then model=HalfSpace ; fi
-staticpar=(model=$model simtime=250f resolution=15n padding=2.5u)
+#if [ -z "$model" ] ; then model=HalfSpace ; fi
+#staticpar=(model=$model simtime=250f resolution=15n padding=2.5u) ## default for the flat air-metal interfaces
+
 
 if [ -z "$skipsimulation" ]; then 
     for K in 0.1 0.3 `seq 0 1 9` `seq 10 2 20`; do    ## transverse wavenumber in 1/um
     #for K in 0.1 0.3 `seq 0 1 9` `seq 10 2 20` `seq .5 1 9 | tr , .` `seq 11 2 20`; do    ## transverse wavenumber in 1/um
-        mpirun -np $NP  ../../scatter.py "${staticpar[@]}" blend=${blend} comment=${comment} epsilon=2 $Kcomponent=${K}e6
+        mpirun -np $NP  ../../scatter.py  "${@}" $Kcomponent=${K}e6
     done
 fi
 

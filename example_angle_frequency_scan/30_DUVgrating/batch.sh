@@ -1,8 +1,7 @@
 #!/bin/bash
 export blend=0u
-export comment=metal 
-export epsilon=
+#export comment=metal 
+#export epsilon=
 export Kcomponent=Kx ## TE polarisation
-export model=DUVGrating
-../angle-frequency-scan.sh
+../angle-frequency-scan.sh model=DUVGrating cellsizey=20n epsilon=.9
 
