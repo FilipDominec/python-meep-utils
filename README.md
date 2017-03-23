@@ -25,6 +25,9 @@ Runs `scatter.py` multiple times in frequency-domain, and then compares the resu
 #### example_current_driven_homogenisation
 Using `cdh.py`, `plot_cdh.py`, computes and plots data for current-driven homogenization; compares them with those obtained from s-parameters
 
+#### example_angle_frequency_scan
+Sets up both the source and the monitor planes such that they have a growing phase in space (done simply by harmonic modulation of the source amplitude). This way, an oblique wave is excited and recorded. Using arccosine, the angle can be computed from our knowledge of the frequency and the transverse component of the wavevector. By several time-domain simulations with different transverse wavevectors, we can efficiently build a 2D map of angle- and frequency-dependent reflectance of a sample. 
+
 #### example_ringdown_cylindrical_cavity
 The simulation in `cylindrical_cavity.py` defines a metallic cylindrical cavity, excites the field by a short pulsed source, and analyzes the ringdown to search for all modes. 
 
@@ -103,6 +106,10 @@ The procedure is tested on Debian-based Linux distributions. You may have to man
    * Perhaps you left some run-time error in the structure definition. Calling `meep_utils.testmaterials()` at the end of the model's initialization may trigger the error first, and help to obtain a reasonable Python report to find the problem.
    * Make sure  to never set a `eps` variable within the `AbstractMeepModel` class, since it is reserved for MEEP callback.
    * If `meep_utils.testmaterials()` did not help, some other error happens within some callback routine. 
+ * Simulation hard-crashes during model initialization with the 'memory not mapped' error  (observed with Matplotlib 1.5.1 on Ubuntu 16.10)
+   * This happens at the point when matplotlib tries to plot the permittivity spectrum, and to place a label at some high-frequency position like 10^16
+   * I reported this error here https://github.com/matplotlib/matplotlib/issues/6984; the solution is in installing a newer fixed version of matplotlib. I suggest picking the freshest one from git: http://matplotlib.org/faq/installing_faq.html#source-install-from-git
+   * One little annoyance is that uninstalling the original `python-matplotlib` package one also has to uninstall `paraview`. Compile the new version, then install `paraview` back and everything will be fine.
  * Simulation aborts with `lorentzian unstable` although the medium passed the `meep_utils.testmaterials()` function 
    * The compiled-in check for Lorentzian stability is overly prudent; it sometimes aborts a simulation that would be completely stable. You may either change the material model as MEEP suggests. 
    * I consider this to be just an unfixed bug, see also the discussion https://github.com/stevengj/meep/issues/12. So even better is to change the MEEP source code to bypass the `abort` in function `lorentzian_unstable` in `src/susceptibility.cpp` and recompile it. My branch of MEEP does it.

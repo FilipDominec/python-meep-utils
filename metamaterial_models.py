@@ -471,11 +471,12 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
             epsilon=33.97, blend=0, **other_args):
         """ This structure demonstrates that scatter.py can also compute the reflectance and transmittance of samples on 
         a substrate. The substrate can have an infinite thickness, since its back interface is not included in the simulation 
-        volume. It is assumed that with thick enough substrate there will be no Fabry-Perot interferences between its sides.
+        volume. It is assumed that with thick enough substrate there will be no Fabry-Perot interferences due to reflection from
+        its back side; this kind simulation can not predict them.
 
         The monitor planes can also be placed inside a dielectric. In this case the measured waveforms are 
-        rescaled so that the light intensity is maintained in the output. The field amplitudes and phases are easy to interpret 
-        physically only when both monitor planes are in the same medium, though.
+        rescaled so that the transmitted energy is returned the same as if measured after reflection-less transition to vacuum. 
+        This way, reflectance*2+transmittance*+losses still sum up to one.
 
         This example also demonstrates that on a steep interface with air the transmitted and reflected waves have 
         exactly the same energy with the choice of permittivity: ((1+.5**.5)/(1-.5**.5))**2, that is roughly 33.97.
@@ -524,7 +525,7 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
         if r.z()> self.blend*.5 or self.blend==0: return self.return_value
         return self.return_value*(1.+np.sin(r.z()/0.5/self.blend*np.pi/2))/2
 
-        ## Inverse sine-like transition from air to dielectric: a broadband anti-reflex layer (do not forget to change to mon1eps=epsilon above)
+        ## Inverse sine-like transition from dielectric to air: a broadband anti-reflex layer (do not forget to change above to "mon1eps,mon2eps=epsilon,1")
         #if r.z()> self.blend*.5: return 0
         #if r.z()<-self.blend*.5 or self.blend==0: return self.return_value
         #return self.return_value*(1.+np.sin(-r.z()/0.5/self.blend*np.pi/2))/2
@@ -536,6 +537,59 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
             #return self.return_value
         return 0
 #}}}
+class DUVGrating(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=2e-15, resolution=.5e-9, cellnumber=1, padding=100e-9, cellsize=10e-9, cellsizex=0, cellsizey=0, 
+            epsilon=.9, gdepth=10e-9, gwidth=10e-9,  **other_args):
+        """ Similar to the HalfSpace model, but defines a deep ultraviolet grating    
+        Rear side does not define any padding - useful for reflective surfaces/gratings only
+        """
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
-models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':ESRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel, 'Fishnet':Fishnet, 'WiresOnSi':WiresOnSi, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace}
+        ## TODO: test out the effect of halving simtime, halving resolution, halving padding...
+
+        ## Constant parameters for the simulation
+        self.simulation_name = "DUVGrating"    
+        self.src_freq, self.src_width = 24e15, 48e15    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (.1e15, 40e15)    # Which frequencies will be saved to disk
+        self.pml_thickness = 20e-9
+
+        self.size_z = 2*padding + gdepth + 2*self.pml_thickness + 6*resolution
+
+        if cellsizex != 0:
+            self.size_x = cellsizex         ## non-flat periodic structure (grating?) with user-defined pitch
+        elif other_args.get('Kx',0) != 0:
+            self.size_x = resolution*5      ## flat structure, but oblique incidence requires several-pixel with 
+        else:
+            self.size_x = resolution*1.8    ## flat structure, zero component of K-vector, so we can make the structure as flat as possible
+        if cellsizey != 0:
+            self.size_y = cellsizey         ## dtto as for size_x above
+        elif other_args.get('Ky',0) != 0:
+            self.size_y = resolution*5      
+        else:
+            self.size_y = resolution*1.8 
+
+        print  'self.size_x, self.size_y', self.size_x, self.size_y
+        self.monitor_z1, self.monitor_z2 = (-padding-gdepth/2, padding+gdepth/2)
+        self.register_locals(locals(), other_args)          ## Remember the parameters
+        self.mon2eps = epsilon                  ## store what dielectric is the second monitor embedded in
+
+        ## Define materials
+        self.materials = []  
+        self.materials += [meep_materials.material_dielectric(where=self.where_m, eps=self.epsilon)]
+
+        for m in self.materials: 
+            self.fix_material_stability(m, f_c=60e15) ## rm all osc above the first one, to optimize for speed 
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        self.test_materials()
+
+    def where_m(self, r):
+        ## grooves parallel to the x-axis (perpendicular to the incident magnetic field):
+        if r.z()>(self.gdepth+self.padding)/2 or (r.z()>(self.padding-self.gdepth)/2 and np.abs(r.y())<self.gwidth/2): return self.return_value 
+        return 0
+#}}}
+
+models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':ESRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel, 'Fishnet':Fishnet, 'WiresOnSi':WiresOnSi, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace, 'DUVGrating':DUVGrating}
 

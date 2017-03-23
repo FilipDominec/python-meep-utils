@@ -2,7 +2,7 @@
 if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
 cellsize=300e-6
 thz=1e12
-par="resolution=10u simtime=100p cellsize=$cellsize"
+par="resolution=10u simtime=100p cellsize=$cellsize cellsizexy=$cellsize"
 
 if [ -z "$skipsimulation" ]; then 
 	echo
@@ -19,11 +19,11 @@ fi
 
 sharedoptions=' --paramname comment --figsizey 2 --xeval x/1e12 --xlim2 1.5 --usetex yes'
 
-../../plot_multiline.py $sharedoptions 28a_sec.dat 'effparam/Fishnet_xholesize=1.800e-04_comment=Simulation 180x200_simtime=2.000e-10_resolution=1.000e-05_cellsize=3.000e-04_cornerradius=6.000e-05_slabthick=1.000e-05_yholesize=2.000e-04_model=Fishnet_effparam.dat' --xlabel "Frequency (THz)" --ycol '|t|' \
+../../plot_multiline.py $sharedoptions 28a_sec.dat 'effparam/Fishnet*180x200*_effparam.dat' --xlabel "Frequency (THz)" --ycol '|t|' \
 	--paramlabel '%s' --ylabel 'Transmittance $|t|$' --figsizey 2 --output ${PWD##*/}_t_ap.pdf
-../../plot_multiline.py $sharedoptions 28a_pri.dat 'effparam/Fishnet_xholesize=2.000e-04_comment=Simulation 200x180_simtime=2.000e-10_resolution=1.000e-05_cellsize=3.000e-04_cornerradius=6.000e-05_slabthick=1.000e-05_yholesize=1.800e-04_model=Fishnet_effparam.dat' --xlabel "Frequency (THz)" --ycol '|t|' \
+../../plot_multiline.py $sharedoptions 28a_pri.dat 'effparam/Fishnet*200x180*_effparam.dat' --xlabel "Frequency (THz)" --ycol '|t|' \
 	--paramlabel '%s' --ylabel 'Transmittance $|t|$' --figsizey 2 --output ${PWD##*/}_t_as.pdf
-../../plot_multiline.py $sharedoptions 28c_sec.dat 'effparam/Fishnet_xholesize=2.300e-04_comment=Simulation 230x255_simtime=2.000e-10_resolution=1.000e-05_cellsize=3.000e-04_cornerradius=6.000e-05_slabthick=1.000e-05_yholesize=2.550e-04_model=Fishnet_effparam.dat' --xlabel "Frequency (THz)" --ycol '|t|' \
+../../plot_multiline.py $sharedoptions 28c_sec.dat 'effparam/Fishnet*230x255*_effparam.dat' --xlabel "Frequency (THz)" --ycol '|t|' \
 	--paramlabel '%s' --ylabel 'Transmittance $|t|$' --figsizey 2 --output ${PWD##*/}_t_cp.pdf
-../../plot_multiline.py $sharedoptions 28c_pri.dat 'effparam/Fishnet_xholesize=2.550e-04_comment=Simulation 255x230_simtime=2.000e-10_resolution=1.000e-05_cellsize=3.000e-04_cornerradius=6.000e-05_slabthick=1.000e-05_yholesize=2.300e-04_model=Fishnet_effparam.dat' --xlabel "Frequency (THz)" --ycol '|t|' \
+../../plot_multiline.py $sharedoptions 28c_pri.dat 'effparam/Fishnet*255x230*_effparam.dat' --xlabel "Frequency (THz)" --ycol '|t|' \
 	--paramlabel '%s' --ylabel 'Transmittance $|t|$' --figsizey 2 --output ${PWD##*/}_t_cs.pdf
