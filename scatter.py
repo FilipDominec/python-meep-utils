@@ -58,7 +58,7 @@ class SrcAmplitudeFactor(meep.Callback):
 af = SrcAmplitudeFactor(Kx=getattr(model, 'Kx', 0), Ky=getattr(model, 'Ky', 0))
 meep.set_AMPL_Callback(af.__disown__())
 #f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
-f.add_volume_source(meep.Ez, src_time_type, srcvolume, meep.AMPL)
+f.add_volume_source(meep.Ex, src_time_type, srcvolume, meep.AMPL)
 
 
 
@@ -78,7 +78,7 @@ if "narrowfreq-snapshots" in model.comment:
             name=('At%.3eHz'%getattr(model, 'frequency', None)) if getattr(model, 'frequency', None) else '',
             outputpng=True, outputvtk=False)]
 if "fieldevolution" in model.comment: 
-    slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_x=0, name='FieldEvolution', 
+    slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_y=0, name='FieldEvolution', 
         min_timestep=.1/model.src_freq, outputgif=True, outputhdf=True, outputvtk=True)]
 if "snapshote" in model.comment:
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]

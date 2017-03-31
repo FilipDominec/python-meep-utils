@@ -62,16 +62,22 @@ ylim2=2e12 ## in Hz
 #compare_dispersion ${par[@]} model=SRRArray resolution=4.000e-06 capacitorr=1.000e-05 splitting=4.000e-06 wirethick=4.000e-06 splitting2=4.000e-06 radius=3.000e-05 simtime=50p
 #compare_dispersion ${par[@]} model=SRRArray resolution=4.000e-06 capacitorr=1.000e-05 splitting=4.000e-06 wirethick=0.000e-06 splitting2=4.000e-06 radius=3.000e-05 simtime=50p
 
+## === (a)symmetric split-ring resonator
+#cellsize=100e-6
+#ylim2=1e12 ## in Hz
+#compare_dispersion ${par[@]} model=ESRRArray wirethick=0u radius=30u splitting=4u  splitting2=4u comment='sSRR' capacitorr=10u
+#compare_dispersion ${par[@]} model=SRRArray wirethick=0u radius=30u splitting=8u splitting2=0u comment='SRR'
+
 ## === Electro-magnetic symmetric split-ring resonator
 
 cellsize=100e-6
 ylim2=1.3e12 ## in Hz
-#for icr in `seq 9 2 17`; do
-#for icr in 6 8 10 14 18; do
-for icr in 7 9 11 12 13 15 17 ; do
+#for icr in 6 8 10 14 18; do  ## 7 9 11 12 13 15 17
+for icr in 18; do
 compare_dispersion ${par[@]} model=ESRRArray comment="emcSRR" cbarthick=6e-6 splitting=6u  splitting2=6u capacitorr=5e-6 \
             insplitting=6e-6 incapacitorr=${icr}e-6 wirethick=0 radius=40e-6 srrthick=10e-6
 done
+
 
 
 #for icr in 12 14 16 18; do

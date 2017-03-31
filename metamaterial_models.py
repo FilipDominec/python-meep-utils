@@ -591,5 +591,56 @@ class DUVGrating(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
+class PlasmonicDimers(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
+    def __init__(self, comment="", simtime=15e-15, resolution=.5e-9, cellsize=10e-9, cellsizex=10e-9, cellsizey=0, cellnumber=1, 
+            padding=2e-9, 
+            radius=3e-9, gap=0, **other_args):
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
+
+        ## Constant parameters for the simulation
+        self.simulation_name = "PlasmonicDimers"    
+        self.src_freq, self.src_width = 1000e12, 4000e12    # Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (1e12, 1.5e15)    # Which frequencies will be saved to disk
+        self.pml_thickness = .1*c/self.src_freq
+
+        self.size_x = cellsizex
+        self.size_y = cellsizey if  cellsizey else resolution/1.8   ## if zero thickness in y, simulate cylinders
+        self.size_z = cellnumber*cellsize + 4*padding + 2*self.pml_thickness
+
+        self.monitor_z1, self.monitor_z2 = (-(cellsize*cellnumber/2)-padding, (cellsize*cellnumber/2)+padding)
+        self.cellcenters = np.arange((1-cellnumber)*cellsize/2, cellnumber*cellsize/2, cellsize)
+
+        self.register_locals(locals(), other_args)          ## Remember the parameters
+
+        self.gap = gap if gap else resolution/1.8       ## adjust the gap to be single voxel TODO
+        self.singlesphere = ('singlesphere' in self.comment)
+
+        ## Define materials (with manual Lorentzian clipping) 
+        au = meep_materials.material_Au(where=self.where_metal)
+        #au.pol[0]['sigma'] /= 1000      # adjust losses
+        #au.pol[0]['gamma'] *= .1
+        if 'noosc' in comment:
+            au.pol = au.pol[:1]  ## optionally, remove all Lorentzian oscillators
+
+        au.pol = au.pol[:5]  ## remove the last oscillator - maximum number is 5 as given by python-meep
+
+        self.fix_material_stability(au, verbose=0)
+        self.materials = [au]  
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        self.test_materials()
+
+    def where_metal(self, r):
+        dd=self.resolution/4
+        for cellc in self.cellcenters:
+            if in_sphere(r, cx=-self.radius-self.gap/2-dd, cy=dd, cz=dd, rad=self.radius) or \
+                    (not self.singlesphere and in_sphere(r, cx=self.radius+self.gap/2-dd, cy=dd, cz=dd, rad=self.radius)):
+                return self.return_value
+        return 0
+#}}}
+
 models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':ESRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel, 'Fishnet':Fishnet, 'WiresOnSi':WiresOnSi, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace, 'DUVGrating':DUVGrating}
 
+models['PlasmonicDimers'] = PlasmonicDimers

@@ -515,13 +515,13 @@ if args.check_hilbert and len(freq)>1:
 plt.plot(freq, np.real(N), color="#33AA00", label=u"$N$'")
 plt.plot(freq, np.imag(N), color="#33AA33", label=u'$N$"', ls='--')
 
-plt.plot(freq, np.real(Z), color="#0044DD", label=u"$Z$'")
-plt.plot(freq, np.imag(Z), color="#4466DD", label=u'$Z$"', ls='--')
+#plt.plot(freq, np.real(Z), color="#0044DD", label=u"$Z$'")
+#plt.plot(freq, np.imag(Z), color="#4466DD", label=u'$Z$"', ls='--')
 
-plt.plot(freq, np.log(-(np.real(N)/np.imag(N)))/np.log(10), 
-    color="#FF9922", ls=":", label=u"$N$'$<0$ FOM")
-plt.plot(freq, np.log((np.real(N)/np.imag(N)))/np.log(10), \
-    color="#BB22FF", ls=":", label=u"$N$''$>0$ FOM")
+#plt.plot(freq, np.log(-(np.real(N)/np.imag(N)))/np.log(10), 
+    #color="#FF9922", ls=":", label=u"$N$'$<0$ FOM")
+#plt.plot(freq, np.log((np.real(N)/np.imag(N)))/np.log(10), \
+    #color="#BB22FF", ls=":", label=u"$N$''$>0$ FOM")
 plt.ylabel(u"Value"); 
 plt.ylim((-3., 6.)); 
 plt.xlim((plot_freq_min, plot_freq_max)); 
@@ -677,11 +677,11 @@ if args.plot_polar and os.path.isdir("polar"):
 
         plt.gca().add_collection(lc)
 
-        ## Add black points to every xtick
-        xpoints = np.interp(xticks, freq, x)
-        ypoints = np.interp(xticks, freq, y)
-        for xpoint, ypoint in zip(xpoints, ypoints):
-            plt.plot(xpoint, ypoint, marker="o", markersize=3, color="#000000", label='')
+        ## Add black points to every xtick DEFUNCT
+        #xpoints = np.interp(xticks, freq, x)
+        #ypoints = np.interp(xticks, freq, y)
+        #for xpoint, ypoint in zip(xpoints, ypoints):
+            #plt.plot(xpoint, ypoint, marker="o", markersize=3, color="#000000", label='')
 
         ## Annotate resonant frequencies
         xpoints = np.interp(freqlabels, freq, x.real)

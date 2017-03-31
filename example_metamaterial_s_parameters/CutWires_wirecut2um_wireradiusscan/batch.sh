@@ -3,12 +3,12 @@ if [ -z $NP ] ; then NP=2 ; fi             # number of processors
 thz=1e12
 cellsize=100e-6
 par="resolution=2u radius=0 cellsize=$cellsize simtime=100p wirecut=2u"
-if [ -z "$skipsimulation" ]; then 
-	for wirethick in 1 2 4 8 16; do
-		mpirun -np $NP ../../scatter.py model=SphereWire $par wirethick=${wirethick}e-6 
-		../../effparam.py
-	done
-fi
+#if [ -z "$skipsimulation" ]; then 
+	#for wirethick in 1 2 4 8 16; do
+		#mpirun -np $NP ../../scatter.py model=SphereWire $par wirethick=${wirethick}e-6 
+		#../../effparam.py
+	#done
+#fi
 
 sharedoptions="effparam/*.dat --paramname wirethick --parameval param*1e6 --figsizey 2 --xeval x/1e12"
 
