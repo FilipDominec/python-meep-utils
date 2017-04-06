@@ -591,5 +591,62 @@ class DUVGrating(meep_utils.AbstractMeepModel): #{{{
         return 0
 #}}}
 
+class PlasmonicDimers(meep_utils.AbstractMeepModel): #{{{
+    def __init__(self, comment="", simtime=2e-15, resolution=.5e-9, cellnumber=1, padding=100e-9, cellsize=100e-9, cellsizex=100e-9, cellsizey=0, 
+            material=Au, radius=10e-9, effgap=10e-9,  **other_args):
+        """ Two metallic spheres or cylinders which nearly touch. The gap can be sub-nanometric in practice, 
+        leading to tunelling and nonlocal effects, which can not be directly modelled by MEEP (nor any other
+        FDTD implementation known to the author), no matter what the resolution.
+        
+        However, one can replace the """
+
+
+
+        meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
+
+        ## TODO: test out the effect of halving simtime, halving resolution, halving padding...
+
+        ## Constant parameters for the simulation
+        self.simulation_name = "PlasmonicDimers"    
+        self.src_freq, self.src_width = 24e15, 48e15    # [Hz] (note: gaussian source ends at t=10/src_width)
+        self.interesting_frequencies = (.1e15, 40e15)    # Which frequencies will be saved to disk
+        self.pml_thickness = 20e-9
+
+        self.size_x = cellsize
+        self.size_y = cellsizey if cellsizey else resolution/1.8
+        self.size_z = 2*padding + gdepth + 2*self.pml_thickness + 6*resolution
+
+        if 'Au' in comment:         self.materials += [meep_materials.material_Au(where=self.where_m)]
+        elif 'Ag' in comment:       self.materials += [meep_materials.material_Ag(where=self.where_m)]
+        elif 'metal' in comment.lower():    
+            self.materials += [meep_materials.material_Au(where=self.where_m)]
+            self.materials[-1].pol[1:] = []
+            self.materials[-1].pol[0]['gamma'] = 0
+        else:                       self.materials += [meep_materials.material_dielectric(where=self.where_m, eps=self.epsilon)]
+
+
+        print  'self.size_x, self.size_y', self.size_x, self.size_y
+        self.monitor_z1, self.monitor_z2 = (-padding-gdepth/2, padding+gdepth/2)
+        self.register_locals(locals(), other_args)          ## Remember the parameters
+        self.mon2eps = epsilon                  ## store what dielectric is the second monitor embedded in
+
+        ## Define materials
+        self.materials = []  
+        self.materials += [meep_materials.material_dielectric(where=self.where_m, eps=self.epsilon)]
+
+        for m in self.materials: 
+            self.fix_material_stability(m, f_c=60e15) ## rm all osc above the first one, to optimize for speed 
+
+        ## Test the validity of the model
+        meep_utils.plot_eps(self.materials, plot_conductivity=True, 
+                draw_instability_area=(self.f_c(), 3*meep.use_Courant()**2), mark_freq={self.f_c():'$f_c$'})
+        self.test_materials()
+
+    def where_m(self, r):
+        ## grooves parallel to the x-axis (perpendicular to the incident magnetic field):
+        if r.z()>(self.gdepth+self.padding)/2 or (r.z()>(self.padding-self.gdepth)/2 and np.abs(r.y())<self.gwidth/2): return self.return_value 
+        return 0
+#}}}
+
 models = {'default':Slab, 'Slab':Slab, 'SphereWire':SphereWire, 'RodArray':RodArray, 'SRRArray':ESRRArray, 'ESRRArray':ESRRArray, 'SphereInDiel':SphereInDiel, 'Fishnet':Fishnet, 'WiresOnSi':WiresOnSi, 'TMathieu_Grating':TMathieu_Grating, 'HalfSpace':HalfSpace, 'DUVGrating':DUVGrating}
 
