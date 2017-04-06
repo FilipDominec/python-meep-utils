@@ -601,7 +601,8 @@ class PlasmonicDimers(meep_utils.AbstractMeepModel): #{{{       single-layer fis
         self.simulation_name = "PlasmonicDimers"    
         self.src_freq, self.src_width = 1000e12, 4000e12    # Hz] (note: gaussian source ends at t=10/src_width)
         self.interesting_frequencies = (1e12, 1.5e15)    # Which frequencies will be saved to disk
-        self.pml_thickness = .1*c/self.src_freq
+        self.pml_thickness = .01*c/self.src_freq        ## changing from 10x larger value caused less than 1e-4 change in transmittance
+        print("self.pml_thickness", self.pml_thickness)
 
         self.size_x = cellsizex
         self.size_y = cellsizey if  cellsizey else resolution/1.8   ## if zero thickness in y, simulate cylinders
