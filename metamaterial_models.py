@@ -594,7 +594,7 @@ class DUVGrating(meep_utils.AbstractMeepModel): #{{{
 class PlasmonicDimers(meep_utils.AbstractMeepModel): #{{{       single-layer fishnet
     def __init__(self, comment="", simtime=15e-15, resolution=.5e-9, cellsize=10e-9, cellsizex=10e-9, cellsizey=0, cellnumber=1, 
             padding=2e-9, 
-            radius=3e-9, gap=0, **other_args):
+            radius=3.1e-9, gap=0, **other_args):
         meep_utils.AbstractMeepModel.__init__(self)        ## Base class initialisation
 
         ## Constant parameters for the simulation
