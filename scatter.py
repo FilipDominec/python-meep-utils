@@ -71,16 +71,16 @@ monitor2_Ex = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Ex, z_position=model
 monitor2_Hy = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
 
 slices = []
-if not "noepssnapshot" in model.comment:
+if not "noepssnapshot" in str(model.comment):
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
-if "narrowfreq-snapshots" in model.comment:
+if "narrowfreq-snapshots" in str(model.comment):
     slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_y=0, at_t=np.inf,
             name=('At%.3eHz'%getattr(model, 'frequency', None)) if getattr(model, 'frequency', None) else '',
             outputpng=True, outputvtk=False)]
-if "fieldevolution" in model.comment: 
+if "fieldevolution" in str(model.comment): 
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_y=0, name='FieldEvolution', 
         min_timestep=.1/model.src_freq, outputgif=True, outputhdf=True, outputvtk=True)]
-if "snapshote" in model.comment:
+if "snapshote" in str(model.comment):
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
 
 ## Run the FDTD simulation or the frequency-domain solver
