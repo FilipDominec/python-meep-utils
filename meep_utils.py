@@ -933,6 +933,10 @@ def get_s_parameters(monitor1_Ex, monitor1_Hy, monitor2_Ex, monitor2_Hy, #{{{
     in2, out2 =  (Ex2f - Hy2f*EHratio2), (Ex2f + Hy2f*EHratio2)
 
     ## Adjust fields so that their modulus square is equal, even when monitors are embedded in different materials
+    ## Therefore for a smooth interface without losses and diffraction, always |s11|^2 + |s12|^2 = 1
+    ## This definition of the |s12| parameter is unusual; it is well known the amplitude of the electric field should be reduced by square root of the  
+    ## permittivity of the medium it enters (even if there are no losses nor diffraction). But I decided to normalize it so that the above equation 
+    ## still holds, since I wanted to to see clearly whether there are any dissipative or diffractive losses from the incident perpendicular beam.
     amplifactor1, amplifactor2 = (eps1**.5 * np.cos(beta1))**.5,  (eps2**.5 * np.cos(beta2))**.5
     in1, out1 = in1*amplifactor1, out1*amplifactor1
     in2, out2 = in2*amplifactor2, out2*amplifactor2
