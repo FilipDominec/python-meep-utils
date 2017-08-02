@@ -103,21 +103,21 @@ The procedure is tested on Debian-based Linux distributions. You may have to man
 ## Troubleshooting - what may happen and what it means
 #### Outright errors
  * `terminate called after throwing an instance of 'Swig::DirectorMethodException'`, and simulation fails with an ugly call trace 
-   * Perhaps you left some run-time error in the structure definition. Calling `meep_utils.testmaterials()` at the end of the model's initialization may trigger the error first, and help to obtain a reasonable Python report to find the problem.
-   * Make sure  to never set a `eps` variable within the `AbstractMeepModel` class, since it is reserved for MEEP callback.
-   * If `meep_utils.testmaterials()` did not help, some other error happens within some callback routine. 
+   * Perhaps you left some run-time error in the  structure definition: The `eps()` method is a *callback*, so a runtime error will not be handled by Python's usual "friendly" report of where the error is. To test this function prior to running MEEP's callback, put `meep_utils.testmaterials()` at the end of the model's initialization, which will help to obtain a reasonable Python report to find the problem.
+   * If `meep_utils.testmaterials()` did not help, check other possible callback routines. 
+   * Make sure  to never set the `eps` variable within the `AbstractMeepModel` class, since this name is reserved for MEEP callback.
  * Simulation hard-crashes during model initialization with the 'memory not mapped' error  (observed with Matplotlib 1.5.1 on Ubuntu 16.10)
    * This happens at the point when matplotlib tries to plot the permittivity spectrum, and to place a label at some high-frequency position like 10^16
    * I reported this error here https://github.com/matplotlib/matplotlib/issues/6984; the solution is in installing a newer fixed version of matplotlib. I suggest picking the freshest one from git: http://matplotlib.org/faq/installing_faq.html#source-install-from-git
    * One little annoyance is that uninstalling the original `python-matplotlib` package one also has to uninstall `paraview`. Compile the new version, then install `paraview` back and everything will be fine.
  * Simulation aborts with `lorentzian unstable` although the medium passed the `meep_utils.testmaterials()` function 
-   * The compiled-in check for Lorentzian stability is overly prudent; it sometimes aborts a simulation that would be completely stable. You may either change the material model as MEEP suggests. 
+   * The compiled-in check for Lorentzian stability in MEEP is overly prudent; it sometimes aborts a simulation that would be completely stable. You may either change the material model as MEEP suggests. 
    * I consider this to be just an unfixed bug, see also the discussion https://github.com/stevengj/meep/issues/12. So even better is to change the MEEP source code to bypass the `abort` in function `lorentzian_unstable` in `src/susceptibility.cpp` and recompile it. My branch of MEEP does it.
- * Time-domain simulations abort when I try to define a material with a negative permittivity 
-   * The static part of permittivity in the time-domain solver can not be negative. In fact its minimum value is determined by the Courant factor; see https://github.com/stevengj/meep/issues/12. Resort to the frequency-domain solver, or define a proper Drude-Lorentz model.
+ * The time-domain simulation aborts when I try to define a material with a negative permittivity 
+   * The frequency-independent part of permittivity (i.e. permittivity without Lorentzian oscillators) in the time-domain solver can never be defined negative. In fact its minimum value is roughly 0.87 by default, this number is determined by the Courant factor used. For mathematical discussion, see https://github.com/stevengj/meep/issues/12. If you need a medium with negative permittivity, resort to the frequency-domain solver, or define a proper Drude-Lorentz model.
  * The frequency-domain simulation does not converge when I try to define a material with a negative permittivity 
-   * The frequency-domain usually fails to converge in the infrared or optical range. Try to reformulate your problem as a time-domain simulation with a narrow-band source.
-   * Try changing the resolution or using other materials. Try running few time-domain steps before running frequency-domain solver. 
+   * The frequency-domain usually fails to converge in the infrared or optical range, where permittivity of metals is a small negative (complex) number. Defining the same metals in microwave simulations appears fine and converges. This situation is somewhat hard to compute with MEEP; you may try to reformulate your problem using Lorentz-Drude model and run a time-domain simulation with a narrow-band source.
+   * Changing the resolution or running few time-domain steps before running frequency-domain solver may also help. 
  * `AttributeError: 'unicode' object has no attribute 'shrink'`
    * Try disabling LaTeX in Matplotlib.
  * `HDF5-DIAG: Error detected in HDF5` (...) `unable to open file`:w
@@ -127,17 +127,18 @@ The procedure is tested on Debian-based Linux distributions. You may have to man
 
 #### Invalid or weird results
  * Exported figures show no fields and are black 
-   * Infinite values or not-a-numbers resulted from the simulation. This is perhaps due to simulation being unstable (see `amplitudes_time_domain.png`, if available, whether the fields are exponentially decaying or growing.
- * The simulation seems to be stable, but no valid data are plotted 
-   * Did you use the same polarisation (field-component) of the source and detectors, etc.? Did you use correct order of magnitude for the source duration and simulation?
- * The retrieved transmission or reflection is over unity 
-   * This may be due to spectral leakage from a high-quality resonances, try prolonging the simulation time or using a lossy medium.
-   * Make sure to check the time-domain exported fields if they decay in exponential manner, or do something unexpected.
+   * This means that infinite values or not-a-numbers ("NaN") resulted from the simulation. This is perhaps due to simulation being unstable for some reason. If you use the AmplitudeMonitorPlane objects, you will automatically get the `amplitudes_time_domain.png` plot for diagnostics. It should show whether the fields are exponentially growing instead of decaying.
+ * The simulation seems to be stable, but no valid data are plotted - the results seem rather random
+   * Did you use the same polarisation (field-component) of the source and detectors, etc.? If not, you obviously get numerical noise from normalization of tiny values by other tiny values. Check the order of magnitude for the source duration and simulation. Make sure the source has broad enough spectrum to cover all frequencies of interest. 
+ * Using `AmplitudeMonitorPlane`, the retrieved transmission or reflection is over unity 
+   * If this happens in the form of characteristic "ringing" in spectra around narrow resonances, it may often be due to spectral leakage. Prolonging the simulation time or using a lossy medium usually helps.
+   * Make sure to check the time-domain exported fields if they decay in exponential manner as they should, or do something unexpected.
  * Frequency-domain and time-domain results are different 
+   * In fact, the results *were* different by few percent when I made comparisons, and I do not know why.
    * Either the frequency-domain solver did not converge correctly, or the time-domain solver had to modify the material definition to make the simulation stable. In either case, read the simulation printouts what happened.
 
 #### Confusing printouts
- * Tracebacks are double printed, and their lines are randomly mixed.
+ * Python's tracebacks are double printed, and their lines are randomly mixed.
    * Run the simulation in single process if you need clear debugging messages.
  * Simulation gives correct results, but at the end complaints that `mpirun has exited ... without calling "finalize"` 
    * This is harmless. I did not find any way to prevent the message in python-meep.
