@@ -2,7 +2,7 @@
 if [ -z $NP ] ; then NP=2 ; fi			 # number of processors
 if [ -z $ext ] ; then ext=png ; fi             # number of processors
 
-#if [ -z "$model" ] ; then model=HalfSpace ; fi
+if [ -z "$model" ] ; then model=HalfSpace ; fi
 #staticpar=(model=$model simtime=250f resolution=15n padding=2.5u) ## default for the flat air-metal interfaces
 
 
