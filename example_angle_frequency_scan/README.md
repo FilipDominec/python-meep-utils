@@ -5,11 +5,16 @@ When the transverse wavenumber *K* is nonzero, the source amplitude is spatially
 
 Obviously, in a time-domain simulation where a broadband pulse is emitted, the angle is *frequency dependent*. At the high-frequency portion of the spectrum, the wave propagates close to the *z*-axis (almost perpendicular to the source plane), whereas at moderate frequencies it deviates much more. At very low frequencies, where *K* > (ω/*cn*), the wave is not radiated at all! This is all true, and it is not a problem if one is interested in a full 2-D scan over a band of frequencies and over a wide variety of angles. One only needs to position each data point at the correct angle, and interpolate the contours.
 
-# Usage
-Change, e.g. to the ```01_diel_eps09_blend0u``` directory and run the `./batch.sh` script. After about 45 simulations (each with a different ```Kx``` parameter), one big 2-D map of angle-frequency scan is plotted.
+## Limitations
+One big limitation, it does not work in the recent commits. I will try to find the error.   
+
+## Usage
+Change, e.g. to the ```01_diel_eps09_blend0u``` directory and run the `./batch.sh` script. 
+
+After about 45 simulations (each with a different ```Kx``` parameter), one big 2-D map of angle-frequency scan is plotted.
 
 
-## TODO: Optical pulse reflecting from a graduated interface
+## Application: Optical pulse reflecting from a graduated interface
 In the definition of the structure, the python-meep-utils scripts enable one to *blend* the materials, i.e. specify the density between 0 and 100 % of the material.
 
 This can be used to build gradient lenses, custom-shaped perfectly absorbing objects, model arbitrary doping profiles in semiconductors etc.
