@@ -184,3 +184,15 @@ The procedure is tested on Debian-based Linux distributions. You may have to man
    * probably no run_bash call will work - slice export will fail on Windows?
 - [ ] currently, the materials are composed into a structure only for the permittivity (static value + Lorentzians), shall we do this also for permeability? And for nonlinear effects etc.?
 - [ ] compress video with something like: ffmpeg -i input -c:v libx264 -preset veryslow -qp 0 output.mkv
+- [ ] solve the following message
+		Progress 0.90 of expected total 107 s
+		CMD: cd 'SphereWire_comment=TiO$_2$ spheres only_resolution=5.000e-06_radius=3.000e-05'; h5tovtk 'EPS_at_t0.000e+00.h5:eps'  '-t 0' -o 'EPS_at_t0.000e+00.vtk'
+		CMD: cd 'SphereWire_comment=TiO$_2$ spheres only_resolution=5.000e-06_radius=3.000e-05'; rm 'EPS_at_t0.000e+00.h5'
+		Traceback (most recent call last):
+		  File "../../scatter.py", line 113, in <module>
+		    eps1=getattr(model, 'mon1eps', 1), eps2=getattr(model, 'mon2eps', 1))               ## enable monitors inside dielectrics
+		  File "/home/filip/python-meep-utils/meep_utils.py", line 902, in get_s_parameters
+		    Ex1, Hy1, Ex2, Hy2  =  map(lambda x: np.append(x, np.zeros(target_len - len(Ex1))), (Ex1, Hy1, Ex2, Hy2))
+		  File "/home/filip/python-meep-utils/meep_utils.py", line 902, in <lambda>
+		    Ex1, Hy1, Ex2, Hy2  =  map(lambda x: np.append(x, np.zeros(target_len - len(Ex1))), (Ex1, Hy1, Ex2, Hy2))
+		TypeError: 'numpy.float64' object cannot be interpreted as an index
