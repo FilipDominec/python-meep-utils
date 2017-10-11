@@ -113,10 +113,12 @@ if meep.my_rank() == 0:
             eps1=getattr(model, 'mon1eps', 1), eps2=getattr(model, 'mon2eps', 1))               ## enable monitors inside dielectrics
 
     print "EVERYTHING OK"
-    meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",                            
-            X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)),                  ## Save 5 columns: freq, amplitude/phase for reflection/transmission
-            header=model.parameterstring+columnheaderstring)     ## Export header
+    if len(s11)>0: 
+        meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",                            
+                ## Save 5 columns: freq, amplitude/phase for reflection/transmission:
+                X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)),                  
+                header=model.parameterstring+columnheaderstring)     ## Export header
 
-    with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
+        with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
 
 meep.all_wait()         # Wait until all file operations are finished
