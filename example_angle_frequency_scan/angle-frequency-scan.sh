@@ -34,5 +34,5 @@ plotoptions=(*.dat  --xlabel     'Frequency'   \
 
 ## Clean up
 if [ -z "$skipsimulation" ]; then 
-    rm -r ${model}*/
+    rm -r ${model}*/ ${model}*.dat
 fi
