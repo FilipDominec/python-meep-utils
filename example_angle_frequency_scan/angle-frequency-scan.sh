@@ -4,7 +4,7 @@ if [ -z $ext ] ; then ext=png ; fi             # number of processors
 
 if [ -z "$model" ] ; then model=HalfSpace ; fi
 
-staticpar=(model=$model simtime=50f resolution=50n padding=.5u ) ## default for the flat air-metal interfaces
+staticpar=(model=$model simtime=50f resolution=15n padding=.5u  epsilon=$epsilon ) ## default for the flat air-metal interfaces
 
 
 if [ -z "$skipsimulation" ]; then 
@@ -33,6 +33,6 @@ plotoptions=(*.dat  --xlabel     'Frequency'   \
 
 
 ## Clean up
-#if [ -z "$skipsimulation" ]; then 
-    #rm -r ${model}*/
-#fi
+if [ -z "$skipsimulation" ]; then 
+    rm -r ${model}*/
+fi
