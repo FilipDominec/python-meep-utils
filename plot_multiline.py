@@ -9,7 +9,8 @@ as multiple lines in the x-y plot, which is the default behaviour. Each curve is
 value of the `param', or simply by the file name if no --paramname option is specified.
 
 Or, if the number of files is over 10 or 20, it may be preferable to plot their `y' values as a 2-D contour plot,
-where the `y' value still represents the horizontal coordinate, but the `param' value now serves as the vertical one. 
+where the `y' value still represents the value to be plotted (as a contour color), but the `param' value now 
+serves as the position of the point on vertical axis. 
 
         1) --contours no              2) --contours yes
                (default)
@@ -68,7 +69,7 @@ parser.add_argument('--contourresp',type=int,   default=200,help='column height 
 parser.add_argument('--interp_aspect', type=float, default=1., help='value lower than 1. interpolates rather vertically')
 parser.add_argument('--figsizex',   type=float, default=8, help='figure width (inches), 8 is default')
 parser.add_argument('--figsizey',   type=float, default=4, help='figure height (inches), 4 is default')
-parser.add_argument('--usetex',     type=str,   default='yes', help='by default, LaTeX is used for nicer typesetting')
+parser.add_argument('--usetex',     type=str,   default='no', help='use LaTeX for nicer typesetting (disabled by default)')
 parser.add_argument('--verbose',    type=str,   default='', help='explicitly print out what happens')
 parser.add_argument('--output',     type=str,   default='*.png', help='output file; *.png or *.pdf (etc.) auto-selects a name with the given format')
 parser.add_argument('filenames',    type=str,   nargs='+', help='CSV files to be processed')
@@ -76,7 +77,7 @@ args = parser.parse_args()
 
 ## Plotting style
 if args.usetex.lower() in ('yes', 'true'): 
-    if args.verbose: print "Selecting to use Latex, disable it by setting   --usetex no"
+    if args.verbose: print "Selecting to use Latex, enable it by setting   --usetex yes"
     matplotlib.rc('text', usetex=True)
     matplotlib.rc('text.latex', preamble = '\usepackage{amsmath}, \usepackage{txfonts}, \usepackage{upgreek}') #, \usepackage{palatino} \usepackage{lmodern}, 
 matplotlib.rc('font', size=12)
