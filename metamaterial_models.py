@@ -515,11 +515,13 @@ class HalfSpace(meep_utils.AbstractMeepModel): #{{{
     def __init__(self, comment="", simtime=100e-15, resolution=5e-9, cellnumber=1, padding=2e-6, cellsize = 200e-9,
             epsilon=33.97, blend=0, **other_args):
         """ This structure demonstrates that scatter.py can also compute the reflectance and transmittance of samples on 
-        a substrate. The substrate can have an infinite thickness, since its back interface is not included in the simulation 
-        volume. It is assumed that with thick enough substrate there will be no Fabry-Perot interferences due to reflection from
-        its back side; this kind simulation can not predict them.
+        a substrate. The substrate is though to have effectively infinite thickness, since its back interface is not 
+        included in the simulation volume. It is assumed that with thick enough substrate there will be no Fabry-Perot 
+        interferences arising from the 
+        reflection from its back side, so this kind of simulation can not predict them.
 
-        The monitor planes can also be placed inside a dielectric. In this case the measured waveforms are 
+        The monitor planes can also be placed inside a dielectric, to enable the transmitted wave amplitude to be sensed 
+        in the substrate medium. In this case the measured waveforms are 
         rescaled so that the transmitted energy is returned the same as if measured after reflection-less transition to vacuum. 
         This way, reflectance*2+transmittance*+losses still sum up to one.
 

@@ -860,11 +860,12 @@ def diagnostic_plot(x, values_and_labels=(), plotmodulus=False, ylog=True, title
         plotmin = None
         for value, label in values_and_labels:
             plt.plot(x, np.abs(value) if plotmodulus else value, label=label)
-            if plotmin==None or plotmin > np.min(value):
-                plotmin = max(np.min(np.abs(value)), np.max(np.abs(value))/1e10)
+            if len(value)>0:
+                if plotmin==None or plotmin > np.min(value):
+                    plotmin = max(np.min(np.abs(value)), np.max(np.abs(value))/1e10)
         plt.legend(prop={'size':10}, loc='lower left')
         plt.xlabel(xlabel); plt.ylabel(ylabel); plt.title(title)
-        if ylog and len(values_and_labels)>0: 
+        if ylog and plotmin is not None: 
             plt.yscale("log")
             plt.ylim(bottom=plotmin) ## ensure reasonable extent of values of 10 orders of magnitude
         plt.savefig("%s.png" % title, bbox_inches='tight')

@@ -71,8 +71,8 @@ monitor2_Ex = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Ex, z_position=model
 monitor2_Hy = meep_utils.AmplitudeMonitorPlane(f, comp=meep.Hy, z_position=model.monitor_z2, **monitor_options)
 
 slices = []
-if not "noepssnapshot" in str(model.comment):
-    slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
+#if not "noepssnapshot" in str(model.comment):
+    #slices += [meep_utils.Slice(model=model, field=f, components=(meep.Dielectric), at_t=0, name='EPS')]
 if "narrowfreq-snapshots" in str(model.comment):
     slices += [meep_utils.Slice(model=model, field=f, components=meep.Ex, at_y=0, at_t=np.inf,
             name=('At%.3eHz'%getattr(model, 'frequency', None)) if getattr(model, 'frequency', None) else '',
@@ -80,7 +80,7 @@ if "narrowfreq-snapshots" in str(model.comment):
 if "fieldevolution" in str(model.comment): 
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex), at_y=0, name='FieldEvolution', 
         min_timestep=.1/model.src_freq, outputgif=True, outputhdf=True, outputvtk=True)]
-if "snapshote" in str(model.comment):
+if  "snapshote" in str(model.comment):
     slices += [meep_utils.Slice(model=model, field=f, components=(meep.Ex, meep.Ey, meep.Ez), at_t=np.inf, name='SnapshotE')]
 
 ## Run the FDTD simulation or the frequency-domain solver
@@ -112,11 +112,12 @@ if meep.my_rank() == 0:
             Kx=getattr(model, 'Kx', 0), Ky=getattr(model, 'Ky', 0),                                 ## enable oblique incidence (works only if monitors in vacuum)
             eps1=getattr(model, 'mon1eps', 1), eps2=getattr(model, 'mon2eps', 1))               ## enable monitors inside dielectrics
 
-    print "EVERYTHING OK"
-    meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",                            
-            X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)),                  ## Save 5 columns: freq, amplitude/phase for reflection/transmission
-            header=model.parameterstring+columnheaderstring)     ## Export header
-
-    with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
+    if len(s11)>0: 
+        meep_utils.savetxt(fname=model.simulation_name+".dat", fmt="%.6e",                            
+                ## Save 5 columns: freq, amplitude/phase for reflection/transmission:
+                X=zip(freq, np.abs(s11), np.angle(s11), np.abs(s12), np.angle(s12)),                  
+                header=model.parameterstring+columnheaderstring)     ## Export header
+        with open("./last_simulation_name.dat", "w") as outfile: outfile.write(model.simulation_name) 
+        print "Scattering parameters succesfully saved to "+model.simulation_name+".dat"
 
 meep.all_wait()         # Wait until all file operations are finished
