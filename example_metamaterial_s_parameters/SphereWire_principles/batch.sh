@@ -5,12 +5,12 @@ thz=1e12
 par="model=SphereWire resolution=5u simtime=100p cellsize=$cellsize"
 
 if [ -z "$skipsimulation" ]; then 
-	mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=30u comment='TiO$_2$ spheres with wires'
-	../../effparam.py
+	#mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=30u comment='TiO$_2$ spheres with wires'
+	#../../effparam.py
 	mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=0u  comment='Wires only'
 	../../effparam.py
-	mpirun -np $NP  ../../scatter.py $par wirethick=0u radius=30u comment='TiO$_2$ spheres only'
-	../../effparam.py
+	#mpirun -np $NP  ../../scatter.py $par wirethick=0u radius=30u comment='TiO$_2$ spheres only'
+	#../../effparam.py
 
 	#mpirun -np $NP  ../../scatter.py $par wirethick=4u radius=30u comment='Lossless spheres with wires' loss=.01 simtime=400p
 	#../../effparam.py

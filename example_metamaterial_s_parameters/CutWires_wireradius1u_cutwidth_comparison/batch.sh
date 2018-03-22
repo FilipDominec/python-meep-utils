@@ -3,11 +3,11 @@ if [ -z $NP ] ; then NP=2 ; fi             # number of processors
 model=SphereWire
 cellsize=100e-6
 thz=1e12
-par='model=SphereArray resolution=2u simtime=100p radius=0u'
+par='resolution=2u simtime=100p radius=0u'
 
 if [ -z "$skipsimulation" ]; then 
 	for wc in 2 4 8 16 32 48; do
-		mpirun -np $NP  ../../scatter.py $par wirethick=1u wirecut=${wc}e-6
+		mpirun -np $NP  ../../scatter.py model=$model $par wirethick=1u wirecut=${wc}e-6
 		../../effparam.py
 	done
 fi
