@@ -1,4 +1,8 @@
 ![python-meep-utils logo](./meep_header.png)
+## Important note
+
+**Since the improvements in meep and its Python bindings in 2018/19, following scripts are rather obsolete. I recommend to refer to the (semi)official meep pages, e.g. https://meep.readthedocs.io/en/latest/ and http://www.simpetus.com/projects.html for up-to-date examples.** Filip Dominec 2019
+
 ## Introduction
 MEEP is a library of functions for numerical simulations of how electromagnetic waves propagate and interact with various structures; it is a finite-difference time-domain solver of the Maxwell equations. The simulation is defined by programming, with bindings to C/C++, Scheme, or Python; I chose to use `python-meep` as Python is a user-friendly language that makes simple simulations (relatively) simple, and really complex ones possible. One can also seamlessly integrate them with powerful Python modules as *numpy*, *scipy*, *matplotlib* and many others.
 
